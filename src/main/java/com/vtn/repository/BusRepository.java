@@ -8,4 +8,6 @@ import java.util.UUID;
 
 public interface BusRepository extends JpaRepository<BusEntity, UUID> {
     BusEntity findByBusId(UUID busId);
+
+    BusEntity findByLicensePlate(String licensePlate);
 }

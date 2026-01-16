@@ -2,7 +2,9 @@ package com.vtn.service;
 
 import com.vtn.dto.request.BusRequest;
 import com.vtn.entity.BusEntity;
+import com.vtn.entity.SeatEntity;
 import com.vtn.repository.BusRepository;
+import com.vtn.repository.SeatRepository;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,15 +13,19 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class BusService {
     private final BusRepository busRepository;
+    private final SeatRepository seatRepository;
 
     @Autowired
-    public BusService(BusRepository busRepository) {
+    public BusService(BusRepository busRepository,
+                      SeatRepository seatRepository) {
         this.busRepository = busRepository;
+        this.seatRepository = seatRepository;
     }
 
     public BaseResponse getAllBuses() {
@@ -34,6 +40,10 @@ public class BusService {
     public BaseResponse createBus(BusRequest busRequest) {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         try {
+                BusEntity busEntity = busRepository.findByLicensePlate(busRequest.getLicensePlate());
+                if (busEntity != null) {
+                    return new BaseResponse(400, null, "Bus already exists", "Bus already exists", null);
+                }
                 BusEntity bus = new BusEntity();
                 bus.setLicensePlate(busRequest.getLicensePlate());
                 bus.setTotalSeat(busRequest.getTotalSeat());
@@ -41,6 +51,17 @@ public class BusService {
                 bus.setCreated_by(info.getUsername());
                 bus.setCreated_at(LocalDateTime.now());
                 busRepository.save(bus);
+                if(busRequest.getTotalSeat() > 0) {
+                    List<SeatEntity> seats = new ArrayList<>();
+                    for(int i = 1; i <= busRequest.getTotalSeat(); i++) {
+                        SeatEntity seat = new SeatEntity();
+                        seat.setSeatNumber("A" + i);
+                        seat.setBusLicensePlate(busRequest.getLicensePlate());
+                        seat.setBus(bus);
+                        seats.add(seat);
+                    }
+                    seatRepository.saveAll(seats);
+                }
                 return new BaseResponse(201, bus, "Create bus successfully", "No error", null);
         } catch (Exception e) {
             throw new RuntimeException(e);
