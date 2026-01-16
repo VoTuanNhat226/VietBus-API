@@ -12,18 +12,27 @@ import java.util.UUID;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "seats")
+@Table(name = "routes")
 @Entity
-public class SeatEntity {
+public class RouteEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID seatId;
+    private UUID routeId;
 
-    @Column(name = "seat_number")
-    private String seatNumber;
+    @Column(name = "from_station")
+    private String fromStation;
 
-    @Column(name = "bus_license_plate")
-    private String busLicensePlate;
+    @Column(name = "to_station")
+    private String toStation;
+
+    @Column(name = "distance_km")
+    private Integer distanceKm;
+
+    @Column(name = "duration_minutes")
+    private Integer durationMinutes;
+
+    @Column(name = "active")
+    private boolean active;
 
     @Column(name = "created_at")
     private LocalDateTime created_at;
@@ -36,8 +45,4 @@ public class SeatEntity {
 
     @Column(name = "updated_by")
     private String updated_by;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bus_id", nullable = false, foreignKey = @ForeignKey(name = "fk_seat_bus_id"))
-    BusEntity bus;
 }

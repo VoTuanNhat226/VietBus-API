@@ -25,7 +25,7 @@ public class EmployeeController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = employeeService.getAllEmployees();
         response.setTook(System.currentTimeMillis() - beginTime);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping(value = APIConstants.API_CREATE_EMPLOYEE)
@@ -41,7 +41,7 @@ public class EmployeeController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = employeeService.updateEmployee(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping(value = APIConstants.API_DELETE_EMPLOYEE)
@@ -49,6 +49,6 @@ public class EmployeeController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = employeeService.deleteEmployee(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
     }
 }

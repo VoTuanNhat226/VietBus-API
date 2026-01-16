@@ -58,6 +58,8 @@ public class BusService {
                         seat.setSeatNumber("A" + i);
                         seat.setBusLicensePlate(busRequest.getLicensePlate());
                         seat.setBus(bus);
+                        seat.setCreated_by(info.getUsername());
+                        seat.setCreated_at(LocalDateTime.now());
                         seats.add(seat);
                     }
                     seatRepository.saveAll(seats);

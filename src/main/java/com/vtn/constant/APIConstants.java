@@ -25,4 +25,10 @@ public class APIConstants {
     public static final String API_CREATE_BUS = API_VIET_BUS + BUS + "/create";
     public static final String API_UPDATE_BUS = API_VIET_BUS + BUS + "/update";
     public static final String API_DELETE_BUS = API_VIET_BUS + BUS + "/delete";
+
+    //Route
+    public static final String ROUTE = "/route";
+    public static final String API_GET_ALL_ROUTE = API_VIET_BUS + ROUTE + "/get-all";
+    public static final String API_CREATE_ROUTE = API_VIET_BUS + ROUTE + "/create";
+    public static final String API_DELETE_ROUTE = API_VIET_BUS + ROUTE + "/delete";
 }
