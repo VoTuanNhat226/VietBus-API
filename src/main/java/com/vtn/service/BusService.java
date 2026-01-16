@@ -11,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class BusService {
         }
     }
 
+    @Transactional
     public BaseResponse createBus(BusRequest busRequest) {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         try {
@@ -56,7 +58,6 @@ public class BusService {
                     for(int i = 1; i <= busRequest.getTotalSeat(); i++) {
                         SeatEntity seat = new SeatEntity();
                         seat.setSeatNumber("A" + i);
-                        seat.setBusLicensePlate(busRequest.getLicensePlate());
                         seat.setBus(bus);
                         seat.setCreated_by(info.getUsername());
                         seat.setCreated_at(LocalDateTime.now());

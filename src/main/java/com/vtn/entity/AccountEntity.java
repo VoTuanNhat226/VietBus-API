@@ -36,7 +36,7 @@ public class AccountEntity implements UserDetails {
     private boolean active;
 
     @Column(name = "role")
-    private String role; // ADMIN, STAFF, USER
+    private String role; // ADMIN, STAFF
 
     @Column(name = "created_at")
     private LocalDateTime created_at;

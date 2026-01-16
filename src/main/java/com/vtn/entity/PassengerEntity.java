@@ -12,27 +12,21 @@ import java.util.UUID;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "employees")
+@Table(name = "passsengers")
 @Entity
-public class EmployeeEntity {
+public class PassengerEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID employeeId;
+    private UUID passengerId;
 
-    @Column(name = "first_name", nullable = false)
-    private String firstName;
-
-    @Column(name = "last_name", nullable = false)
-    private String lastName;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    @Column(name = "position", nullable = false)
-    private String position; // ADMIN - STAFF - DRIVER
-
-    @Column(name = "active")
-    private boolean active;
+    @Column(name = "id_card", nullable = false, unique = true)
+    private String idCard;
 
     @Column(name = "created_at")
     private LocalDateTime created_at;
@@ -45,8 +39,4 @@ public class EmployeeEntity {
 
     @Column(name = "updated_by")
     private String updated_by;
-
-    @OneToOne
-    @JoinColumn(name = "account_id", nullable = false, unique = true, foreignKey = @ForeignKey(name = "fk_employee_account_id"))
-    AccountEntity account;
 }

@@ -31,4 +31,11 @@ public class APIConstants {
     public static final String API_GET_ALL_ROUTE = API_VIET_BUS + ROUTE + "/get-all";
     public static final String API_CREATE_ROUTE = API_VIET_BUS + ROUTE + "/create";
     public static final String API_DELETE_ROUTE = API_VIET_BUS + ROUTE + "/delete";
+
+    //Trip
+    public static final String TRIP = "/trip";
+    public static final String API_GET_ALL_TRIP = API_VIET_BUS + TRIP + "/get-all";
+    public static final String API_CREATE_TRIP = API_VIET_BUS + TRIP + "/create";
+    public static final String API_UPDATE_TRIP = API_VIET_BUS + TRIP + "/update";
+    public static final String API_DELETE_TRIP = API_VIET_BUS + TRIP + "/delete";
 }
