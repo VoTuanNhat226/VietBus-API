@@ -43,17 +43,17 @@ public class EmployeeService {
             if (account == null) {
                 return new BaseResponse(404, null, "Not found account", "Not found account", null);
             } else {
-                EmployeeEntity employeeEntity = new EmployeeEntity();
-                employeeEntity.setFirstName(employeeRequest.getFirstName());
-                employeeEntity.setLastName(employeeRequest.getLastName());
-                employeeEntity.setPhoneNumber(employeeRequest.getPhoneNumber());
-                employeeEntity.setPosition(employeeRequest.getPosition());
-                employeeEntity.setActive(true);
-                employeeEntity.setAccount(account);
-                employeeEntity.setCreated_by(info.getUsername());
-                employeeEntity.setCreated_at(LocalDateTime.now());
-                employeeRepository.save(employeeEntity);
-                return new BaseResponse(201, employeeEntity, "Create employee successfully", "No error", null);
+                EmployeeEntity employee = new EmployeeEntity();
+                employee.setFirstName(employeeRequest.getFirstName());
+                employee.setLastName(employeeRequest.getLastName());
+                employee.setPhoneNumber(employeeRequest.getPhoneNumber());
+                employee.setPosition(employeeRequest.getPosition());
+                employee.setActive(true);
+                employee.setAccount(account);
+                employee.setCreated_by(info.getUsername());
+                employee.setCreated_at(LocalDateTime.now());
+                employeeRepository.save(employee);
+                return new BaseResponse(201, employee, "Create employee successfully", "No error", null);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
