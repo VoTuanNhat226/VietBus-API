@@ -55,23 +55,27 @@ public class EmployeeService {
 
     public BaseResponse createEmployee(EmployeeRequest employeeRequest) {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String role = info.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse(null);
         try {
-            AccountEntity account = accountRepository.findByAccountId(employeeRequest.getAccountId());
-            if (account == null) {
-                return new BaseResponse(404, null, "Not found account", "Not found account", null);
-            } else {
+            if("ROLE_ADMIN".equals(role)) {
                 EmployeeEntity employee = new EmployeeEntity();
                 employee.setFirstName(employeeRequest.getFirstName());
                 employee.setLastName(employeeRequest.getLastName());
                 employee.setPhoneNumber(employeeRequest.getPhoneNumber());
                 employee.setPosition(employeeRequest.getPosition());
                 employee.setActive(true);
-                employee.setAccount(account);
                 employee.setCreated_by(info.getUsername());
                 employee.setCreated_at(LocalDateTime.now());
                 employeeRepository.save(employee);
                 return new BaseResponse(201, employee, "Create employee successfully", "No error", null);
+            } else {
+                return new BaseResponse(403, null, "You don't has permission", "No error", null);
             }
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -88,7 +92,7 @@ public class EmployeeService {
                 employee.setLastName(employeeRequest.getLastName());
                 employee.setPhoneNumber(employeeRequest.getPhoneNumber());
                 employee.setPosition(employeeRequest.getPosition());
-                employee.setActive(true);
+                employee.setActive(employeeRequest.isActive());
                 employee.setUpdated_by(info.getUsername());
                 employee.setUpdated_at(LocalDateTime.now());
                 employeeRepository.save(employee);
