@@ -8,15 +8,21 @@ import com.vtn.entity.AccountEntity;
 import com.vtn.repository.AccountRepository;
 import com.vtn.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 public class AuthController {
@@ -24,16 +30,18 @@ public class AuthController {
     private final JwtService jwtService;
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserDetailsService userDetailsService;
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager,
                           JwtService jwtService,
                           AccountRepository accountRepository,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder, UserDetailsService userDetailsService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.accountRepository = accountRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userDetailsService = userDetailsService;
     }
 
     @PostMapping(APIConstants.API_LOGIN)
@@ -46,12 +54,28 @@ public class AuthController {
                     )
             );
 
-            String token = jwtService.generateToken(request.getUsername());
+            // Lấy thông tin user sau khi authenticate
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(request.getUsername());
+
+            // Lấy role (giả sử mỗi user 1 role)
+            String role = userDetails.getAuthorities()
+                    .stream()
+                    .findFirst()
+                    .map(GrantedAuthority::getAuthority)
+                    .orElse(null);
+
+            // Thêm role vào JWT
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", role);
+
+            String token = jwtService.generateToken(claims, request.getUsername());
+
             return ResponseEntity.ok(new LoginResponse(token));
 
         } catch (Exception ex) {
             return ResponseEntity
-                    .status(401)
+                    .status(HttpStatus.UNAUTHORIZED)
                     .body(new LoginResponse("Invalid username or password"));
         }
     }
@@ -75,7 +99,11 @@ public class AuthController {
 
         accountRepository.save(account);
 
-        String token = jwtService.generateToken(account.getUsername());
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", account.getRole());
+
+        String token = jwtService.generateToken(claims, account.getUsername());
+
         return ResponseEntity.ok(new LoginResponse(token));
     }
 }

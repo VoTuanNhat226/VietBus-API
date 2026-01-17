@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,9 +28,25 @@ public class EmployeeService {
         this.accountRepository = accountRepository;
     }
 
-    public BaseResponse getAllEmployees() {
+    private boolean isAllParametersNull(EmployeeRequest employeeRequest) {
+        return ((employeeRequest.getLastName() == null) &&
+                (employeeRequest.getFirstName() == null) &&
+                (employeeRequest.getPhoneNumber() == null) &&
+                (employeeRequest.getPosition() == null));
+    }
+
+    public BaseResponse getAllEmployees(EmployeeRequest employeeRequest) {
         try {
-            List<EmployeeEntity> employees = employeeRepository.findAll();
+            List<EmployeeEntity> employees = new ArrayList<>();
+            if(isAllParametersNull(employeeRequest)) {
+                employees = employeeRepository.findAll();
+            } else {
+                employees = employeeRepository.findByCondition(
+                        employeeRequest.getFirstName(),
+                        employeeRequest.getLastName(),
+                        employeeRequest.getPhoneNumber(),
+                        employeeRequest.getPosition());
+            }
             return new BaseResponse(200, employees, "Get all employees successfully", "Get all employees successfully", null);
         } catch (Exception e) {
             throw new RuntimeException(e);

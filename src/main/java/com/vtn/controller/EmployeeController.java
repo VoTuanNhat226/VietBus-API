@@ -21,9 +21,9 @@ public class EmployeeController {
     }
 
     @PostMapping(value = APIConstants.API_GET_ALL_EMPLOYEES)
-    public ResponseEntity<BaseResponse> getAll() {
+    public ResponseEntity<BaseResponse> getAll(@RequestBody EmployeeRequest request) {
         long beginTime = System.currentTimeMillis();
-        BaseResponse response = employeeService.getAllEmployees();
+        BaseResponse response = employeeService.getAllEmployees(request);
         response.setTook(System.currentTimeMillis() - beginTime);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
