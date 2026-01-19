@@ -47,6 +47,6 @@ public class EmployeeEntity {
     private String updated_by;
 
     @OneToOne
-    @JoinColumn(name = "account_id", foreignKey = @ForeignKey(name = "fk_employee_account_id"))
+    @JoinColumn(name = "account_id", unique = true, foreignKey = @ForeignKey(name = "fk_employee_account_id"))
     AccountEntity account;
 }

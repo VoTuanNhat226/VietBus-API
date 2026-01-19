@@ -38,4 +38,8 @@ public class APIConstants {
     public static final String API_CREATE_TRIP = API_VIET_BUS + TRIP + "/create";
     public static final String API_UPDATE_TRIP = API_VIET_BUS + TRIP + "/update";
     public static final String API_DELETE_TRIP = API_VIET_BUS + TRIP + "/delete";
+
+    //Account
+    public static final String ACCOUNT = "/account";
+    public static final String API_GET_ALL_ACCOUNT_BY_ROLE = API_VIET_BUS + ACCOUNT + "/get-all-by-role";
 }

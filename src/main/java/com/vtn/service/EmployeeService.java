@@ -75,12 +75,18 @@ public class EmployeeService {
             return new BaseResponse(409, null, "Nhân viên đã tồn tại", null, null);
         }
 
+        AccountEntity account = accountRepository.findByAccountId(employeeRequest.getAccountId());
+        if (account == null) {
+            return new BaseResponse(404, null, "Không tìm thấy tài khoản", null, null);
+        }
+
         EmployeeEntity employee = new EmployeeEntity();
         employee.setFirstName(employeeRequest.getFirstName());
         employee.setLastName(employeeRequest.getLastName());
         employee.setPhoneNumber(employeeRequest.getPhoneNumber());
         employee.setPosition(employeeRequest.getPosition());
-        employee.setActive(true);
+        employee.setActive(employeeRequest.isActive());
+        employee.setAccount(account);
         employee.setCreated_by(info.getUsername());
         employee.setCreated_at(LocalDateTime.now());
 

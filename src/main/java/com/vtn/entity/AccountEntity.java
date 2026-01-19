@@ -23,7 +23,7 @@ import java.util.UUID;
 public class AccountEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID account_id;
+    private UUID accountId;
 
     @Column(name = "username", unique = true, nullable = false)
     private String username;

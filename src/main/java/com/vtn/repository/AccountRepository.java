@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,9 +17,22 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
     @Query("""
     SELECT a
     FROM AccountEntity a
-    WHERE a.account_id = :account_id    
+    WHERE a.accountId = :accountId    
     """)
-    AccountEntity findByAccountId(@Param("account_id") UUID account_id);
+    AccountEntity findByAccountId(@Param("accountId") UUID accountId);
+
+    @Query("""
+        SELECT a
+        FROM AccountEntity a
+        WHERE a.role = :role
+        AND a.active = true
+        AND NOT EXISTS (
+            SELECT 1
+            FROM EmployeeEntity e
+            WHERE e.account = a
+            )
+    """)
+    List<AccountEntity> findAccountsNotUsedByEmployee(@Param("role") String role);
 
     boolean existsByUsername(String username);
 }
