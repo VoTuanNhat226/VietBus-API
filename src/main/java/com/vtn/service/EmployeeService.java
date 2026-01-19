@@ -27,28 +27,28 @@ public class EmployeeService {
         this.accountRepository = accountRepository;
     }
 
-    private boolean isAllParametersNull(EmployeeRequest employeeRequest) {
-        return ((employeeRequest.getLastName() == null) &&
-                (employeeRequest.getFirstName() == null) &&
-                (employeeRequest.getPhoneNumber() == null) &&
-                (employeeRequest.getPosition() == null) &&
-                (employeeRequest.getCreatedBy() == null) &&
-                (employeeRequest.getUpdatedBy() == null));
+    private boolean isAllParametersNull(EmployeeRequest request) {
+        return ((request.getLastName() == null) &&
+                (request.getFirstName() == null) &&
+                (request.getPhoneNumber() == null) &&
+                (request.getPosition() == null) &&
+                (request.getCreatedBy() == null) &&
+                (request.getUpdatedBy() == null));
     }
 
-    public BaseResponse getAllEmployees(EmployeeRequest employeeRequest) {
+    public BaseResponse getAllEmployees(EmployeeRequest request) {
         List<EmployeeEntity> employees;
 
-        if (isAllParametersNull(employeeRequest)) {
+        if (isAllParametersNull(request)) {
             employees = employeeRepository.findAll();
         } else {
             employees = employeeRepository.getAllByCondition(
-                    employeeRequest.getFirstName(),
-                    employeeRequest.getLastName(),
-                    employeeRequest.getPhoneNumber(),
-                    employeeRequest.getPosition(),
-                    employeeRequest.getCreatedBy(),
-                    employeeRequest.getUpdatedBy()
+                    request.getFirstName(),
+                    request.getLastName(),
+                    request.getPhoneNumber(),
+                    request.getPosition(),
+                    request.getCreatedBy(),
+                    request.getUpdatedBy()
             );
         }
 

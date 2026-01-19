@@ -20,6 +20,14 @@ public class AccountController {
         this.accountDetailsService = accountDetailsService;
     }
 
+    @PostMapping(value = APIConstants.API_GET_ALL_ACCOUNT)
+    public ResponseEntity<BaseResponse> getAllAccount(@RequestBody AccountRequest accountRequest) {
+        long begin = System.currentTimeMillis();
+        BaseResponse response = accountDetailsService.getAllAccounts(accountRequest);
+        response.setTook(System.currentTimeMillis() - begin);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping(value = APIConstants.API_GET_ALL_ACCOUNT_BY_ROLE)
     public ResponseEntity<BaseResponse> getAllByRole(@RequestBody AccountRequest request) {
         long beginTime = System.currentTimeMillis();

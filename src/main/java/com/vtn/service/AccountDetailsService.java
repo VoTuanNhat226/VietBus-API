@@ -1,6 +1,7 @@
 package com.vtn.service;
 
 import com.vtn.dto.request.AccountRequest;
+import com.vtn.dto.request.EmployeeRequest;
 import com.vtn.entity.AccountEntity;
 import com.vtn.entity.RouteEntity;
 import com.vtn.repository.AccountRepository;
@@ -31,10 +32,34 @@ public class AccountDetailsService implements UserDetailsService {
         return account;
     }
 
+    private boolean isAllParametersNull(AccountRequest request) {
+        return ((request.getUsername() == null) &&
+                (request.getActive() == null ) &&
+                (request.getRole() == null) &&
+                (request.getCreatedBy() == null) &&
+                (request.getUpdatedBy() == null));
+    }
+
+    public BaseResponse getAllAccounts(AccountRequest request) {
+        List<AccountEntity> accounts;
+        if (isAllParametersNull(request)) {
+            accounts = accountRepository.findAll();
+        } else {
+            accounts = accountRepository.getAllByCondition(
+                    request.getUsername(),
+                    request.getRole(),
+                    request.getActive(),
+                    request.getCreatedBy(),
+                    request.getUpdatedBy()
+            );
+        }
+        return new BaseResponse(200, accounts, "Get all accounts successfully", null,null);
+    }
+
     public BaseResponse getAllAccountsByRole(AccountRequest request) {
         try {
             List<AccountEntity> accounts = accountRepository.findAccountsNotUsedByEmployee(request.getRole());
-            return new BaseResponse(200, accounts, "Get all accounts successfully", null,null);
+            return new BaseResponse(200, accounts, "Get all accounts by role successfully", null,null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

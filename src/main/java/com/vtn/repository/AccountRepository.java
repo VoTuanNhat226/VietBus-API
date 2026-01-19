@@ -1,6 +1,7 @@
 package com.vtn.repository;
 
 import com.vtn.entity.AccountEntity;
+import com.vtn.entity.EmployeeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,23 @@ import java.util.UUID;
 @Repository
 public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
     Optional<AccountEntity> findByUsername(String username);
+
+    @Query("""
+    SELECT a
+    FROM AccountEntity a
+    WHERE (:username IS NULL OR a.username LIKE %:username%)
+        AND (:role IS NULL OR a.role = :role)
+        AND (:active IS NULL OR a.active = :active)
+        AND (:createdBy IS NULL OR a.createdBy LIKE %:createdBy%)
+        AND (:updatedBy IS NULL OR a.updatedBy LIKE :updatedBy%)
+    """)
+    List<AccountEntity> getAllByCondition(
+            @Param("username") String username,
+            @Param("role") String role,
+            @Param("active") Boolean active,
+            @Param("createdBy") String createdBy,
+            @Param("updatedBy") String updatedBy
+    );
 
     @Query("""
     SELECT a

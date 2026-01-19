@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -80,22 +81,25 @@ public class AuthController {
         }
     }
 
-    @PostMapping(value = APIConstants.API_REGISTER)
+    @PostMapping(value = APIConstants.API_CREATE_ACCOUNT)
     public ResponseEntity<LoginResponse> register(@RequestBody RegisterRequest request) {
 
         if (accountRepository.existsByUsername(request.getUsername())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new LoginResponse("Username already exists"));
+                    .body(new LoginResponse("Tên đăng nhập đã được sử dụng!"));
         }
+
+        UserDetails info = (UserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
 
         AccountEntity account = new AccountEntity();
         account.setUsername(request.getUsername());
         account.setPassword(passwordEncoder.encode(request.getPassword()));
         account.setRole(request.getRole());
-        account.setActive(true);
-        account.setCreated_at(LocalDateTime.now());
-        account.setCreated_by("SYSTEM");
+        account.setActive(request.isActive());
+        account.setCreatedAt(LocalDateTime.now());
+        account.setCreatedBy(info.getUsername());
 
         accountRepository.save(account);
 

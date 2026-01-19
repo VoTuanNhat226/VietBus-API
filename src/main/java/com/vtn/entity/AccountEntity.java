@@ -39,16 +39,16 @@ public class AccountEntity implements UserDetails {
     private String role; // ADMIN, STAFF
 
     @Column(name = "created_at")
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String created_by;
+    private String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updated_by;
+    private String updatedBy;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

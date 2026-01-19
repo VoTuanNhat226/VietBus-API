@@ -10,7 +10,6 @@ public class APIConstants {
     //Auth
     public static final String AUTH = "/auth";
     public static final String API_LOGIN = API_VIET_BUS + AUTH + "/login";
-    public static final String API_REGISTER = API_VIET_BUS + AUTH + "/register";
 
     //Employee
     public static final String EMPLOYEE = "/employee";
@@ -41,5 +40,8 @@ public class APIConstants {
 
     //Account
     public static final String ACCOUNT = "/account";
+    public static final String API_GET_ALL_ACCOUNT = API_VIET_BUS + ACCOUNT + "/get-all";
+    public static final String API_CREATE_ACCOUNT = API_VIET_BUS + ACCOUNT + "/create";
     public static final String API_GET_ALL_ACCOUNT_BY_ROLE = API_VIET_BUS + ACCOUNT + "/get-all-by-role";
+
 }
