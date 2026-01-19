@@ -12,17 +12,30 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
     EmployeeEntity findByEmployeeId(UUID employeeId);
 
     @Query("""
-    SELECT e
-    FROM EmployeeEntity e
-    WHERE (:firstName IS NULL OR e.firstName LIKE %:firstName%)
-    AND (:lastName IS NULL OR e.lastName LIKE %:lastName%)
-    AND (:phoneNumber IS NULL OR e.phoneNumber LIKE %:phoneNumber%)
-    AND (:position IS NULL OR e.position = :position)
-""")
-    List<EmployeeEntity> findByCondition(
+        SELECT e
+        FROM EmployeeEntity e
+        WHERE (:firstName IS NULL OR e.firstName LIKE %:firstName%)
+            AND (:lastName IS NULL OR e.lastName LIKE %:lastName%)
+            AND (:phoneNumber IS NULL OR e.phoneNumber LIKE %:phoneNumber%)
+            AND (:position IS NULL OR e.position = :position)
+    """)
+    List<EmployeeEntity> getAllByCondition(
             @Param("firstName") String firstName,
             @Param("lastName") String lastName,
             @Param("phoneNumber") String phoneNumber,
             @Param("position") String position
+    );
+
+    @Query("""
+        SELECT e
+        FROM EmployeeEntity e
+        WHERE (e.firstName LIKE %:firstName%)
+            AND (e.lastName LIKE %:lastName%)
+            AND (e.phoneNumber LIKE %:phoneNumber%)       
+    """)
+    EmployeeEntity findByFirstNameLastNamePhoneNumber(
+            @Param("firstName") String firstName,
+            @Param("lastName") String lastName,
+            @Param("phoneNumber") String phoneNumber
     );
 }

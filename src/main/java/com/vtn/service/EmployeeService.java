@@ -41,44 +41,52 @@ public class EmployeeService {
             if(isAllParametersNull(employeeRequest)) {
                 employees = employeeRepository.findAll();
             } else {
-                employees = employeeRepository.findByCondition(
+                employees = employeeRepository.getAllByCondition(
                         employeeRequest.getFirstName(),
                         employeeRequest.getLastName(),
                         employeeRequest.getPhoneNumber(),
                         employeeRequest.getPosition());
             }
-            return new BaseResponse(200, employees, "Get all employees successfully", "Get all employees successfully", null);
+            return new BaseResponse(200, employees, "Get all employees successfully", null, null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     public BaseResponse createEmployee(EmployeeRequest employeeRequest) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String role = info.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .findFirst()
-                .orElse(null);
-        try {
-            if("ROLE_ADMIN".equals(role)) {
-                EmployeeEntity employee = new EmployeeEntity();
-                employee.setFirstName(employeeRequest.getFirstName());
-                employee.setLastName(employeeRequest.getLastName());
-                employee.setPhoneNumber(employeeRequest.getPhoneNumber());
-                employee.setPosition(employeeRequest.getPosition());
-                employee.setActive(true);
-                employee.setCreated_by(info.getUsername());
-                employee.setCreated_at(LocalDateTime.now());
-                employeeRepository.save(employee);
-                return new BaseResponse(201, employee, "Create employee successfully", "No error", null);
-            } else {
-                return new BaseResponse(403, null, "You don't has permission", "No error", null);
-            }
+        UserDetails info = (UserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        boolean isAdmin = info.getAuthorities()
+                .stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+
+        if (!isAdmin) {
+            return new BaseResponse(403, null, "Bạn không có quyền!", null, null);
         }
+
+        EmployeeEntity existed = employeeRepository
+                .findByFirstNameLastNamePhoneNumber(
+                        employeeRequest.getFirstName(),
+                        employeeRequest.getLastName(),
+                        employeeRequest.getPhoneNumber());
+
+        if (existed != null) {
+            return new BaseResponse(409, null, "Nhân viên đã tồn tại", null, null);
+        }
+
+        EmployeeEntity employee = new EmployeeEntity();
+        employee.setFirstName(employeeRequest.getFirstName());
+        employee.setLastName(employeeRequest.getLastName());
+        employee.setPhoneNumber(employeeRequest.getPhoneNumber());
+        employee.setPosition(employeeRequest.getPosition());
+        employee.setActive(true);
+        employee.setCreated_by(info.getUsername());
+        employee.setCreated_at(LocalDateTime.now());
+
+        employeeRepository.save(employee);
+
+        return new BaseResponse(201, employee, "Thêm nhân viên thành công", null, null);
     }
 
     public BaseResponse updateEmployee(EmployeeRequest employeeRequest) {
@@ -86,7 +94,7 @@ public class EmployeeService {
         try {
             EmployeeEntity employee = employeeRepository.findByEmployeeId(employeeRequest.getEmployeeId());
             if (employee == null) {
-                return new BaseResponse(404, null, "Not found employee", "Not found employee", null);
+                return new BaseResponse(404, null, "Không tìm thấy nhân viên", null, null);
             } else {
                 employee.setFirstName(employeeRequest.getFirstName());
                 employee.setLastName(employeeRequest.getLastName());
@@ -96,7 +104,7 @@ public class EmployeeService {
                 employee.setUpdated_by(info.getUsername());
                 employee.setUpdated_at(LocalDateTime.now());
                 employeeRepository.save(employee);
-                return new BaseResponse(200, employee, "Update employee successfully", "No error", null);
+                return new BaseResponse(200, employee, "Cập nhật nhân viên thành công", null, null);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -104,27 +112,25 @@ public class EmployeeService {
     }
 
     public BaseResponse deleteEmployee(EmployeeRequest employeeRequest) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String role = info.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .findFirst()
-                .orElse(null);
-        try {
-            if("ROLE_ADMIN".equals(role)) {
-                EmployeeEntity employee = employeeRepository.findByEmployeeId(employeeRequest.getEmployeeId());
-                if (employee == null) {
-                    return new BaseResponse(404, null, "Not found employee", "Not found employee", null);
-                } else {
-                    employeeRepository.delete(employee);
-                    return new BaseResponse(204, null, "Delete employee successfully", "No error", null);
-                }
-            } else {
-                return new BaseResponse(403, null, "You don't has permission", "No error", null);
-            }
+        UserDetails info = (UserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        boolean isAdmin = info.getAuthorities()
+                .stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+
+        if (!isAdmin) {
+            return new BaseResponse(403, null, "Bạn không có quyền!", null, null);
         }
+
+        EmployeeEntity employee = employeeRepository
+                .findByEmployeeId(employeeRequest.getEmployeeId());
+
+        if (employee == null) {
+            return new BaseResponse(404, null, "Không tìm thấy nhân viên", null, null);
+        }
+
+        employeeRepository.delete(employee);
+        return new BaseResponse(200, null, "Xóa nhân viên thành công", null, null);
     }
 }

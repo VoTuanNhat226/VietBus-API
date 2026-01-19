@@ -28,12 +28,15 @@ public class EmployeeController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PostMapping(value = APIConstants.API_CREATE_EMPLOYEE)
+    @PostMapping(APIConstants.API_CREATE_EMPLOYEE)
     public ResponseEntity<BaseResponse> create(@RequestBody EmployeeRequest request) {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = employeeService.createEmployee(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
     }
 
     @PostMapping(value = APIConstants.API_UPDATE_EMPLOYEE)
@@ -41,7 +44,10 @@ public class EmployeeController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = employeeService.updateEmployee(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
     }
 
     @PostMapping(value = APIConstants.API_DELETE_EMPLOYEE)
@@ -49,6 +55,9 @@ public class EmployeeController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = employeeService.deleteEmployee(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
     }
 }
