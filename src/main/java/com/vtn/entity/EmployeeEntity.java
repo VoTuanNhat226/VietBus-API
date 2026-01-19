@@ -35,16 +35,16 @@ public class EmployeeEntity {
     private boolean active;
 
     @Column(name = "created_at")
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String created_by;
+    private String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updated_by;
+    private String updatedBy;
 
     @OneToOne
     @JoinColumn(name = "account_id", unique = true, foreignKey = @ForeignKey(name = "fk_employee_account_id"))

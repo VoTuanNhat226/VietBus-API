@@ -7,7 +7,6 @@ import com.vtn.repository.AccountRepository;
 import com.vtn.repository.EmployeeRepository;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -32,26 +31,30 @@ public class EmployeeService {
         return ((employeeRequest.getLastName() == null) &&
                 (employeeRequest.getFirstName() == null) &&
                 (employeeRequest.getPhoneNumber() == null) &&
-                (employeeRequest.getPosition() == null));
+                (employeeRequest.getPosition() == null) &&
+                (employeeRequest.getCreatedBy() == null) &&
+                (employeeRequest.getUpdatedBy() == null));
     }
 
     public BaseResponse getAllEmployees(EmployeeRequest employeeRequest) {
-        try {
-            List<EmployeeEntity> employees = new ArrayList<>();
-            if(isAllParametersNull(employeeRequest)) {
-                employees = employeeRepository.findAll();
-            } else {
-                employees = employeeRepository.getAllByCondition(
-                        employeeRequest.getFirstName(),
-                        employeeRequest.getLastName(),
-                        employeeRequest.getPhoneNumber(),
-                        employeeRequest.getPosition());
-            }
-            return new BaseResponse(200, employees, "Get all employees successfully", null, null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        List<EmployeeEntity> employees;
+
+        if (isAllParametersNull(employeeRequest)) {
+            employees = employeeRepository.findAll();
+        } else {
+            employees = employeeRepository.getAllByCondition(
+                    employeeRequest.getFirstName(),
+                    employeeRequest.getLastName(),
+                    employeeRequest.getPhoneNumber(),
+                    employeeRequest.getPosition(),
+                    employeeRequest.getCreatedBy(),
+                    employeeRequest.getUpdatedBy()
+            );
         }
+
+        return new BaseResponse(200, employees, "Get all employees successfully", null, null);
     }
+
 
     public BaseResponse createEmployee(EmployeeRequest employeeRequest) {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext()
@@ -87,8 +90,8 @@ public class EmployeeService {
         employee.setPosition(employeeRequest.getPosition());
         employee.setActive(employeeRequest.isActive());
         employee.setAccount(account);
-        employee.setCreated_by(info.getUsername());
-        employee.setCreated_at(LocalDateTime.now());
+        employee.setCreatedBy(info.getUsername());
+        employee.setCreatedAt(LocalDateTime.now());
 
         employeeRepository.save(employee);
 
@@ -107,8 +110,8 @@ public class EmployeeService {
                 employee.setPhoneNumber(employeeRequest.getPhoneNumber());
                 employee.setPosition(employeeRequest.getPosition());
                 employee.setActive(employeeRequest.isActive());
-                employee.setUpdated_by(info.getUsername());
-                employee.setUpdated_at(LocalDateTime.now());
+                employee.setUpdatedBy(info.getUsername());
+                employee.setUpdatedAt(LocalDateTime.now());
                 employeeRepository.save(employee);
                 return new BaseResponse(200, employee, "Cập nhật nhân viên thành công", null, null);
             }

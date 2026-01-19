@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,18 +13,22 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
     EmployeeEntity findByEmployeeId(UUID employeeId);
 
     @Query("""
-        SELECT e
-        FROM EmployeeEntity e
-        WHERE (:firstName IS NULL OR e.firstName LIKE %:firstName%)
-            AND (:lastName IS NULL OR e.lastName LIKE %:lastName%)
-            AND (:phoneNumber IS NULL OR e.phoneNumber LIKE %:phoneNumber%)
-            AND (:position IS NULL OR e.position = :position)
+    SELECT e
+    FROM EmployeeEntity e
+    WHERE (:firstName IS NULL OR e.firstName LIKE %:firstName%)
+        AND (:lastName IS NULL OR e.lastName LIKE %:lastName%)
+        AND (:phoneNumber IS NULL OR e.phoneNumber LIKE %:phoneNumber%)
+        AND (:position IS NULL OR e.position = :position)
+        AND (:createdBy IS NULL OR e.createdBy LIKE %:createdBy%)
+        AND (:updatedBy IS NULL OR e.updatedBy LIKE :updatedBy%)
     """)
     List<EmployeeEntity> getAllByCondition(
             @Param("firstName") String firstName,
             @Param("lastName") String lastName,
             @Param("phoneNumber") String phoneNumber,
-            @Param("position") String position
+            @Param("position") String position,
+            @Param("createdBy") String createdBy,
+            @Param("updatedBy") String updatedBy
     );
 
     @Query("""

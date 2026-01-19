@@ -92,7 +92,7 @@ public class AuthController {
         AccountEntity account = new AccountEntity();
         account.setUsername(request.getUsername());
         account.setPassword(passwordEncoder.encode(request.getPassword()));
-        account.setRole("STAFF");
+        account.setRole(request.getRole());
         account.setActive(true);
         account.setCreated_at(LocalDateTime.now());
         account.setCreated_by("SYSTEM");
