@@ -15,7 +15,7 @@ public class EmployeeRequest {
     private String lastName;
     private String phoneNumber;
     private String position;
-    private boolean active;
+    private Boolean active;
     private String createdBy;
     private LocalDate createdAt;
     private String updatedBy;

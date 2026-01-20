@@ -33,7 +33,9 @@ public class BusController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = busService.createBus(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return  ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
     }
 
     @PostMapping(value = APIConstants.API_UPDATE_BUS)
@@ -41,7 +43,9 @@ public class BusController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = busService.updateBus(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return  ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
     }
 
     @PostMapping(value = APIConstants.API_DELETE_BUS)
@@ -49,6 +53,8 @@ public class BusController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = busService.deleteBus(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
     }
 }

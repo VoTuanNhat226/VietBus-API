@@ -33,7 +33,7 @@ public class AccountEntity implements UserDetails {
     private String password;
 
     @Column(name = "active")
-    private boolean active;
+    private Boolean active;
 
     @Column(name = "role")
     private String role; // ADMIN, STAFF

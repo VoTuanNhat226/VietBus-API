@@ -33,7 +33,8 @@ public class EmployeeService {
                 (request.getPhoneNumber() == null) &&
                 (request.getPosition() == null) &&
                 (request.getCreatedBy() == null) &&
-                (request.getUpdatedBy() == null));
+                (request.getUpdatedBy() == null) &&
+                (request.getActive() == null));
     }
 
     public BaseResponse getAllEmployees(EmployeeRequest request) {
@@ -48,7 +49,8 @@ public class EmployeeService {
                     request.getPhoneNumber(),
                     request.getPosition(),
                     request.getCreatedBy(),
-                    request.getUpdatedBy()
+                    request.getUpdatedBy(),
+                    request.getActive()
             );
         }
 
@@ -88,7 +90,7 @@ public class EmployeeService {
         employee.setLastName(employeeRequest.getLastName());
         employee.setPhoneNumber(employeeRequest.getPhoneNumber());
         employee.setPosition(employeeRequest.getPosition());
-        employee.setActive(employeeRequest.isActive());
+        employee.setActive(employeeRequest.getActive());
         employee.setAccount(account);
         employee.setCreatedBy(info.getUsername());
         employee.setCreatedAt(LocalDateTime.now());
@@ -109,7 +111,7 @@ public class EmployeeService {
                 employee.setLastName(employeeRequest.getLastName());
                 employee.setPhoneNumber(employeeRequest.getPhoneNumber());
                 employee.setPosition(employeeRequest.getPosition());
-                employee.setActive(employeeRequest.isActive());
+                employee.setActive(employeeRequest.getActive());
                 employee.setUpdatedBy(info.getUsername());
                 employee.setUpdatedAt(LocalDateTime.now());
                 employeeRepository.save(employee);

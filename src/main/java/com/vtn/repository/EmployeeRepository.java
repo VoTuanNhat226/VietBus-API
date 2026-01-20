@@ -21,6 +21,7 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
         AND (:position IS NULL OR e.position = :position)
         AND (:createdBy IS NULL OR e.createdBy LIKE %:createdBy%)
         AND (:updatedBy IS NULL OR e.updatedBy LIKE :updatedBy%)
+        AND (:active IS NULL OR e.active = :active)
     """)
     List<EmployeeEntity> getAllByCondition(
             @Param("firstName") String firstName,
@@ -28,7 +29,8 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
             @Param("phoneNumber") String phoneNumber,
             @Param("position") String position,
             @Param("createdBy") String createdBy,
-            @Param("updatedBy") String updatedBy
+            @Param("updatedBy") String updatedBy,
+            @Param("active") Boolean active
     );
 
     @Query("""

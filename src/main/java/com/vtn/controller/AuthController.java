@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -90,8 +91,25 @@ public class AuthController {
                     .body(new LoginResponse("Tên đăng nhập đã được sử dụng!"));
         }
 
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getPrincipal().equals("anonymousUser")) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new LoginResponse("Bạn chưa đăng nhập"));
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(new LoginResponse("Bạn không có quyền tạo tài khoản"));
+        }
+
+        UserDetails info = (UserDetails) authentication.getPrincipal();
 
         AccountEntity account = new AccountEntity();
         account.setUsername(request.getUsername());
@@ -108,6 +126,6 @@ public class AuthController {
 
         String token = jwtService.generateToken(claims, account.getUsername());
 
-        return ResponseEntity.ok(new LoginResponse(token));
+        return ResponseEntity.ok(new LoginResponse(null));
     }
 }
