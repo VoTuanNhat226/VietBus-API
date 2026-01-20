@@ -7,9 +7,12 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class BusRequest {
-    private UUID busId;
+public class VehicleRequest {
+    private UUID vehicleId;
     private String licensePlate;
     private Integer totalSeat;
-    private boolean active;
+    private Boolean active;
+    private String model;
+    private String manufactureYear;
+    private Integer totalKm;
 }

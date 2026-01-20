@@ -12,12 +12,12 @@ import java.util.UUID;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "buses")
+@Table(name = "vehicles")
 @Entity
-public class BusEntity {
+public class VehicleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID busId;
+    private UUID vehicleId;
 
     @Column(name = "license_plate")
     private String licensePlate;
@@ -28,15 +28,24 @@ public class BusEntity {
     @Column(name = "active")
     private boolean active;
 
+    @Column(name = "model")
+    private String model;
+
+    @Column(name = "manufacture_year")
+    private String manufactureYear;
+
+    @Column(name = "total_km")
+    private Integer totalKm;
+
     @Column(name = "created_at")
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String created_by;
+    private String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updated_by;
+    private String updatedBy;
 }

@@ -12,7 +12,7 @@ public interface SeatRepository extends JpaRepository<SeatEntity, UUID> {
     @Query("""
         SELECT s 
         FROM SeatEntity s
-        WHERE s.bus.busId = :busId    
+        WHERE s.vehicle.vehicleId = :vehicleId    
     """)
-    List<SeatEntity> findByBusId(UUID busId);
+    List<SeatEntity> findByVehicleId(UUID vehicleId);
 }

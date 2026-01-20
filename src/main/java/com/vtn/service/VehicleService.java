@@ -1,9 +1,9 @@
 package com.vtn.service;
 
-import com.vtn.dto.request.BusRequest;
-import com.vtn.entity.BusEntity;
+import com.vtn.dto.request.VehicleRequest;
+import com.vtn.entity.VehicleEntity;
 import com.vtn.entity.SeatEntity;
-import com.vtn.repository.BusRepository;
+import com.vtn.repository.VehicleRepository;
 import com.vtn.repository.SeatRepository;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,46 +16,59 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-public class BusService {
-    private final BusRepository busRepository;
+public class VehicleService {
+    private final VehicleRepository vehicleRepository;
     private final SeatRepository seatRepository;
 
     @Autowired
-    public BusService(BusRepository busRepository,
-                      SeatRepository seatRepository) {
-        this.busRepository = busRepository;
+    public VehicleService(VehicleRepository vehicleRepository,
+                          SeatRepository seatRepository) {
+        this.vehicleRepository = vehicleRepository;
         this.seatRepository = seatRepository;
     }
 
     public BaseResponse getAllBuses() {
         try {
-            List<BusEntity> buses = busRepository.findAll();
+            List<VehicleEntity> buses = vehicleRepository.findAll();
             return new BaseResponse(200, buses, "Get all buses successfully", "Get all buses successfully", null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+    public BaseResponse getVehicleById(VehicleRequest vehicleRequest) {
+        try {
+            Optional<VehicleEntity> bus = vehicleRepository.findById(vehicleRequest.getVehicleId());
+            return new BaseResponse(200, bus, "Get bus successfully", "Get buse successfully", null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Transactional
-    public BaseResponse createBus(BusRequest busRequest) {
+    public BaseResponse createBus(VehicleRequest request) {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         try {
-            BusEntity existedBus = busRepository.findByLicensePlate(busRequest.getLicensePlate());
-            if (existedBus != null) {
-                return new BaseResponse(400, null,"Bus already exists", "Bus already exists",null);
+            VehicleEntity existedVehicle = vehicleRepository.findByLicensePlate(request.getLicensePlate());
+            if (existedVehicle != null) {
+                return new BaseResponse(400, null,"Xe đã tồn tại", null,null);
             }
 
             // ===== CREATE BUS =====
-            BusEntity bus = new BusEntity();
-            bus.setLicensePlate(busRequest.getLicensePlate());
-            bus.setTotalSeat(busRequest.getTotalSeat());
-            bus.setActive(true);
-            bus.setCreated_by(info.getUsername());
-            bus.setCreated_at(LocalDateTime.now());
+            VehicleEntity vehicle = new VehicleEntity();
+            vehicle.setLicensePlate(request.getLicensePlate());
+            vehicle.setTotalSeat(request.getTotalSeat());
+            vehicle.setActive(request.getActive());
+            vehicle.setModel(request.getModel());
+            vehicle.setManufactureYear(request.getManufactureYear());
+            vehicle.setTotalKm(0);
+            vehicle.setCreatedBy(info.getUsername());
+            vehicle.setCreatedAt(LocalDateTime.now());
 
-            busRepository.save(bus);
+            vehicleRepository.save(vehicle);
 
             // ===== CREATE SEATS =====
             List<SeatEntity> seats = new ArrayList<>();
@@ -70,14 +83,14 @@ public class BusService {
                             1,
                             row,
                             col,
-                            bus,
+                            vehicle,
                             info
                     ));
                 }
             }
             // extra seats floor 1
-            seats.add(createSeat("A13", 1, totalRows + 1, "A", bus, info));
-            seats.add(createSeat("C13", 1, totalRows + 1, "C", bus, info));
+            seats.add(createSeat("A13", 1, totalRows + 1, "A", vehicle, info));
+            seats.add(createSeat("C13", 1, totalRows + 1, "C", vehicle, info));
             // ===== FLOOR 2 (EVEN) =====
             for (int row = 1; row <= totalRows; row++) {
                 int seatIndex = row * 2; // 2,4,6,8,10,12
@@ -87,55 +100,55 @@ public class BusService {
                             2,
                             row,
                             col,
-                            bus,
+                            vehicle,
                             info
                     ));
                 }
             }
             // extra seats floor 2
-            seats.add(createSeat("A14", 2, totalRows + 1, "A", bus, info));
-            seats.add(createSeat("C14", 2, totalRows + 1, "C", bus, info));
+            seats.add(createSeat("A14", 2, totalRows + 1, "A", vehicle, info));
+            seats.add(createSeat("C14", 2, totalRows + 1, "C", vehicle, info));
             seatRepository.saveAll(seats);
 
-            return new BaseResponse(201,bus,"Create bus successfully","No error",null);
+            return new BaseResponse(201,vehicle,"Thêm xe thành công",null,null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private SeatEntity createSeat(String seatNumber, int floor, int seatRow, String seatColumn, BusEntity bus, UserDetails info) {
+    private SeatEntity createSeat(String seatNumber, int floor, int seatRow, String seatColumn, VehicleEntity vehicle, UserDetails info) {
         SeatEntity seat = new SeatEntity();
         seat.setSeatNumber(seatNumber);
         seat.setFloor(floor);
         seat.setSeatRow(seatRow);
         seat.setSeatColumn(seatColumn);
-        seat.setBus(bus);
+        seat.setVehicle(vehicle);
         seat.setCreatedBy(info.getUsername());
         seat.setCreatedAt(LocalDateTime.now());
         return seat;
     }
 
-    public BaseResponse updateBus(BusRequest busRequest) {
+    public BaseResponse updateBus(VehicleRequest request) {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         try {
-            BusEntity bus = busRepository.findByBusId(busRequest.getBusId());
-            if (bus == null) {
-                return new BaseResponse(404, null, "Not found bus", "Not found bus", null);
+            VehicleEntity vehicle = vehicleRepository.findByVehicleId(request.getVehicleId());
+            if (vehicle == null) {
+                return new BaseResponse(404, null, "Không tìm thấy phương tiện", null, null);
             } else {
-                bus.setLicensePlate(busRequest.getLicensePlate());
-                bus.setTotalSeat(busRequest.getTotalSeat());
-                bus.setActive(busRequest.isActive());
-                bus.setUpdated_by(info.getUsername());
-                bus.setUpdated_at(LocalDateTime.now());
-                busRepository.save(bus);
-                return new BaseResponse(200, bus, "Update bus successfully", "No error", null);
+                vehicle.setLicensePlate(request.getLicensePlate());
+                vehicle.setTotalSeat(request.getTotalSeat());
+                vehicle.setActive(request.getActive());
+                vehicle.setUpdatedBy(info.getUsername());
+                vehicle.setUpdatedAt(LocalDateTime.now());
+                vehicleRepository.save(vehicle);
+                return new BaseResponse(200, vehicle, "Cập nhật phương tiện thành công", null, null);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public BaseResponse deleteBus(BusRequest busRequest) {
+    public BaseResponse deleteBus(VehicleRequest vehicleRequest) {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String role = info.getAuthorities()
                 .stream()
@@ -144,11 +157,11 @@ public class BusService {
                 .orElse(null);
         try {
             if("ROLE_ADMIN".equals(role)) {
-                BusEntity bus = busRepository.findByBusId(busRequest.getBusId());
+                VehicleEntity bus = vehicleRepository.findByVehicleId(vehicleRequest.getVehicleId());
                 if (bus == null) {
                     return new BaseResponse(404, null, "Not found bus", "Not found bus", null);
                 } else {
-                    busRepository.delete(bus);
+                    vehicleRepository.delete(bus);
                     return new BaseResponse(204, null, "Delete bus successfully", "No error", null);
                 }
             } else {

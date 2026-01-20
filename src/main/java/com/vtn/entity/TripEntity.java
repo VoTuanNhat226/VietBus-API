@@ -50,7 +50,7 @@ public class TripEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bus_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_bus_id"))
-    BusEntity bus;
+    VehicleEntity bus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_employee_id"))

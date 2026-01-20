@@ -1,5 +1,6 @@
 package com.vtn.service;
 
+import com.vtn.dto.request.EmployeeRequest;
 import com.vtn.dto.request.RouteRequest;
 import com.vtn.entity.RouteEntity;
 import com.vtn.repository.RouteRepository;
@@ -22,13 +23,32 @@ public class RouteService {
         this.routeRepository = routeRepository;
     }
 
-    public BaseResponse getAllRoutes() {
-        try {
-            List<RouteEntity> routes = routeRepository.findAll();
-            return new BaseResponse(200, routes, "Get all routes successfully", "Get all routes successfully",null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    private boolean isAllParametersNull(RouteRequest request) {
+        return ((request.getFromStation() == null) &&
+                (request.getToStation() == null) &&
+                (request.getDistanceKm() == null) &&
+                (request.getDurationMinutes() == null) &&
+                (request.getCreatedBy() == null) &&
+                (request.getUpdatedBy() == null) &&
+                (request.getActive() == null));
+    }
+
+    public BaseResponse getAllRoutes(RouteRequest request) {
+        List<RouteEntity> routes;
+        if (isAllParametersNull(request)) {
+            routes = routeRepository.findAll();
+        } else {
+            routes = routeRepository.getAllByCondition(
+                    request.getFromStation(),
+                    request.getToStation(),
+                    request.getDistanceKm(),
+                    request.getDurationMinutes(),
+                    request.getCreatedBy(),
+                    request.getUpdatedBy(),
+                    request.getActive()
+            );
         }
+        return new BaseResponse(200, routes, "Get all routes successfully", null, null);
     }
 
     public BaseResponse createRoute(RouteRequest routeRequest) {
@@ -53,8 +73,8 @@ public class RouteService {
             route.setDistanceKm(routeRequest.getDistanceKm());
             route.setDurationMinutes(routeRequest.getDurationMinutes());
             route.setActive(true);
-            route.setCreated_by(info.getUsername());
-            route.setCreated_at(LocalDateTime.now());
+            route.setCreatedBy(info.getUsername());
+            route.setCreatedAt(LocalDateTime.now());
             routeRepository.save(route);
             return new BaseResponse(201, route, "Create route successfully", "No error", null);
         } catch (Exception e) {

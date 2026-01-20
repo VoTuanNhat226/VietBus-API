@@ -22,9 +22,9 @@ public class RouteController {
     }
 
     @PostMapping(value = APIConstants.API_GET_ALL_ROUTE)
-    public ResponseEntity<BaseResponse> getAll() {
+    public ResponseEntity<BaseResponse> getAll(@RequestBody RouteRequest request) {
         long begin = System.currentTimeMillis();
-        BaseResponse response = routeService.getAllRoutes();
+        BaseResponse response = routeService.getAllRoutes(request);
         response.setTook(System.currentTimeMillis() - begin);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

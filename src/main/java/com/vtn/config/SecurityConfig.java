@@ -45,7 +45,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/app/auth/login",
                                 "/api/v1/app/auth/register",
-                                "/api/v1/app/employee/**"
+                                "/api/v1/app/employee/**",
+                                "/api/v1/app/vehicle/**",
+                                "/api/v1/app/seat/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

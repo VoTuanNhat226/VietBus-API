@@ -14,5 +14,7 @@ public class RouteRequest {
     private String toStation;
     private Integer distanceKm;
     private Integer durationMinutes;
-    private boolean active;
+    private Boolean active;
+    private String createdBy;
+    private String updatedBy;
 }

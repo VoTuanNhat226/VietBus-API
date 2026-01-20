@@ -18,7 +18,7 @@ public class TripService {
     private final TripRepository tripRepository;
     private final RouteRepository routeRepository;
     private final EmployeeRepository employeeRepository;
-    private final BusRepository busRepository;
+    private final VehicleRepository vehicleRepository;
     private final SeatRepository seatRepository;
     private final TripSeatRepository tripSeatRepository;
 
@@ -26,13 +26,13 @@ public class TripService {
     public TripService(TripRepository tripRepository,
                        RouteRepository routeRepository,
                        EmployeeRepository employeeRepository,
-                       BusRepository busRepository,
+                       VehicleRepository vehicleRepository,
                        SeatRepository seatRepository,
                        TripSeatRepository tripSeatRepository) {
         this.tripRepository = tripRepository;
         this.routeRepository = routeRepository;
         this.employeeRepository = employeeRepository;
-        this.busRepository = busRepository;
+        this.vehicleRepository = vehicleRepository;
         this.seatRepository = seatRepository;
         this.tripSeatRepository = tripSeatRepository;
     }
@@ -54,7 +54,7 @@ public class TripService {
             if (route == null) {
                 return new BaseResponse(400,null,"Route not found","Route not found",null);
             }
-            BusEntity bus = busRepository.findByBusId(tripRequest.getBusId());
+            VehicleEntity bus = vehicleRepository.findByVehicleId(tripRequest.getBusId());
             if (bus == null) {
                 return new BaseResponse(400,null,"Bus not found","Bus not found",null);
             }
@@ -77,7 +77,7 @@ public class TripService {
             trip.setCreated_at(LocalDateTime.now());
             tripRepository.save(trip);
 
-            List<SeatEntity> seats = seatRepository.findByBusId(bus.getBusId());
+            List<SeatEntity> seats = seatRepository.findByVehicleId(bus.getVehicleId());
 
             List<TripSeatEntity> tripSeats = seats.stream()
                     .map(seat -> {
