@@ -12,29 +12,21 @@ import java.util.UUID;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "routes")
+@Table(name = "stations")
 @Entity
-public class RouteEntity {
+public class StationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID routeId;
+    private UUID stationId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "from_station_id", nullable = false)
-    StationEntity fromStation;
+    @Column(name = "name", nullable = false)
+    String name;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "to_station_id", nullable = false)
-    StationEntity toStation;
+    @Column(name = "city")
+    String city;
 
-    @Column(name = "distance_km")
-    private Integer distanceKm;
-
-    @Column(name = "duration_minutes")
-    private Integer durationMinutes;
-
-    @Column(name = "active")
-    private boolean active;
+    @Column(name = "address")
+    String address;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

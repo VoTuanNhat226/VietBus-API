@@ -1,9 +1,10 @@
 package com.vtn.service;
 
-import com.vtn.dto.request.EmployeeRequest;
 import com.vtn.dto.request.RouteRequest;
 import com.vtn.entity.RouteEntity;
+import com.vtn.entity.StationEntity;
 import com.vtn.repository.RouteRepository;
+import com.vtn.repository.StationRepository;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,15 +18,19 @@ import java.util.List;
 @Service
 public class RouteService {
     private final RouteRepository routeRepository;
+    private final StationRepository stationRepository;
 
     @Autowired
-    public RouteService(RouteRepository routeRepository) {
+    public RouteService(
+            RouteRepository routeRepository,
+            StationRepository stationRepository) {
         this.routeRepository = routeRepository;
+        this.stationRepository = stationRepository;
     }
 
     private boolean isAllParametersNull(RouteRequest request) {
-        return ((request.getFromStation() == null) &&
-                (request.getToStation() == null) &&
+        return ((request.getFromStationId() == null) &&
+                (request.getToStationId() == null) &&
                 (request.getDistanceKm() == null) &&
                 (request.getDurationMinutes() == null) &&
                 (request.getCreatedBy() == null) &&
@@ -39,8 +44,8 @@ public class RouteService {
             routes = routeRepository.findAll();
         } else {
             routes = routeRepository.getAllByCondition(
-                    request.getFromStation(),
-                    request.getToStation(),
+                    request.getFromStationId(),
+                    request.getToStationId(),
                     request.getDistanceKm(),
                     request.getDurationMinutes(),
                     request.getCreatedBy(),
@@ -54,29 +59,49 @@ public class RouteService {
     public BaseResponse createRoute(RouteRequest routeRequest) {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         try {
-            RouteEntity routeEntity = routeRepository.findByFromStationAndToStation(routeRequest.getFromStation(), routeRequest.getToStation());
+            RouteEntity routeEntity = routeRepository.findByFromStationAndToStation(routeRequest.getFromStationId(), routeRequest.getToStationId());
             if(routeEntity != null) {
-                return new BaseResponse(400, null,"Route already exists", "Route already exists",null);
+                return new BaseResponse(400, null,"Tuyến xe đã tồn tại", null,null);
             }
-            if(routeRequest.getFromStation().equals(routeRequest.getToStation())) {
-                return new BaseResponse(400, null,"From Station equal To Station", "From Station equal To Station",null);
+            if(routeRequest.getFromStationId().equals(routeRequest.getToStationId())) {
+                return new BaseResponse(400, null,"Điểm đi trùng điểm đến", null,null);
             }
             if(routeRequest.getDistanceKm() == 0) {
-                return new BaseResponse(400, null,"Distance Km must be greater than 0", "Distance Km must be greater than 0",null);
+                return new BaseResponse(400, null,"Khoảng cách phải lớn hơn 0", null,null);
             }
             if(routeRequest.getDurationMinutes() == 0) {
-                return new BaseResponse(400, null,"Duration minutes must be greater than 0", "Duration minutes must be greater than 0",null);
+                return new BaseResponse(400, null,"Thời gian phải lớn hơn 0", null,null);
             }
+
+            StationEntity fromStaion = stationRepository.findByStationId(routeRequest.getFromStationId());
+            StationEntity toStaion = stationRepository.findByStationId(routeRequest.getToStationId());
+
             RouteEntity route = new RouteEntity();
-            route.setFromStation(routeRequest.getFromStation());
-            route.setToStation(routeRequest.getToStation());
+            route.setFromStation(fromStaion);
+            route.setToStation(toStaion);
             route.setDistanceKm(routeRequest.getDistanceKm());
             route.setDurationMinutes(routeRequest.getDurationMinutes());
-            route.setActive(true);
+            route.setActive(routeRequest.getActive());
             route.setCreatedBy(info.getUsername());
             route.setCreatedAt(LocalDateTime.now());
             routeRepository.save(route);
             return new BaseResponse(201, route, "Create route successfully", "No error", null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public BaseResponse updateRoute(RouteRequest routeRequest) {
+        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        try {
+            RouteEntity route = routeRepository.findByRouteId(routeRequest.getRouteId());
+            if(route != null) {
+                route.setActive(routeRequest.getActive());
+                route.setUpdatedBy(info.getUsername());
+                route.setUpdatedAt(LocalDateTime.now());
+                routeRepository.save(route);
+            }
+            return new BaseResponse(200, route, "Update route successfully", "No error", null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

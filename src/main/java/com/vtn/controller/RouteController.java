@@ -7,7 +7,6 @@ import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.RouteMatcher;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,7 +33,19 @@ public class RouteController {
         long begin = System.currentTimeMillis();
         BaseResponse response = routeService.createRoute(request);
         response.setTook(System.currentTimeMillis() - begin);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
+    }
+
+    @PostMapping(value = APIConstants.API_UPDATE_ROUTE)
+    public ResponseEntity<BaseResponse> update(@RequestBody RouteRequest request) {
+        long begin = System.currentTimeMillis();
+        BaseResponse response = routeService.updateRoute(request);
+        response.setTook(System.currentTimeMillis() - begin);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
     }
 
     @PostMapping(value = APIConstants.API_DELETE_ROUTE)
@@ -42,6 +53,8 @@ public class RouteController {
         long begin = System.currentTimeMillis();
         BaseResponse response = routeService.deleteRoute(request);
         response.setTook(System.currentTimeMillis() - begin);
-        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
     }
 }

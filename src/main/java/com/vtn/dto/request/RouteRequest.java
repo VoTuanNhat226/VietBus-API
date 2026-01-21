@@ -10,8 +10,8 @@ import java.util.UUID;
 @Setter
 public class RouteRequest {
     private UUID routeId;
-    private String fromStation;
-    private String toStation;
+    private UUID fromStationId;
+    private UUID toStationId;
     private Integer distanceKm;
     private Integer durationMinutes;
     private Boolean active;

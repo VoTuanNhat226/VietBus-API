@@ -14,18 +14,18 @@ public interface RouteRepository extends JpaRepository<RouteEntity, Integer> {
     RouteEntity findByRouteId(UUID routeId);
 
     @Query("""
-        SELECT r 
+        SELECT r
         FROM RouteEntity r
-        WHERE r.fromStation = :fromStation
-        AND r.toStation = :toStation    
+        WHERE r.fromStation.stationId = :fromStationId
+        AND r.toStation.stationId = :toStationId
     """)
-    RouteEntity findByFromStationAndToStation(String fromStation, String toStation);
+    RouteEntity findByFromStationAndToStation(UUID fromStationId, UUID toStationId);
 
     @Query("""
     SELECT r
     FROM RouteEntity r
-    WHERE (:fromStation IS NULL OR r.fromStation LIKE %:fromStation%)
-        AND (:toStation IS NULL OR r.toStation LIKE %:toStation%)
+    WHERE (:fromStationId IS NULL OR r.fromStation.stationId = :fromStationId)
+        AND (:toStationId IS NULL OR r.toStation.stationId = :toStationId)
         AND (:distanceKm IS NULL OR r.distanceKm = :distanceKm)
         AND (:durationMinutes IS NULL OR r.durationMinutes = :durationMinutes)
         AND (:createdBy IS NULL OR r.createdBy LIKE %:createdBy%)
@@ -33,8 +33,8 @@ public interface RouteRepository extends JpaRepository<RouteEntity, Integer> {
         AND (:active IS NULL OR r.active = :active)
     """)
     List<RouteEntity> getAllByCondition(
-            @Param("fromStation") String fromStation,
-            @Param("toStation") String toStation,
+            @Param("fromStationId") UUID fromStationId,
+            @Param("toStationId") UUID toStationId,
             @Param("distanceKm") Integer distanceKm,
             @Param("durationMinutes") Integer durationMinutes,
             @Param("createdBy") String createdBy,
