@@ -23,13 +23,21 @@ public class VehicleController {
     @PostMapping(value = APIConstants.API_GET_ALL_VEHICLES)
     public ResponseEntity<BaseResponse> getAll() {
         long beginTime = System.currentTimeMillis();
-        BaseResponse response = vehicleService.getAllBuses();
+        BaseResponse response = vehicleService.getAllVehicles();
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping(value = APIConstants.API_GET_ALL_VEHICLES_ACTIVE)
+    public ResponseEntity<BaseResponse> getAllVehiclesActive() {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = vehicleService.getAllVehiclesActive();
         response.setTook(System.currentTimeMillis() - beginTime);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping(value = APIConstants.API_GET_VEHICLE_BY_VEHICLE_ID)
-    public ResponseEntity<BaseResponse> getBusById(@RequestBody VehicleRequest vehicleRequest) {
+    public ResponseEntity<BaseResponse> getVehicleById(@RequestBody VehicleRequest vehicleRequest) {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = vehicleService.getVehicleById(vehicleRequest);
         response.setTook(System.currentTimeMillis() - beginTime);

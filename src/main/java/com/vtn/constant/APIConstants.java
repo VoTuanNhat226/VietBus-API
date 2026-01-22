@@ -14,6 +14,7 @@ public class APIConstants {
     //Employee
     public static final String EMPLOYEE = "/employee";
     public static final String API_GET_ALL_EMPLOYEES = API_VIET_BUS + EMPLOYEE + "/get-all";
+    public static final String API_GET_ALL_EMPLOYEES_BY_POSITION = API_VIET_BUS + EMPLOYEE + "/get-all-by-position";
     public static final String API_CREATE_EMPLOYEE = API_VIET_BUS + EMPLOYEE + "/create";
     public static final String API_UPDATE_EMPLOYEE = API_VIET_BUS + EMPLOYEE + "/update";
     public static final String API_DELETE_EMPLOYEE = API_VIET_BUS + EMPLOYEE + "/delete";
@@ -21,6 +22,7 @@ public class APIConstants {
     //Vehicle
     public static final String VEHICLE = "/vehicle";
     public static final String API_GET_ALL_VEHICLES = API_VIET_BUS + VEHICLE + "/get-all";
+    public static final String API_GET_ALL_VEHICLES_ACTIVE = API_VIET_BUS + VEHICLE + "/get-all-active";
     public static final String API_GET_VEHICLE_BY_VEHICLE_ID = API_VIET_BUS + VEHICLE + "/get-by-id";
     public static final String API_CREATE_VEHICLE = API_VIET_BUS + VEHICLE + "/create";
     public static final String API_UPDATE_VEHICLE = API_VIET_BUS + VEHICLE + "/update";
@@ -29,6 +31,7 @@ public class APIConstants {
     //Route
     public static final String ROUTE = "/route";
     public static final String API_GET_ALL_ROUTE = API_VIET_BUS + ROUTE + "/get-all";
+    public static final String API_GET_ALL_ROUTE_ACTIVE = API_VIET_BUS + ROUTE + "/get-all-active";
     public static final String API_CREATE_ROUTE = API_VIET_BUS + ROUTE + "/create";
     public static final String API_UPDATE_ROUTE = API_VIET_BUS + ROUTE + "/update";
     public static final String API_DELETE_ROUTE = API_VIET_BUS + ROUTE + "/delete";

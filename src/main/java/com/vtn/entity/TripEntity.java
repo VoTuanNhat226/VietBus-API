@@ -30,29 +30,29 @@ public class TripEntity {
     BigDecimal price;
 
     @Column(name = "status")
-    String status; //OPEN - RUNNING - CLOSED
+    String status; //CREATED → SCHEDULED → OPEN_FOR_BOOKING → CLOSED_FOR_BOOKING → DEPARTED → IN_PROGRESS → COMPLETED
 
     @Column(name = "created_at")
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String created_by;
+    private String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updated_by;
+    private String updatedBy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "route_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_route_id"))
     RouteEntity route;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bus_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_bus_id"))
-    VehicleEntity bus;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vehicle_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_vehicle_id"))
+    VehicleEntity vehicle;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_employee_id"))
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "driver_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_driver_id"))
     EmployeeEntity driver;
 }

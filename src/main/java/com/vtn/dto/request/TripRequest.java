@@ -16,6 +16,8 @@ public class TripRequest {
     private BigDecimal price;
     private String status;
     private UUID routeId;
-    private UUID busId;
+    private UUID vehicleId;
     private UUID driverId;
+    private UUID fromStationId;
+    private UUID toStationId;
 }

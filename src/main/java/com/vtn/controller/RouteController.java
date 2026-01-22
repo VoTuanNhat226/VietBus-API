@@ -28,6 +28,14 @@ public class RouteController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping(value = APIConstants.API_GET_ALL_ROUTE_ACTIVE)
+    public ResponseEntity<BaseResponse> getAllRoutesActive() {
+        long begin = System.currentTimeMillis();
+        BaseResponse response = routeService.getAllRoutesActive();
+        response.setTook(System.currentTimeMillis() - begin);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping(value = APIConstants.API_CREATE_ROUTE)
     public ResponseEntity<BaseResponse> create(@RequestBody RouteRequest request) {
         long begin = System.currentTimeMillis();

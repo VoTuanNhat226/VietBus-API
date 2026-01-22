@@ -57,6 +57,15 @@ public class EmployeeService {
         return new BaseResponse(200, employees, "Get all employees successfully", null, null);
     }
 
+    public BaseResponse getAllEmployeeActiveByPosition(EmployeeRequest request) {
+        try {
+            List<EmployeeEntity> employeeActive = employeeRepository.getAllEmployeeActiveByPosition(request.getPosition());
+            return new BaseResponse(200, employeeActive, "Get all employees active by position successfully", null, null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     public BaseResponse createEmployee(EmployeeRequest employeeRequest) {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext()

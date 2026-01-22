@@ -28,6 +28,14 @@ public class EmployeeController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping(value = APIConstants.API_GET_ALL_EMPLOYEES_BY_POSITION)
+    public ResponseEntity<BaseResponse> getAllByPosition(@RequestBody EmployeeRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = employeeService.getAllEmployeeActiveByPosition(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping(APIConstants.API_CREATE_EMPLOYEE)
     public ResponseEntity<BaseResponse> create(@RequestBody EmployeeRequest request) {
         long beginTime = System.currentTimeMillis();

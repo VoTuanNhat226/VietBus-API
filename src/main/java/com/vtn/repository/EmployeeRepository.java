@@ -36,6 +36,14 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
     @Query("""
         SELECT e
         FROM EmployeeEntity e
+        WHERE e.active = true
+            AND e.position = :position
+    """)
+    List<EmployeeEntity> getAllEmployeeActiveByPosition(@Param("position") String position);
+
+    @Query("""
+        SELECT e
+        FROM EmployeeEntity e
         WHERE (e.firstName LIKE %:firstName%)
             AND (e.lastName LIKE %:lastName%)
             AND (e.phoneNumber LIKE %:phoneNumber%)       

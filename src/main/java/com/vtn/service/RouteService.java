@@ -3,6 +3,7 @@ package com.vtn.service;
 import com.vtn.dto.request.RouteRequest;
 import com.vtn.entity.RouteEntity;
 import com.vtn.entity.StationEntity;
+import com.vtn.entity.TripEntity;
 import com.vtn.repository.RouteRepository;
 import com.vtn.repository.StationRepository;
 import com.vtn.utils.BaseResponse;
@@ -54,6 +55,15 @@ public class RouteService {
             );
         }
         return new BaseResponse(200, routes, "Get all routes successfully", null, null);
+    }
+
+    public BaseResponse getAllRoutesActive() {
+        try {
+            List<RouteEntity> routes = routeRepository.findAllRoutesActive();
+            return new BaseResponse(200, routes, "Get all routes active successfully",null,null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public BaseResponse createRoute(RouteRequest routeRequest) {

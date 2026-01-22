@@ -41,4 +41,11 @@ public interface RouteRepository extends JpaRepository<RouteEntity, Integer> {
             @Param("updatedBy") String updatedBy,
             @Param("active") Boolean active
     );
+
+    @Query("""
+        SELECT r
+        FROM RouteEntity r
+        WHERE r.active = true
+    """)
+    List<RouteEntity> findAllRoutesActive();
 }

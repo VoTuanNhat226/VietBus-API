@@ -30,10 +30,19 @@ public class VehicleService {
         this.seatRepository = seatRepository;
     }
 
-    public BaseResponse getAllBuses() {
+    public BaseResponse getAllVehicles() {
         try {
             List<VehicleEntity> buses = vehicleRepository.findAll();
-            return new BaseResponse(200, buses, "Get all buses successfully", "Get all buses successfully", null);
+            return new BaseResponse(200, buses, "Get all buses successfully", null, null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public BaseResponse getAllVehiclesActive() {
+        try {
+            List<VehicleEntity> buses = vehicleRepository.findAllVehiclesActive();
+            return new BaseResponse(200, buses, "Get all buses active successfully", null, null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
