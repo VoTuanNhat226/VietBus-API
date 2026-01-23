@@ -64,19 +64,4 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
             @Param("status") String status,
             @Param("tripCode") String tripCode
     );
-
-    @Query("""
-        SELECT COUNT(t)
-        FROM TripSeatEntity t
-        WHERE t.trip.tripId = :tripId
-            AND t.status = 'SOLD'
-    """)
-    Integer countTripSeatSoldByTripId(@Param("tripId") UUID tripId);
-
-    @Query("""
-        SELECT t
-        FROM TripSeatEntity t
-        WHERE t.trip.tripId = :tripId
-    """)
-    List<TripSeatEntity> findAllTripSeatsByTripId(UUID tripId);
 }

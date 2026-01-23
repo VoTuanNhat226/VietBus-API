@@ -90,24 +90,6 @@ public class TripService {
         }
     }
 
-    public BaseResponse countTripSeatSoldByTripId(TripRequest request) {
-        try {
-            Integer count = tripRepository.countTripSeatSoldByTripId(request.getTripId());
-            return new BaseResponse(200, count, "Get trip seat sold successfully",null,null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public BaseResponse getAllTripSeatsByTripId(TripRequest request) {
-        try {
-            List<TripSeatEntity> tripSeats = tripRepository.findAllTripSeatsByTripId(request.getTripId());
-            return new BaseResponse(200, tripSeats, "Get all trip seats successfully",null,null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @Transactional
     public BaseResponse createTrip(TripRequest tripRequest) {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
