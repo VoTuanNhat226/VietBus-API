@@ -11,10 +11,13 @@ import java.util.UUID;
 @Setter
 public class TripRequest {
     private UUID tripId;
+    private String tripCode;
     private LocalDateTime departureTime;
     private LocalDateTime arrivalTime;
     private BigDecimal price;
     private String status;
+    private String restStop;
+    private LocalDateTime restTime;
     private UUID routeId;
     private UUID vehicleId;
     private UUID driverId;

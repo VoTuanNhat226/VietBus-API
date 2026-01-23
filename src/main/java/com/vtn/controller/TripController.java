@@ -27,6 +27,30 @@ public class TripController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping(value = APIConstants.API_COUNT_TRIP_SEAT_SOLD_BY_TRIP_ID)
+    public ResponseEntity<BaseResponse> countTripSeatHoldByTripId(@RequestBody TripRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = tripService.countTripSeatSoldByTripId(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping(value = APIConstants.API_GET_ALL_TRIP_SEAT_BY_TRIP_ID)
+    public ResponseEntity<BaseResponse> getAllTripSeatByTripId(@RequestBody TripRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = tripService.getAllTripSeatsByTripId(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping(value = APIConstants.API_GET_TRIP_BY_TRIP_ID)
+    public ResponseEntity<BaseResponse> getTripByTripId(@RequestBody TripRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = tripService.getTripByTripId(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping(value = APIConstants.API_CREATE_TRIP)
     public ResponseEntity<BaseResponse> create(@RequestBody TripRequest request) {
         long beginTime = System.currentTimeMillis();

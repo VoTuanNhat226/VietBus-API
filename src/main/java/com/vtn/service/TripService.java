@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,6 +24,10 @@ public class TripService {
     private final VehicleRepository vehicleRepository;
     private final SeatRepository seatRepository;
     private final TripSeatRepository tripSeatRepository;
+
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int CODE_LENGTH = 10;
+    private static final SecureRandom random = new SecureRandom();
 
     @Autowired
     public TripService(TripRepository tripRepository,
@@ -39,12 +44,21 @@ public class TripService {
         this.tripSeatRepository = tripSeatRepository;
     }
 
+    private String generateTripCode() {
+        StringBuilder sb = new StringBuilder(CODE_LENGTH);
+        for (int i = 0; i < CODE_LENGTH; i++) {
+            sb.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
+        }
+        return sb.toString();
+    }
+
     private boolean isAllParametersNull(TripRequest request) {
         return ((request.getFromStationId() == null) &&
                 (request.getToStationId() == null) &&
                 (request.getDriverId() == null) &&
                 (request.getVehicleId() == null) &&
-                (request.getStatus() == null));
+                (request.getStatus() == null) &&
+                (request.getTripCode() == null));
     }
 
     public BaseResponse getAllTrips(TripRequest request) {
@@ -57,10 +71,41 @@ public class TripService {
                     request.getToStationId(),
                     request.getDriverId(),
                     request.getVehicleId(),
-                    request.getStatus()
+                    request.getStatus(),
+                    request.getTripCode()
             );
         }
         return new BaseResponse(200, trips, "Get all trips successfully","Get all trips successfully",null);
+    }
+
+    public BaseResponse getTripByTripId(TripRequest request) {
+        try {
+            TripEntity trip = tripRepository.findById(request.getTripId()).orElse(null);
+            if(trip == null) {
+                return new BaseResponse(400, null,"Không tìm thấy chuyến xe",null,null);
+            }
+            return new BaseResponse(200, trip, "Get trip successfully",null,null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public BaseResponse countTripSeatSoldByTripId(TripRequest request) {
+        try {
+            Integer count = tripRepository.countTripSeatSoldByTripId(request.getTripId());
+            return new BaseResponse(200, count, "Get trip seat sold successfully",null,null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public BaseResponse getAllTripSeatsByTripId(TripRequest request) {
+        try {
+            List<TripSeatEntity> tripSeats = tripRepository.findAllTripSeatsByTripId(request.getTripId());
+            return new BaseResponse(200, tripSeats, "Get all trip seats successfully",null,null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Transactional
@@ -115,10 +160,19 @@ public class TripService {
             }
 
             TripEntity trip = new TripEntity();
+            String tripCode;
+            do {
+                tripCode = generateTripCode();
+            } while (tripRepository.existsByTripCode(tripCode));
+
+            trip.setTripCode(tripCode);
+
             trip.setDepartureTime(tripRequest.getDepartureTime());
             trip.setArrivalTime(tripRequest.getArrivalTime());
+            trip.setRestTime(tripRequest.getRestTime());
             trip.setPrice(tripRequest.getPrice());
             trip.setStatus("CREATED");
+            trip.setRestStop(tripRequest.getRestStop());
             trip.setRoute(route);
             trip.setVehicle(vehicle);
             trip.setDriver(driver);

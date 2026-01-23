@@ -20,6 +20,9 @@ public class TripEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID tripId;
 
+    @Column(name = "trip_code", nullable = false, unique = true, length = 10)
+    String tripCode;
+
     @Column(name = "departure_time", nullable = false)
     LocalDateTime departureTime;
 
@@ -28,6 +31,12 @@ public class TripEntity {
 
     @Column(name = "price", nullable = false)
     BigDecimal price;
+
+    @Column(name = "rest_stop")
+    String restStop;
+
+    @Column(name = "rest_time")
+    LocalDateTime restTime;
 
     @Column(name = "status")
     String status; //CREATED → SCHEDULED → OPEN_FOR_BOOKING → CLOSED_FOR_BOOKING → DEPARTED → IN_PROGRESS → COMPLETED
