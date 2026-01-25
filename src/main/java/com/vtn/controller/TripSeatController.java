@@ -21,19 +21,21 @@ public class TripSeatController {
         this.tripSeatService = tripSeatService;
     }
 
-    @PostMapping(value = APIConstants.API_COUNT_TRIP_SEAT_SOLD_BY_TRIP_ID)
-    public ResponseEntity<BaseResponse> countTripSeatHoldByTripId(@RequestBody TripSeatRequest request) {
-        long beginTime = System.currentTimeMillis();
-        BaseResponse response = tripSeatService.countTripSeatSoldByTripId(request);
-        response.setTook(System.currentTimeMillis() - beginTime);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
     @PostMapping(value = APIConstants.API_GET_ALL_TRIP_SEAT_BY_TRIP_ID)
     public ResponseEntity<BaseResponse> getAllTripSeatByTripId(@RequestBody TripSeatRequest request) {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = tripSeatService.getAllTripSeatsByTripId(request);
         response.setTook(System.currentTimeMillis() - beginTime);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping(value = APIConstants.API_COUNT_TRIP_SEAT_SOLD_BY_TRIP_ID)
+    public ResponseEntity<BaseResponse> countTripSeatSoldByTripId(@RequestBody TripSeatRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = tripSeatService.countTripSeatSoldByTripId(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
     }
 }
