@@ -29,7 +29,7 @@ public class EmployeeEntity {
     private String phoneNumber;
 
     @Column(name = "position", nullable = false)
-    private String position; // ADMIN - STAFF - DRIVER
+    private String position; // ADMIN - MANAGER - STAFF - DRIVER
 
     @Column(name = "active")
     private boolean active;
