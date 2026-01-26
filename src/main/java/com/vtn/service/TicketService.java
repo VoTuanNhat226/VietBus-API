@@ -79,7 +79,11 @@ public class TicketService {
         ticket.setTripSeat(tripSeat);
         ticket.setPassenger(passenger);
         ticket.setPrice(request.getTicketPrice());
+        ticket.setNote(request.getNote());
+        ticket.setPaymentType(request.getPaymentType());
         ticket.setSoldBy(info.getUsername());
+        ticket.setSoldAt(LocalDateTime.now());
+        ticket.setCreatedBy(info.getUsername());
         ticket.setCreatedAt(LocalDateTime.now());
         ticketRepository.save(ticket);
 
@@ -94,6 +98,8 @@ public class TicketService {
             payment.setAmount(ticket.getPrice());
             payment.setMethod(request.getPaymentMethod());
             payment.setStatus("SUCCESS");
+            payment.setPaidAt(LocalDateTime.now());
+            payment.setCreatedBy(info.getUsername());
             payment.setCreatedAt(LocalDateTime.now());
             paymentRepository.save(payment);
         } else { // PAY_LATER

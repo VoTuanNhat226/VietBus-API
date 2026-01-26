@@ -53,7 +53,8 @@ public class SecurityConfig {
                                 "/api/v1/app/vehicle/**",
                                 "/api/v1/app/seat/**",
                                 "/api/v1/app/station/**",
-                                "/api/v1/app/ticket/**"
+                                "/api/v1/app/ticket/**",
+                                "/api/v1/app/payment/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

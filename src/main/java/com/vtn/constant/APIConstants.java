@@ -11,6 +11,12 @@ public class APIConstants {
     public static final String AUTH = "/auth";
     public static final String API_LOGIN = API_VIET_BUS + AUTH + "/login";
 
+    //Account
+    public static final String ACCOUNT = "/account";
+    public static final String API_GET_ALL_ACCOUNT = API_VIET_BUS + ACCOUNT + "/get-all";
+    public static final String API_CREATE_ACCOUNT = API_VIET_BUS + ACCOUNT + "/create";
+    public static final String API_GET_ALL_ACCOUNT_BY_ROLE = API_VIET_BUS + ACCOUNT + "/get-all-by-role";
+
     //Employee
     public static final String EMPLOYEE = "/employee";
     public static final String API_GET_ALL_EMPLOYEES = API_VIET_BUS + EMPLOYEE + "/get-all";
@@ -45,12 +51,6 @@ public class APIConstants {
     public static final String API_UPDATE_TRIP = API_VIET_BUS + TRIP + "/update";
     public static final String API_DELETE_TRIP = API_VIET_BUS + TRIP + "/delete";
 
-    //Account
-    public static final String ACCOUNT = "/account";
-    public static final String API_GET_ALL_ACCOUNT = API_VIET_BUS + ACCOUNT + "/get-all";
-    public static final String API_CREATE_ACCOUNT = API_VIET_BUS + ACCOUNT + "/create";
-    public static final String API_GET_ALL_ACCOUNT_BY_ROLE = API_VIET_BUS + ACCOUNT + "/get-all-by-role";
-
     //Seat
     public static final String SEAT = "/seat";
     public static final String API_GET_SEAT_BY_VEHICLE_ID = API_VIET_BUS + SEAT + "/get-by-vehicle-id";
@@ -69,4 +69,7 @@ public class APIConstants {
     public static final String TICKET = "/ticket";
     public static final String API_CREATE_TICKET = API_VIET_BUS + TICKET + "/create";
 
+    //Payment
+    public static final String PAYMENT = "/payment";
+    public static final String API_GET_ALL_PAYMENT = API_VIET_BUS + PAYMENT + "/get-all";
 }
