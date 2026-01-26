@@ -38,9 +38,9 @@ public class TripSeatService {
         }
     }
 
-    public BaseResponse getAllTripSeatsCanSell() {
+    public BaseResponse getAllTripSeatAvailableByTripId(TripSeatRequest request) {
         try {
-            List<TripSeatResponse> result  = tripSeatRepository.findAllTripSeatCanSell()
+            List<TripSeatResponse> result  = tripSeatRepository.findAllTripSeatAvailableByTripId(request.getTripId())
                     .stream()
                     .map(ts -> new TripSeatResponse(
                             //TripSeat

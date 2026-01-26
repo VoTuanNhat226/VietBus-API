@@ -29,10 +29,10 @@ public class TripSeatController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PostMapping(value = APIConstants.API_GET_ALL_TRIP_SEAT_CAN_SELL)
-    public ResponseEntity<BaseResponse> getAllTripSeatCanSell() {
+    @PostMapping(value = APIConstants.API_GET_ALL_TRIP_SEAT_AVAILABLE_BY_TRIP_ID)
+    public ResponseEntity<BaseResponse> getAllTripSeatAvailableByTripId(@RequestBody TripSeatRequest request) {
         long beginTime = System.currentTimeMillis();
-        BaseResponse response = tripSeatService.getAllTripSeatsCanSell();
+        BaseResponse response = tripSeatService.getAllTripSeatAvailableByTripId(request);
         response.setTook(System.currentTimeMillis() - beginTime);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

@@ -6,9 +6,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface TripSeatRepository extends JpaRepository<TripSeatEntity, UUID> {
+    @Query("""
+        SELECT ts 
+        FROM TripSeatEntity ts
+            WHERE ts.id = :tripSeatId
+    """)
+    TripSeatEntity findByTripSeatId(@Param("tripSeatId") UUID tripSeatId);
+
     @Query("""
         SELECT COUNT(t)
         FROM TripSeatEntity t
@@ -28,8 +36,9 @@ public interface TripSeatRepository extends JpaRepository<TripSeatEntity, UUID> 
         SELECT ts
         FROM TripSeatEntity ts
         JOIN FETCH TripEntity t ON t.tripId = ts.trip.tripId
-        WHERE t.status = 'OPEN_FOR_BOOKING'
+        WHERE t.tripId = :tripId 
+            AND t.status = 'OPEN_FOR_BOOKING'
             AND ts.status = 'AVAILABLE'
     """)
-    List<TripSeatEntity> findAllTripSeatCanSell();
+    List<TripSeatEntity> findAllTripSeatAvailableByTripId(@Param("tripId") UUID tripId);
 }

@@ -39,6 +39,7 @@ public class APIConstants {
     //Trip
     public static final String TRIP = "/trip";
     public static final String API_GET_ALL_TRIP = API_VIET_BUS + TRIP + "/get-all";
+    public static final String API_GET_ALL_TRIP_OPEN_FOR_BOOKING = API_VIET_BUS + TRIP + "/get-all-open-booking";
     public static final String API_GET_TRIP_BY_TRIP_ID = API_VIET_BUS + TRIP + "/get-by-id";
     public static final String API_CREATE_TRIP = API_VIET_BUS + TRIP + "/create";
     public static final String API_UPDATE_TRIP = API_VIET_BUS + TRIP + "/update";
@@ -58,10 +59,14 @@ public class APIConstants {
     public static final String TRIP_SEAT = "/trip-seat";
     public static final String API_COUNT_TRIP_SEAT_SOLD_BY_TRIP_ID = API_VIET_BUS + TRIP_SEAT + "/count-trip-seat-sold-by-trip-id";
     public static final String API_GET_ALL_TRIP_SEAT_BY_TRIP_ID = API_VIET_BUS + TRIP_SEAT + "/get-all-trip-seat-by-trip-id";
-    public static final String API_GET_ALL_TRIP_SEAT_CAN_SELL = API_VIET_BUS + TRIP_SEAT + "/get-list-can-sell";
+    public static final String API_GET_ALL_TRIP_SEAT_AVAILABLE_BY_TRIP_ID = API_VIET_BUS + TRIP_SEAT + "/get-all-trip-seat-available-by-trip-id";
 
     //Station
     public static final String STATION = "/station";
     public static final String API_GET_ALL_STATION = API_VIET_BUS + STATION + "/get-all";
+
+    //Ticket
+    public static final String TICKET = "/ticket";
+    public static final String API_CREATE_TICKET = API_VIET_BUS + TICKET + "/create";
 
 }

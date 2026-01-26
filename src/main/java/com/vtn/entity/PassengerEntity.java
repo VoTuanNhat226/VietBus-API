@@ -12,7 +12,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "passsengers")
+@Table(name = "passengers")
 @Entity
 public class PassengerEntity {
     @Id

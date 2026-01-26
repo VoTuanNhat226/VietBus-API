@@ -27,6 +27,14 @@ public class TripController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping(value = APIConstants.API_GET_ALL_TRIP_OPEN_FOR_BOOKING)
+    public ResponseEntity<BaseResponse> getAllTripOpenBooking() {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = tripService.getAllTripOpenBooking();
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping(value = APIConstants.API_GET_TRIP_BY_TRIP_ID)
     public ResponseEntity<BaseResponse> getTripByTripId(@RequestBody TripRequest request) {
         long beginTime = System.currentTimeMillis();

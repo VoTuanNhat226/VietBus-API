@@ -64,4 +64,11 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
             @Param("status") String status,
             @Param("tripCode") String tripCode
     );
+
+    @Query("""
+        SELECT t
+        FROM TripEntity t
+        WHERE t.status = :status
+    """)
+    List<TripEntity> getAllTripOpenBooking(@Param("status") String status);
 }

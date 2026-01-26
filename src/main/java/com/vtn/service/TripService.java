@@ -78,6 +78,15 @@ public class TripService {
         return new BaseResponse(200, trips, "Get all trips successfully","Get all trips successfully",null);
     }
 
+    public BaseResponse getAllTripOpenBooking() {
+        try {
+            List<TripEntity> trips = tripRepository.getAllTripOpenBooking("OPEN_FOR_BOOKING");
+            return new BaseResponse(200, trips, "Get all trip can sell successfully",null,null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public BaseResponse getTripByTripId(TripRequest request) {
         try {
             TripEntity trip = tripRepository.findById(request.getTripId()).orElse(null);

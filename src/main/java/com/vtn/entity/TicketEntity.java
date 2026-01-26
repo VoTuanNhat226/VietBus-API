@@ -20,8 +20,8 @@ public class TicketEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID ticketId;
 
-    @Column(name = "trip_code", nullable = false, unique = true, length = 10)
-    private String tripCode;
+    @Column(name = "ticket_code", nullable = false, unique = true, length = 10)
+    private String ticketCode;
 
     @Column(name = "note")
     private String note;
@@ -30,22 +30,28 @@ public class TicketEntity {
     private BigDecimal price;
 
     @Column(name = "status")
-    private String status;
+    private String status; //UNPAID - PAID
+
+    @Column(name = "payment_type")
+    private String paymentType;
 
     @Column(name = "sold_by")
     private String soldBy;
 
+    @Column(name = "sold_at")
+    private LocalDateTime soldAt;
+
     @Column(name = "created_at")
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String created_by;
+    private String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updated_by;
+    private String updatedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
@@ -56,6 +62,6 @@ public class TicketEntity {
     private TripSeatEntity tripSeat;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "passenger_id", nullable = false)
+    @JoinColumn(name = "passenger_id")
     private PassengerEntity passenger;
 }
