@@ -29,6 +29,14 @@ public class TripSeatController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping(value = APIConstants.API_GET_ALL_TRIP_SEAT_CAN_SELL)
+    public ResponseEntity<BaseResponse> getAllTripSeatCanSell() {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = tripSeatService.getAllTripSeatsCanSell();
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping(value = APIConstants.API_COUNT_TRIP_SEAT_SOLD_BY_TRIP_ID)
     public ResponseEntity<BaseResponse> countTripSeatSoldByTripId(@RequestBody TripSeatRequest request) {
         long beginTime = System.currentTimeMillis();

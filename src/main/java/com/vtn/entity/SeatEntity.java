@@ -24,13 +24,13 @@ public class SeatEntity {
     private String seatNumber;
 
     @Column(name = "floor")
-    Integer floor; // 1 hoặc 2
+    private Integer floor; // 1 hoặc 2
 
     @Column(name = "seat_row")
-    Integer seatRow; // hàng (1 → 6)
+    private Integer seatRow; // hàng (1 → 6)
 
     @Column(name = "seat_column")
-    String seatColumn; // A, B, C
+    private String seatColumn; // A, B, C
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

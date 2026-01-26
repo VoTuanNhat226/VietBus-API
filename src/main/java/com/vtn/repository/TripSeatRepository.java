@@ -23,4 +23,13 @@ public interface TripSeatRepository extends JpaRepository<TripSeatEntity, UUID> 
         WHERE t.trip.tripId = :tripId
     """)
     List<TripSeatEntity> findAllTripSeatsByTripId(UUID tripId);
+
+    @Query("""
+        SELECT ts
+        FROM TripSeatEntity ts
+        JOIN FETCH TripEntity t ON t.tripId = ts.trip.tripId
+        WHERE t.status = 'OPEN_FOR_BOOKING'
+            AND ts.status = 'AVAILABLE'
+    """)
+    List<TripSeatEntity> findAllTripSeatCanSell();
 }

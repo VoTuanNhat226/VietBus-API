@@ -2,6 +2,7 @@ package com.vtn.service;
 
 import com.vtn.dto.request.TripRequest;
 import com.vtn.dto.request.TripSeatRequest;
+import com.vtn.dto.response.TripSeatResponse;
 import com.vtn.entity.TripSeatEntity;
 import com.vtn.repository.TripSeatRepository;
 import com.vtn.utils.BaseResponse;
@@ -32,6 +33,39 @@ public class TripSeatService {
         try {
             List<TripSeatEntity> tripSeats = tripSeatRepository.findAllTripSeatsByTripId(request.getTripId());
             return new BaseResponse(200, tripSeats, "Get all trip seats successfully",null,null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public BaseResponse getAllTripSeatsCanSell() {
+        try {
+            List<TripSeatResponse> result  = tripSeatRepository.findAllTripSeatCanSell()
+                    .stream()
+                    .map(ts -> new TripSeatResponse(
+                            //TripSeat
+                            ts.getId(),
+                            ts.getStatus(),
+                            //Seat
+                            ts.getSeat().getSeatId(),
+                            ts.getSeat().getSeatNumber(),
+                            ts.getSeat().getFloor(),
+                            ts.getSeat().getSeatRow(),
+                            ts.getSeat().getSeatColumn(),
+                            //Trip
+                            ts.getTrip().getTripId(),
+                            ts.getTrip().getTripCode(),
+                            ts.getTrip().getRoute().getFromStation().getName(),
+                            ts.getTrip().getRoute().getToStation().getName(),
+                            ts.getTrip().getDepartureTime(),
+                            ts.getTrip().getArrivalTime(),
+                            ts.getTrip().getPrice(),
+                            ts.getTrip().getRestStop(),
+                            ts.getTrip().getRestTime(),
+                            ts.getTrip().getStatus()
+                    ))
+                    .toList();
+            return new BaseResponse(200, result, "Get all trip seats can sell successfully",null,null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

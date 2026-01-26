@@ -21,25 +21,25 @@ public class TripEntity {
     private UUID tripId;
 
     @Column(name = "trip_code", nullable = false, unique = true, length = 10)
-    String tripCode;
+    private String tripCode;
 
     @Column(name = "departure_time", nullable = false)
-    LocalDateTime departureTime;
+    private LocalDateTime departureTime;
 
     @Column(name = "arrival_time", nullable = false)
-    LocalDateTime arrivalTime;
+    private LocalDateTime arrivalTime;
 
     @Column(name = "price", nullable = false)
-    BigDecimal price;
+    private BigDecimal price;
 
     @Column(name = "rest_stop")
-    String restStop;
+    private String restStop;
 
     @Column(name = "rest_time")
-    LocalDateTime restTime;
+    private LocalDateTime restTime;
 
     @Column(name = "status")
-    String status; //CREATED → SCHEDULED → OPEN_FOR_BOOKING → CLOSED_FOR_BOOKING → DEPARTED → IN_PROGRESS → COMPLETED
+    private String status; //CREATED → SCHEDULED → OPEN_FOR_BOOKING → CLOSED_FOR_BOOKING → DEPARTED → IN_PROGRESS → COMPLETED
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

@@ -20,6 +20,12 @@ public class TicketEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID ticketId;
 
+    @Column(name = "trip_code", nullable = false, unique = true, length = 10)
+    private String tripCode;
+
+    @Column(name = "note")
+    private String note;
+
     @Column(name = "price")
     private BigDecimal price;
 
