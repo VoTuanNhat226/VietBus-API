@@ -1,6 +1,8 @@
 package com.vtn.service;
 
+import com.vtn.dto.request.PaymentRequest;
 import com.vtn.dto.request.TicketRequest;
+import com.vtn.dto.response.TicketResponse;
 import com.vtn.entity.*;
 import com.vtn.repository.*;
 import com.vtn.utils.BaseResponse;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -48,6 +51,59 @@ public class TicketService {
         return sb.toString();
     }
 
+    private boolean isAllParametersNull(TicketRequest request) {
+        return ((request.getTicketCode() == null) &&
+                (request.getTripCode() == null) &&
+                (request.getTicketPaymentType() == null) &&
+                (request.getTicketSoldBy() == null));
+    }
+
+    public BaseResponse getAllTicketsUnpaid(TicketRequest request) {
+        try {
+            List<TicketResponse> tickets;
+            if(isAllParametersNull(request)) {
+                tickets = ticketRepository.findAllTicketUnPaid()
+                        .stream()
+                        .map(t -> new TicketResponse(
+                                t.getTicketId(),
+                                t.getTicketCode(),
+                                t.getPrice(),
+                                t.getStatus(),
+                                t.getPaymentType(),
+                                t.getSoldBy(),
+                                t.getTrip().getTripCode(),
+                                t.getTrip().getRoute().getFromStation().getName(),
+                                t.getTrip().getRoute().getToStation().getName(),
+                                t.getTripSeat().getSeat().getSeatNumber()
+                        ))
+                        .toList();
+            } else {
+                tickets = ticketRepository.getAllByCondition(
+                            request.getTicketCode(),
+                            request.getTripCode(),
+                            request.getTicketPaymentType(),
+                            request.getTicketSoldBy())
+                        .stream()
+                        .map(t -> new TicketResponse(
+                                t.getTicketId(),
+                                t.getTicketCode(),
+                                t.getPrice(),
+                                t.getStatus(),
+                                t.getPaymentType(),
+                                t.getSoldBy(),
+                                t.getTrip().getTripCode(),
+                                t.getTrip().getRoute().getFromStation().getName(),
+                                t.getTrip().getRoute().getToStation().getName(),
+                                t.getTripSeat().getSeat().getSeatNumber()
+                        ))
+                        .toList();
+            }
+            return new BaseResponse(200,tickets,"Get all tickets unpaid successfully", null,null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Transactional
     public BaseResponse createTicket(TicketRequest request) {
 
@@ -58,7 +114,6 @@ public class TicketService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chuyến xe"));
 
         TripSeatEntity tripSeat = tripSeatRepository.findByTripSeatId(request.getTripSeatId());
-
         if (!"AVAILABLE".equals(tripSeat.getStatus())) {
             throw new RuntimeException("Ghế đã được giữ hoặc đã bán");
         }
@@ -70,10 +125,12 @@ public class TicketService {
         }
 
         TicketEntity ticket = new TicketEntity();
+
         String ticketCode;
         do {
             ticketCode = generateTripCode();
         } while (ticketRepository.existsByTicketCode(ticketCode));
+
         ticket.setTicketCode(ticketCode);
         ticket.setTrip(trip);
         ticket.setTripSeat(tripSeat);

@@ -10,11 +10,19 @@ import java.util.UUID;
 @Setter
 public class TicketRequest {
     private UUID ticketId;
+    private String ticketCode;
     private BigDecimal ticketPrice;
+    private String ticketStatus;
+    private String ticketPaymentType;
+    private String ticketSoldBy;
+
     private String note;
     private String paymentType;
+
     private UUID tripId;
     private UUID tripSeatId;
+    private String tripCode;
+
     private UUID passengerId;
     private String paymentMethod;
 }

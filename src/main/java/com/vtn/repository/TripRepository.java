@@ -53,8 +53,8 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
         AND (:toStationId IS NULL OR t.route.toStation.stationId = :toStationId)
         AND (:driverId IS NULL OR t.driver.employeeId = :driverId)
         AND (:vehicleId IS NULL OR t.vehicle.vehicleId = :vehicleId)
-        AND (:status IS NULL OR t.status LIKE %:status%)
-        AND (:tripCode IS NULL OR t.tripCode = :tripCode)
+        AND (:status IS NULL OR t.status = :status)
+        AND (:tripCode IS NULL OR t.tripCode LIKE %:tripCode%)
     """)
     List<TripEntity> getAllByCondition(
             @Param("fromStationId") UUID fromStationId,
