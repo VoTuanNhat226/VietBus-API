@@ -4,6 +4,7 @@ import com.vtn.dto.request.TicketRequest;
 import com.vtn.dto.response.TicketResponse;
 import com.vtn.entity.*;
 import com.vtn.repository.*;
+import com.vtn.service.Mail.MailService;
 import com.vtn.utils.BaseResponse;
 import com.vtn.utils.CodeGeneratorUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +13,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -23,6 +24,7 @@ public class TicketService {
     private final TripSeatRepository tripSeatRepository;
     private final PassengerRepository passengerRepository;
     private final PaymentRepository paymentRepository;
+    private final MailService mailService;
 
     @Autowired
     public TicketService(
@@ -30,12 +32,14 @@ public class TicketService {
             TripRepository tripRepository,
             TripSeatRepository tripSeatRepository,
             PassengerRepository passengerRepository,
-            PaymentRepository paymentRepository) {
+            PaymentRepository paymentRepository,
+            MailService mailService) {
         this.ticketRepository = ticketRepository;
         this.tripRepository = tripRepository;
         this.tripSeatRepository = tripSeatRepository;
         this.passengerRepository = passengerRepository;
         this.paymentRepository = paymentRepository;
+        this.mailService = mailService;
     }
 
     private boolean isAllParametersNull(TicketRequest request) {
@@ -128,14 +132,19 @@ public class TicketService {
         ticket.setSoldAt(LocalDateTime.now());
         ticket.setCreatedBy(info.getUsername());
         ticket.setCreatedAt(LocalDateTime.now());
+
+        if ("PAY_NOW".equals(request.getPaymentType())) {
+            ticket.setStatus("PAID");
+            tripSeat.setStatus("SOLD");
+        } else { // PAY_LATER
+            ticket.setStatus("UNPAID");
+            tripSeat.setStatus("HOLD");
+        }
+
+        tripSeatRepository.save(tripSeat);
         ticketRepository.save(ticket);
 
         if ("PAY_NOW".equals(request.getPaymentType())) {
-            // Ticket
-            ticket.setStatus("PAID");
-            // Seat
-            tripSeat.setStatus("SOLD");
-            // Payment
             PaymentEntity payment = new PaymentEntity();
             payment.setTicket(ticket);
             payment.setAmount(ticket.getPrice());
@@ -145,13 +154,53 @@ public class TicketService {
             payment.setCreatedBy(info.getUsername());
             payment.setCreatedAt(LocalDateTime.now());
             paymentRepository.save(payment);
-        } else { // PAY_LATER
-            ticket.setStatus("UNPAID");
-            tripSeat.setStatus("HOLD");
+
+            if (passenger != null && passenger.getEmail() != null) {
+                try {
+                    String subject = "Xác nhận đặt vé xe VietBus";
+                    String content = buildTicketMailContent(ticket);
+                    mailService.sendMail(
+                            passenger.getEmail(),
+                            subject,
+                            content
+                    );
+                } catch (Exception e) {
+                    System.err.println("Send mail failed: " + e.getMessage());
+                }
+            }
         }
-        ticketRepository.save(ticket);
-        tripSeatRepository.save(tripSeat);
         return new BaseResponse(201, ticket, "Create ticket successfully", null, null);
+    }
+
+    private String buildTicketMailContent(TicketEntity ticket) {
+        String bookingTime = ticket.getCreatedAt()
+                .format(MAIL_DATE_FORMAT);
+
+        String departureTime = ticket.getTrip().getDepartureTime()
+                .format(MAIL_DATE_FORMAT);
+
+        String arrivalTime = ticket.getTrip().getArrivalTime()
+                .format(MAIL_DATE_FORMAT);
+
+        return """
+            Xin chào,
+            Vé xe của bạn đã được đặt thành công.
+            Mã vé: %s
+            Ngày đặt: %s
+            Điểm đi: %s
+            Thời gian xuất bến: %s
+            Điểm đến: %s
+            Thời gian đến(dự kiến): %s
+
+            Cảm ơn bạn đã sử dụng VietBus!
+            """.formatted(
+                ticket.getTicketCode(),
+                bookingTime,
+                ticket.getTrip().getRoute().getFromStation().getName(),
+                departureTime,
+                ticket.getTrip().getRoute().getToStation().getName(),
+                arrivalTime
+        );
     }
 
     @Transactional
@@ -195,4 +244,7 @@ public class TicketService {
         }
         return new BaseResponse(200, null, "Update ticket successfully", null, null);
     }
+
+    private static final DateTimeFormatter MAIL_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy");
 }

@@ -25,6 +25,9 @@ public class PassengerEntity {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
+    @Column(name = "email", nullable = false, unique = true)
+    private String email;
+
     @Column(name = "id_card", nullable = false, unique = true)
     private String idCard;
 

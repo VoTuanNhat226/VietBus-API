@@ -19,6 +19,17 @@ spring:
         format_sql: true
   main:
     web-application-type: servlet
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: tuannhat226@gmail.com
+    password: ofkh vfej yttv zupv
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 jwt:
   secret: mX4r9FQ+Z8nZ0Y8bW+1E8g4b7v7pZbM+KcZl0YJm8mM=
