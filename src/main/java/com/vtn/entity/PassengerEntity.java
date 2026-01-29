@@ -22,7 +22,7 @@ public class PassengerEntity {
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @Column(name = "phone_number", nullable = false)
+    @Column(name = "phone_number", nullable = false, unique = true)
     private String phoneNumber;
 
     @Column(name = "email", nullable = false, unique = true)
@@ -30,6 +30,9 @@ public class PassengerEntity {
 
     @Column(name = "id_card", nullable = false, unique = true)
     private String idCard;
+
+    @Column(name = "note")
+    private String note;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

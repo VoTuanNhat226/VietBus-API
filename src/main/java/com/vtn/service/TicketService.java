@@ -12,6 +12,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -113,6 +115,7 @@ public class TicketService {
             passenger = passengerRepository.findById(request.getPassengerId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
         }
+        String passengerEmail = passenger != null ? passenger.getEmail() : null;
 
         TicketEntity ticket = new TicketEntity();
 
@@ -155,18 +158,23 @@ public class TicketService {
             payment.setCreatedAt(LocalDateTime.now());
             paymentRepository.save(payment);
 
-            if (passenger != null && passenger.getEmail() != null) {
-                try {
-                    String subject = "Xác nhận đặt vé xe VietBus";
-                    String content = buildTicketMailContent(ticket);
-                    mailService.sendMail(
-                            passenger.getEmail(),
-                            subject,
-                            content
-                    );
-                } catch (Exception e) {
-                    System.err.println("Send mail failed: " + e.getMessage());
-                }
+            //Send Mail
+            if (passengerEmail != null) {
+                String subject = "Xác nhận đặt vé xe VietBus";
+                String content = buildTicketMailContent(ticket);
+
+                TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                mailService.sendMail(
+                                        passengerEmail,
+                                        subject,
+                                        content
+                                );
+                            }
+                        }
+                );
             }
         }
         return new BaseResponse(201, ticket, "Create ticket successfully", null, null);
