@@ -5,6 +5,7 @@ import com.vtn.dto.response.TicketResponse;
 import com.vtn.entity.*;
 import com.vtn.repository.*;
 import com.vtn.utils.BaseResponse;
+import com.vtn.utils.CodeGeneratorUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,10 +24,6 @@ public class TicketService {
     private final PassengerRepository passengerRepository;
     private final PaymentRepository paymentRepository;
 
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private static final int CODE_LENGTH = 10;
-    private static final SecureRandom random = new SecureRandom();
-
     @Autowired
     public TicketService(
             TicketRepository ticketRepository,
@@ -39,14 +36,6 @@ public class TicketService {
         this.tripSeatRepository = tripSeatRepository;
         this.passengerRepository = passengerRepository;
         this.paymentRepository = paymentRepository;
-    }
-
-    private String generateTripCode() {
-        StringBuilder sb = new StringBuilder(CODE_LENGTH);
-        for (int i = 0; i < CODE_LENGTH; i++) {
-            sb.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
-        }
-        return sb.toString();
     }
 
     private boolean isAllParametersNull(TicketRequest request) {
@@ -125,7 +114,7 @@ public class TicketService {
 
         String ticketCode;
         do {
-            ticketCode = generateTripCode();
+            ticketCode = CodeGeneratorUtil.generateCode();
         } while (ticketRepository.existsByTicketCode(ticketCode));
 
         ticket.setTicketCode(ticketCode);

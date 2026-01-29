@@ -5,6 +5,7 @@ import com.vtn.dto.request.TripRequest;
 import com.vtn.entity.*;
 import com.vtn.repository.*;
 import com.vtn.utils.BaseResponse;
+import com.vtn.utils.CodeGeneratorUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,10 +26,6 @@ public class TripService {
     private final SeatRepository seatRepository;
     private final TripSeatRepository tripSeatRepository;
 
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private static final int CODE_LENGTH = 10;
-    private static final SecureRandom random = new SecureRandom();
-
     @Autowired
     public TripService(TripRepository tripRepository,
                        RouteRepository routeRepository,
@@ -42,14 +39,6 @@ public class TripService {
         this.vehicleRepository = vehicleRepository;
         this.seatRepository = seatRepository;
         this.tripSeatRepository = tripSeatRepository;
-    }
-
-    private String generateTripCode() {
-        StringBuilder sb = new StringBuilder(CODE_LENGTH);
-        for (int i = 0; i < CODE_LENGTH; i++) {
-            sb.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
-        }
-        return sb.toString();
     }
 
     private boolean isAllParametersNull(TripRequest request) {
@@ -153,7 +142,7 @@ public class TripService {
             TripEntity trip = new TripEntity();
             String tripCode;
             do {
-                tripCode = generateTripCode();
+                tripCode = CodeGeneratorUtil.generateCode();
             } while (tripRepository.existsByTripCode(tripCode));
 
             trip.setTripCode(tripCode);
