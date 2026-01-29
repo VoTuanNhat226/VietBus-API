@@ -39,4 +39,15 @@ public class TicketController {
                 .status(response.getStatusCode())
                 .body(response);
     }
+
+    @PostMapping(value =APIConstants.API_UPDATE_TICKET)
+    public ResponseEntity<BaseResponse> update(@RequestBody TicketRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = ticketService.updateTicket(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
+    }
 }

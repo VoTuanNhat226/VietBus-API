@@ -1,6 +1,5 @@
 package com.vtn.service;
 
-import com.vtn.dto.request.PaymentRequest;
 import com.vtn.dto.request.TicketRequest;
 import com.vtn.dto.response.TicketResponse;
 import com.vtn.entity.*;
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TicketService {
@@ -107,8 +105,7 @@ public class TicketService {
     @Transactional
     public BaseResponse createTicket(TicketRequest request) {
 
-        UserDetails info = (UserDetails) SecurityContextHolder
-                .getContext().getAuthentication().getPrincipal();
+        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         TripEntity trip = tripRepository.findById(request.getTripId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chuyến xe"));
@@ -165,7 +162,48 @@ public class TicketService {
         }
         ticketRepository.save(ticket);
         tripSeatRepository.save(tripSeat);
-        return new BaseResponse(200, ticket, "Create ticket successfully", null, null);
+        return new BaseResponse(201, ticket, "Create ticket successfully", null, null);
     }
 
+    @Transactional
+    public BaseResponse updateTicket(TicketRequest request) {
+        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        TicketEntity ticket = ticketRepository.findByTicketCode(request.getTicketCode());
+        if (ticket == null) {
+            return new BaseResponse(404,null,"Không tìm thấy vé xe",null,null);
+        }
+
+        TripEntity trip = tripRepository.findByTripCode(request.getTripCode());
+        if (trip == null) {
+            return new BaseResponse(404,null,"Không tìm thấy chuyến xe",null,null);
+        }
+
+        String currentTicketStatus = ticket.getStatus();
+        if ("PAID".equals(currentTicketStatus)) {
+            return new BaseResponse(400, null, "Vé đã được thanh toán", null, null);
+        }
+
+        if("UNPAID".equals(currentTicketStatus) && "PAID".equals(request.getTicketStatus())) {
+            ticket.setStatus(request.getTicketStatus());
+            ticketRepository.save(ticket);
+
+            TripSeatEntity tripSeat = ticket.getTripSeat();
+            tripSeat.setStatus("SOLD");
+            tripSeatRepository.save(tripSeat);
+
+            PaymentEntity payment = new PaymentEntity();
+            payment.setTicket(ticket);
+            payment.setAmount(ticket.getPrice());
+            payment.setMethod(request.getPaymentMethod());
+            payment.setStatus("SUCCESS");
+            payment.setPaidAt(LocalDateTime.now());
+            payment.setCreatedBy(info.getUsername());
+            payment.setCreatedAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+
+            return new BaseResponse(200, null, "Update ticket successfully, created payment", null, null);
+        }
+        return new BaseResponse(200, null, "Update ticket successfully", null, null);
+    }
 }

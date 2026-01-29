@@ -12,6 +12,8 @@ import java.util.List;
 public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     boolean existsByTicketCode(String ticketCode);
 
+    TicketEntity findByTicketCode(String ticketCode);
+
     @Query("""
         SELECT t
         FROM TicketEntity t

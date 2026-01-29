@@ -16,6 +16,8 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
 
     boolean existsByTripCode(String tripCode);
 
+    TripEntity findByTripCode(String tripCode);
+
     @Query("""
         SELECT COUNT(t) > 0
         FROM TripEntity t
