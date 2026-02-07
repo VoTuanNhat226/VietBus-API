@@ -52,4 +52,14 @@ public class TripController {
                 .status(response.getStatusCode())
                 .body(response);
     }
+
+    @PostMapping(value = APIConstants.API_UPDATE_TRIP)
+    public ResponseEntity<BaseResponse> update(@RequestBody TripRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = tripService.updateTrip(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
+    }
 }

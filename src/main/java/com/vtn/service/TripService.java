@@ -177,4 +177,23 @@ public class TripService {
             throw new RuntimeException(e);
         }
     }
+
+    public BaseResponse updateTrip(TripRequest request) {
+        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        try {
+            TripEntity trip = tripRepository.findById(request.getTripId()).orElse(null);
+            if (trip == null) {
+                return new BaseResponse(404,null,"Không tìm thấy chuyến xe", null, null);
+            }
+
+            trip.setStatus(request.getStatus());
+            trip.setUpdatedBy(info.getUsername());
+            trip.setUpdatedAt(LocalDateTime.now());
+            tripRepository.save(trip);
+
+            return new BaseResponse(200,trip,"Update trip successfully", null, null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

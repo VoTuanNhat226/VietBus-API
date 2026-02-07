@@ -24,10 +24,10 @@ public class SeatEntity {
     private String seatNumber;
 
     @Column(name = "floor")
-    private Integer floor; // 1 hoặc 2
+    private Integer floor; // 1 or 2
 
     @Column(name = "seat_row")
-    private Integer seatRow; // hàng (1 → 6)
+    private Integer seatRow; // row (1 → 6)
 
     @Column(name = "seat_column")
     private String seatColumn; // A, B, C
