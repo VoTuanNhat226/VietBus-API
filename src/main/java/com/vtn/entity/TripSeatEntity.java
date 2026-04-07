@@ -1,6 +1,7 @@
 package com.vtn.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vtn.enumdef.TripSeatStatusEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,8 +20,9 @@ public class TripSeatEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "status")
-    private String status; // AVAILABLE, HOLD, SOLD
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private TripSeatStatusEnum status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)

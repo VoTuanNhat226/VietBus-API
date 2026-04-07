@@ -35,7 +35,7 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
     @Query("""
     SELECT a
     FROM AccountEntity a
-    WHERE a.accountId = :accountId    
+    WHERE a.accountId = :accountId
     """)
     AccountEntity findByAccountId(@Param("accountId") UUID accountId);
 

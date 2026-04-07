@@ -6,15 +6,17 @@ import com.vtn.entity.EmployeeEntity;
 import com.vtn.repository.AccountRepository;
 import com.vtn.repository.EmployeeRepository;
 import com.vtn.utils.BaseResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class EmployeeService {
     private final EmployeeRepository employeeRepository;
@@ -27,130 +29,142 @@ public class EmployeeService {
         this.accountRepository = accountRepository;
     }
 
-    private boolean isAllParametersNull(EmployeeRequest request) {
-        return ((request.getLastName() == null) &&
-                (request.getFirstName() == null) &&
-                (request.getPhoneNumber() == null) &&
-                (request.getPosition() == null) &&
-                (request.getCreatedBy() == null) &&
-                (request.getUpdatedBy() == null) &&
-                (request.getActive() == null));
-    }
-
     public BaseResponse getAllEmployees(EmployeeRequest request) {
-        List<EmployeeEntity> employees;
-
-        if (isAllParametersNull(request)) {
-            employees = employeeRepository.findAll();
-        } else {
-            employees = employeeRepository.getAllByCondition(
-                    request.getFirstName(),
-                    request.getLastName(),
+        List<EmployeeEntity> employees = employeeRepository.getAllByCondition(
+                    request.getFullName(),
                     request.getPhoneNumber(),
                     request.getPosition(),
                     request.getCreatedBy(),
                     request.getUpdatedBy(),
-                    request.getActive()
-            );
-        }
+                    request.getActive());
 
-        return new BaseResponse(200, employees, "Get all employees successfully", null, null);
+        return new BaseResponse(200, employees, "Get all employees successful", null, null);
     }
 
     public BaseResponse getAllEmployeeActiveByPosition(EmployeeRequest request) {
-        try {
-            List<EmployeeEntity> employeeActive = employeeRepository.getAllEmployeeActiveByPosition(request.getPosition());
-            return new BaseResponse(200, employeeActive, "Get all employees active by position successfully", null, null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        log.info("Get active employees by position: {}", request.getPosition());
+        if (request.getPosition() == null) {
+            log.warn("Position is required");
+            return new BaseResponse(400, null, "Position is required", null, null);
         }
+        List<EmployeeEntity> employeeActive = employeeRepository.getAllEmployeeActiveByPosition(request.getPosition());
+        return new BaseResponse(200, employeeActive, "Get all employees active by position successful", null, null);
     }
 
-
+    @Transactional
     public BaseResponse createEmployee(EmployeeRequest employeeRequest) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
+        log.info("Start createEmployee with request: {}", employeeRequest);
+        UserDetails info = getInfo();
+        log.info("User {} is creating employee", info.getUsername());
 
-        boolean isAdmin = info.getAuthorities()
-                .stream()
-                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-
+        boolean isAdmin = isAdmin(info);
         if (!isAdmin) {
-            return new BaseResponse(403, null, "Bạn không có quyền!", null, null);
+            log.warn("User {} does not have permission to create employee", info.getUsername());
+            return new BaseResponse(403, null, "You don't have permission!", null, null);
         }
 
-        EmployeeEntity existed = employeeRepository
-                .findByFirstNameLastNamePhoneNumber(
-                        employeeRequest.getFirstName(),
-                        employeeRequest.getLastName(),
+        if (employeeRequest.getFullName() == null || employeeRequest.getPhoneNumber() == null) {
+            log.warn("Missing required fields: fullName or phoneNumber");
+            return new BaseResponse(400, null, "FullName and Phone are required", null, null);
+        }
+
+        EmployeeEntity existed = employeeRepository.findByFullNameAndPhoneNumber(
+                        employeeRequest.getFullName(),
                         employeeRequest.getPhoneNumber());
 
         if (existed != null) {
-            return new BaseResponse(409, null, "Nhân viên đã tồn tại", null, null);
-        }
-
-        AccountEntity account = accountRepository.findByAccountId(employeeRequest.getAccountId());
-        if (account == null) {
-            return new BaseResponse(404, null, "Không tìm thấy tài khoản", null, null);
+            log.warn("Employee already exists with name {} and phone {}", employeeRequest.getFullName(), employeeRequest.getPhoneNumber());
+            return new BaseResponse(409, null, "Employee already existed", null, null);
         }
 
         EmployeeEntity employee = new EmployeeEntity();
-        employee.setFirstName(employeeRequest.getFirstName());
-        employee.setLastName(employeeRequest.getLastName());
+        employee.setFullName(employeeRequest.getFullName());
         employee.setPhoneNumber(employeeRequest.getPhoneNumber());
         employee.setPosition(employeeRequest.getPosition());
         employee.setActive(employeeRequest.getActive());
-        employee.setAccount(account);
+        if(employeeRequest.getAccountId() != null) {
+            log.info("Mapping accountId: {}", employeeRequest.getAccountId());
+            AccountEntity account = accountRepository.findByAccountId(employeeRequest.getAccountId());
+            if (account == null) {
+                log.error("Account not found with id: {}", employeeRequest.getAccountId());
+                return new BaseResponse(404, null, "Account not found", null, null);
+            } else {
+                employee.setAccount(account);
+            }
+        }
         employee.setCreatedBy(info.getUsername());
         employee.setCreatedAt(LocalDateTime.now());
-
         employeeRepository.save(employee);
+        log.info("Employee created successful with id: {}", employee.getEmployeeId());
 
-        return new BaseResponse(201, employee, "Thêm nhân viên thành công", null, null);
+        return new BaseResponse(201, employee, "Create employee successful", null, null);
     }
 
+    @Transactional
     public BaseResponse updateEmployee(EmployeeRequest employeeRequest) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        try {
-            EmployeeEntity employee = employeeRepository.findByEmployeeId(employeeRequest.getEmployeeId());
-            if (employee == null) {
-                return new BaseResponse(404, null, "Không tìm thấy nhân viên", null, null);
-            } else {
-                employee.setFirstName(employeeRequest.getFirstName());
-                employee.setLastName(employeeRequest.getLastName());
-                employee.setPhoneNumber(employeeRequest.getPhoneNumber());
-                employee.setPosition(employeeRequest.getPosition());
-                employee.setActive(employeeRequest.getActive());
-                employee.setUpdatedBy(info.getUsername());
-                employee.setUpdatedAt(LocalDateTime.now());
-                employeeRepository.save(employee);
-                return new BaseResponse(200, employee, "Cập nhật nhân viên thành công", null, null);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        log.info("Start updateEmployee with request: {}", employeeRequest);
+        UserDetails info = getInfo();
+        log.info("User {} is updating employee", info.getUsername());
+
+        boolean isAdmin = isAdmin(info);
+        if (!isAdmin) {
+            log.warn("User {} does not have permission to create employee", info.getUsername());
+            return new BaseResponse(403, null, "You don't have permission!", null, null);
+        }
+
+        EmployeeEntity employee = employeeRepository.findByEmployeeId(employeeRequest.getEmployeeId());
+        if (employee == null) {
+            return new BaseResponse(404, null, "Employee not found", null, null);
+        } else {
+            employee.setFullName(employeeRequest.getFullName());
+            employee.setPhoneNumber(employeeRequest.getPhoneNumber());
+            employee.setPosition(employeeRequest.getPosition());
+            employee.setActive(employeeRequest.getActive());
+            employee.setUpdatedBy(info.getUsername());
+            employee.setUpdatedAt(LocalDateTime.now());
+            employeeRepository.save(employee);
+            log.info("Employee updated successful with id: {}", employee.getEmployeeId());
+
+            return new BaseResponse(200, employee, "Update employee successful", null, null);
         }
     }
 
     public BaseResponse deleteEmployee(EmployeeRequest employeeRequest) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-
-        boolean isAdmin = info.getAuthorities()
-                .stream()
-                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-
+        log.info("Start deleteEmployee with request: {}", employeeRequest);
+        UserDetails info = getInfo();
+        log.info("User {} is deleting employee", info.getUsername());
+        boolean isAdmin = isAdmin(info);
         if (!isAdmin) {
-            return new BaseResponse(403, null, "Bạn không có quyền!", null, null);
+            log.warn("User {} does not have permission to delete employee", info.getUsername());
+            return new BaseResponse(403, null, "You don't have permission!", null, null);
+        }
+
+        if (employeeRequest.getEmployeeId() == null) {
+            log.warn("Missing required fields: employeeId");
+            return new BaseResponse(400, null, "EmployeeId is required", null, null);
         }
 
         EmployeeEntity employee = employeeRepository
                 .findByEmployeeId(employeeRequest.getEmployeeId());
 
         if (employee == null) {
-            return new BaseResponse(404, null, "Không tìm thấy nhân viên", null, null);
+            log.error("Employee not found with id: {}", employeeRequest.getEmployeeId());
+            return new BaseResponse(404, null, "Employee not found", null, null);
         }
 
         employeeRepository.delete(employee);
-        return new BaseResponse(200, null, "Xóa nhân viên thành công", null, null);
+        log.info("Employee deleted successful with id: {}", employee.getEmployeeId());
+
+        return new BaseResponse(200, null, "Delete employee successful", null, null);
+    }
+
+    private boolean isAdmin(UserDetails info) {
+        return info.getAuthorities()
+                .stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+    }
+
+    private UserDetails getInfo() {
+        return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 }

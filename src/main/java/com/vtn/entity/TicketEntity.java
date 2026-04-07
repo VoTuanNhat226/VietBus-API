@@ -1,5 +1,6 @@
 package com.vtn.entity;
 
+import com.vtn.enumdef.TicketStatusEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -29,8 +30,9 @@ public class TicketEntity {
     @Column(name = "price")
     private BigDecimal price;
 
-    @Column(name = "status")
-    private String status; //UNPAID - PAID
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private TicketStatusEnum status;
 
     @Column(name = "payment_type")
     private String paymentType;

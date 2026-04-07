@@ -7,11 +7,13 @@ import com.vtn.entity.RouteEntity;
 import com.vtn.repository.AccountRepository;
 import com.vtn.utils.BaseResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -60,6 +62,25 @@ public class AccountDetailsService implements UserDetailsService {
         try {
             List<AccountEntity> accounts = accountRepository.findAccountsNotUsedByEmployee(request.getRole());
             return new BaseResponse(200, accounts, "Get all accounts by role successfully", null,null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public BaseResponse updateAccount(AccountRequest request) {
+        UserDetails info = (UserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        try {
+            AccountEntity account = accountRepository.findByAccountId(request.getAccountId());
+            if (account != null) {
+                account.setActive(request.getActive());
+                account.setUpdatedBy(info.getUsername());
+                account.setUpdatedAt(LocalDateTime.now());
+                accountRepository.save(account);
+                return new BaseResponse(200, "Account updated successfully", null, null,null);
+            } else {
+                return new BaseResponse(404, "Account not found", null, null,null);
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

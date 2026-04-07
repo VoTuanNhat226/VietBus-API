@@ -35,4 +35,14 @@ public class AccountController {
         response.setTook(System.currentTimeMillis() - beginTime);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @PostMapping(value = APIConstants.API_UPDATE_ACCOUNT)
+    public ResponseEntity<BaseResponse> updateAccount(@RequestBody AccountRequest accountRequest) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = accountDetailsService.updateAccount(accountRequest);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
+    }
 }

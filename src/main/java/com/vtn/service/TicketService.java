@@ -3,6 +3,9 @@ package com.vtn.service;
 import com.vtn.dto.request.TicketRequest;
 import com.vtn.dto.response.TicketResponse;
 import com.vtn.entity.*;
+import com.vtn.enumdef.PaymentStatusEnum;
+import com.vtn.enumdef.TicketStatusEnum;
+import com.vtn.enumdef.TripSeatStatusEnum;
 import com.vtn.repository.*;
 import com.vtn.service.Mail.MailService;
 import com.vtn.utils.BaseResponse;
@@ -21,6 +24,9 @@ import java.util.List;
 
 @Service
 public class TicketService {
+    // Constant
+    private static final String PAY_NOW = "PAY_NOW";
+
     private final TicketRepository ticketRepository;
     private final TripRepository tripRepository;
     private final TripSeatRepository tripSeatRepository;
@@ -44,34 +50,8 @@ public class TicketService {
         this.mailService = mailService;
     }
 
-    private boolean isAllParametersNull(TicketRequest request) {
-        return ((request.getTicketCode() == null) &&
-                (request.getTripCode() == null) &&
-                (request.getTicketPaymentType() == null) &&
-                (request.getTicketSoldBy() == null));
-    }
-
     public BaseResponse getAllTicketsUnpaid(TicketRequest request) {
-        try {
-            List<TicketResponse> tickets;
-            if(isAllParametersNull(request)) {
-                tickets = ticketRepository.findAllTicketUnPaid()
-                        .stream()
-                        .map(t -> new TicketResponse(
-                                t.getTicketId(),
-                                t.getTicketCode(),
-                                t.getPrice(),
-                                t.getStatus(),
-                                t.getPaymentType(),
-                                t.getSoldBy(),
-                                t.getTrip().getTripCode(),
-                                t.getTrip().getRoute().getFromStation().getName(),
-                                t.getTrip().getRoute().getToStation().getName(),
-                                t.getTripSeat().getSeat().getSeatNumber()
-                        ))
-                        .toList();
-            } else {
-                tickets = ticketRepository.getAllByCondition(
+        List<TicketResponse> tickets = ticketRepository.getAllByCondition(
                             request.getTicketCode(),
                             request.getTripCode(),
                             request.getTicketPaymentType(),
@@ -90,11 +70,7 @@ public class TicketService {
                                 t.getTripSeat().getSeat().getSeatNumber()
                         ))
                         .toList();
-            }
-            return new BaseResponse(200,tickets,"Get all tickets unpaid successfully", null,null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return new BaseResponse(200,tickets,"Get all tickets unpaid successful", null,null);
     }
 
     @Transactional
@@ -103,17 +79,17 @@ public class TicketService {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         TripEntity trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy chuyến xe"));
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
 
         TripSeatEntity tripSeat = tripSeatRepository.findByTripSeatId(request.getTripSeatId());
-        if (!"AVAILABLE".equals(tripSeat.getStatus())) {
-            throw new RuntimeException("Ghế đã được giữ hoặc đã bán");
+        if (!TripSeatStatusEnum.AVAILABLE.equals(tripSeat.getStatus())) {
+            throw new RuntimeException("Seat have been hold or sold");
         }
 
         PassengerEntity passenger = null;
         if (request.getPassengerId() != null) {
             passenger = passengerRepository.findById(request.getPassengerId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
+                    .orElseThrow(() -> new RuntimeException("Passenger not found"));
         }
         String passengerEmail = passenger != null ? passenger.getEmail() : null;
 
@@ -136,23 +112,24 @@ public class TicketService {
         ticket.setCreatedBy(info.getUsername());
         ticket.setCreatedAt(LocalDateTime.now());
 
-        if ("PAY_NOW".equals(request.getPaymentType())) {
-            ticket.setStatus("PAID");
-            tripSeat.setStatus("SOLD");
-        } else { // PAY_LATER
-            ticket.setStatus("UNPAID");
-            tripSeat.setStatus("HOLD");
+        if (PAY_NOW.equals(request.getPaymentType())) {
+            ticket.setStatus(TicketStatusEnum.PAID);
+            tripSeat.setStatus(TripSeatStatusEnum.SOLD);
+        } else {
+            // PAY_LATER
+            ticket.setStatus(TicketStatusEnum.UNPAID);
+            tripSeat.setStatus(TripSeatStatusEnum.HOLD);
         }
 
         tripSeatRepository.save(tripSeat);
         ticketRepository.save(ticket);
 
-        if ("PAY_NOW".equals(request.getPaymentType())) {
+        if (PAY_NOW.equals(request.getPaymentType())) {
             PaymentEntity payment = new PaymentEntity();
             payment.setTicket(ticket);
             payment.setAmount(ticket.getPrice());
             payment.setMethod(request.getPaymentMethod());
-            payment.setStatus("SUCCESS");
+            payment.setStatus(PaymentStatusEnum.SUCCESS);
             payment.setPaidAt(LocalDateTime.now());
             payment.setCreatedBy(info.getUsername());
             payment.setCreatedAt(LocalDateTime.now());
@@ -217,40 +194,40 @@ public class TicketService {
 
         TicketEntity ticket = ticketRepository.findByTicketCode(request.getTicketCode());
         if (ticket == null) {
-            return new BaseResponse(404,null,"Không tìm thấy vé xe",null,null);
+            return new BaseResponse(404,null,"Ticket not found",null,null);
         }
 
         TripEntity trip = tripRepository.findByTripCode(request.getTripCode());
         if (trip == null) {
-            return new BaseResponse(404,null,"Không tìm thấy chuyến xe",null,null);
+            return new BaseResponse(404,null,"Trip not found",null,null);
         }
 
-        String currentTicketStatus = ticket.getStatus();
-        if ("PAID".equals(currentTicketStatus)) {
-            return new BaseResponse(400, null, "Vé đã được thanh toán", null, null);
+        TicketStatusEnum currentTicketStatus = ticket.getStatus();
+        if (TicketStatusEnum.PAID.equals(currentTicketStatus)) {
+            return new BaseResponse(400, null, "Ticket have been paid", null, null);
         }
 
-        if("UNPAID".equals(currentTicketStatus) && "PAID".equals(request.getTicketStatus())) {
+        if(TicketStatusEnum.UNPAID.equals(currentTicketStatus) && TicketStatusEnum.PAID.equals(request.getTicketStatus())) {
             ticket.setStatus(request.getTicketStatus());
             ticketRepository.save(ticket);
 
             TripSeatEntity tripSeat = ticket.getTripSeat();
-            tripSeat.setStatus("SOLD");
+            tripSeat.setStatus(TripSeatStatusEnum.SOLD);
             tripSeatRepository.save(tripSeat);
 
             PaymentEntity payment = new PaymentEntity();
             payment.setTicket(ticket);
             payment.setAmount(ticket.getPrice());
             payment.setMethod(request.getPaymentMethod());
-            payment.setStatus("SUCCESS");
+            payment.setStatus(PaymentStatusEnum.SUCCESS);
             payment.setPaidAt(LocalDateTime.now());
             payment.setCreatedBy(info.getUsername());
             payment.setCreatedAt(LocalDateTime.now());
             paymentRepository.save(payment);
 
-            return new BaseResponse(200, null, "Update ticket successfully, created payment", null, null);
+            return new BaseResponse(200, null, "Update ticket successful, created payment", null, null);
         }
-        return new BaseResponse(200, null, "Update ticket successfully", null, null);
+        return new BaseResponse(200, null, "Update ticket successful", null, null);
     }
 
     private static final DateTimeFormatter MAIL_DATE_FORMAT =

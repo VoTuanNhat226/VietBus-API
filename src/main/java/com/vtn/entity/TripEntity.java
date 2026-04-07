@@ -1,5 +1,6 @@
 package com.vtn.entity;
 
+import com.vtn.enumdef.TripStatusEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -38,8 +39,9 @@ public class TripEntity {
     @Column(name = "rest_time")
     private LocalDateTime restTime;
 
-    @Column(name = "status")
-    private String status; //CREATED → SCHEDULED → OPEN_FOR_BOOKING → CLOSED_FOR_BOOKING → DEPARTED → IN_PROGRESS → COMPLETED
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private TripStatusEnum status;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

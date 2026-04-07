@@ -1,5 +1,6 @@
 package com.vtn.dto.response;
 
+import com.vtn.enumdef.TicketStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,7 +13,7 @@ public class TicketResponse {
     private UUID ticketId;
     private String ticketCode;
     private BigDecimal ticketPrice;
-    private String ticketStatus; //UNPAID - PAID
+    private TicketStatusEnum ticketStatus;
     private String ticketPaymentType; //PAY_NOW - PAY_LATER
     private String ticketSoldBy;
 

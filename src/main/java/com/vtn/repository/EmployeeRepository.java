@@ -1,11 +1,11 @@
 package com.vtn.repository;
 
 import com.vtn.entity.EmployeeEntity;
+import com.vtn.enumdef.EmployeePositionEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,8 +15,7 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
     @Query("""
     SELECT e
     FROM EmployeeEntity e
-    WHERE (:firstName IS NULL OR e.firstName LIKE %:firstName%)
-        AND (:lastName IS NULL OR e.lastName LIKE %:lastName%)
+    WHERE (:fullName IS NULL OR e.fullName LIKE %:fullName%)
         AND (:phoneNumber IS NULL OR e.phoneNumber LIKE %:phoneNumber%)
         AND (:position IS NULL OR e.position = :position)
         AND (:createdBy IS NULL OR e.createdBy LIKE %:createdBy%)
@@ -24,10 +23,9 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
         AND (:active IS NULL OR e.active = :active)
     """)
     List<EmployeeEntity> getAllByCondition(
-            @Param("firstName") String firstName,
-            @Param("lastName") String lastName,
+            @Param("fullName") String fullName,
             @Param("phoneNumber") String phoneNumber,
-            @Param("position") String position,
+            @Param("position") EmployeePositionEnum position,
             @Param("createdBy") String createdBy,
             @Param("updatedBy") String updatedBy,
             @Param("active") Boolean active
@@ -39,18 +37,16 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
         WHERE e.active = true
             AND e.position = :position
     """)
-    List<EmployeeEntity> getAllEmployeeActiveByPosition(@Param("position") String position);
+    List<EmployeeEntity> getAllEmployeeActiveByPosition(@Param("position") EmployeePositionEnum position);
 
     @Query("""
         SELECT e
         FROM EmployeeEntity e
-        WHERE (e.firstName LIKE %:firstName%)
-            AND (e.lastName LIKE %:lastName%)
-            AND (e.phoneNumber LIKE %:phoneNumber%)       
+        WHERE (e.fullName = :fullName)
+            AND (e.phoneNumber = :phoneNumber)
     """)
-    EmployeeEntity findByFirstNameLastNamePhoneNumber(
-            @Param("firstName") String firstName,
-            @Param("lastName") String lastName,
+    EmployeeEntity findByFullNameAndPhoneNumber(
+            @Param("fullName") String fullName,
             @Param("phoneNumber") String phoneNumber
     );
 }

@@ -1,5 +1,6 @@
 package com.vtn.entity;
 
+import com.vtn.enumdef.PaymentStatusEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,8 +24,9 @@ public class PaymentEntity {
     @Column(name = "method")
     private String method; // CASH, VNPAY, MOMO
 
-    @Column(name = "status")
-    private String status; // PENDING, SUCCESS, FAILED, REFUNDED
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private PaymentStatusEnum status;
 
     @Column(name = "amount",nullable = false)
     private BigDecimal amount;

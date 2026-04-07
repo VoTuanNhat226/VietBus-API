@@ -1,5 +1,6 @@
 package com.vtn.entity;
 
+import com.vtn.enumdef.EmployeePositionEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,17 +20,15 @@ public class EmployeeEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID employeeId;
 
-    @Column(name = "first_name", nullable = false)
-    private String firstName;
-
-    @Column(name = "last_name", nullable = false)
-    private String lastName;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "position", nullable = false)
-    private String position; // ADMIN - MANAGER - STAFF - DRIVER
+    private EmployeePositionEnum position;
 
     @Column(name = "active")
     private boolean active;

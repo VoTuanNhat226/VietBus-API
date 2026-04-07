@@ -1,5 +1,6 @@
 package com.vtn.dto.request;
 
+import com.vtn.enumdef.TripStatusEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,7 +16,7 @@ public class TripRequest {
     private LocalDateTime departureTime;
     private LocalDateTime arrivalTime;
     private BigDecimal price;
-    private String status;
+    private TripStatusEnum status;
     private String restStop;
     private LocalDateTime restTime;
     private UUID routeId;

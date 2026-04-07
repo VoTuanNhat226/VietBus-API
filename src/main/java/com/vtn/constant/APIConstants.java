@@ -4,7 +4,7 @@ public class APIConstants {
     private APIConstants() {
     }
 
-    // Domain api use for all lc import
+    // Domain api
     public static final String API_VIET_BUS = "/api/v1/app";
 
     //Auth
@@ -15,6 +15,7 @@ public class APIConstants {
     public static final String ACCOUNT = "/account";
     public static final String API_GET_ALL_ACCOUNT = API_VIET_BUS + ACCOUNT + "/get-all";
     public static final String API_CREATE_ACCOUNT = API_VIET_BUS + ACCOUNT + "/create";
+    public static final String API_UPDATE_ACCOUNT = API_VIET_BUS + ACCOUNT + "/update";
     public static final String API_GET_ALL_ACCOUNT_BY_ROLE = API_VIET_BUS + ACCOUNT + "/get-all-by-role";
 
     //Employee

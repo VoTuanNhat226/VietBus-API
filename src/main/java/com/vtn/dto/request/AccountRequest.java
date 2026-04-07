@@ -3,10 +3,12 @@ package com.vtn.dto.request;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 public class AccountRequest {
-    private String accountId;
+    private UUID accountId;
     private String username;
     private String role;
     private Boolean active;

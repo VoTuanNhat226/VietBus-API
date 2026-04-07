@@ -3,6 +3,7 @@ package com.vtn.repository;
 import com.vtn.entity.EmployeeEntity;
 import com.vtn.entity.TripEntity;
 import com.vtn.entity.TripSeatEntity;
+import com.vtn.enumdef.TripStatusEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -63,7 +64,7 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
             @Param("toStationId") UUID toStationId,
             @Param("driverId") UUID driverId,
             @Param("vehicleId") UUID vehicleId,
-            @Param("status") String status,
+            @Param("status") TripStatusEnum status,
             @Param("tripCode") String tripCode
     );
 

@@ -1,5 +1,7 @@
 package com.vtn.dto.response;
 
+import com.vtn.enumdef.TripSeatStatusEnum;
+import com.vtn.enumdef.TripStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,7 +14,7 @@ import java.util.UUID;
 public class TripSeatResponse {
     //TripSeat
     private UUID tripSeatId;
-    private String tripSeatStatus;
+    private TripSeatStatusEnum tripSeatStatus;
 
     //Seat
     private UUID seatId;
@@ -31,5 +33,5 @@ public class TripSeatResponse {
     private BigDecimal tripPrice;
     private String tripRestStop;
     private LocalDateTime tripRestTime;
-    private String tripStatus;
+    private TripStatusEnum tripStatus;
 }

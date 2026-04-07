@@ -6,6 +6,7 @@ import com.vtn.entity.SeatEntity;
 import com.vtn.repository.VehicleRepository;
 import com.vtn.repository.SeatRepository;
 import com.vtn.utils.BaseResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class VehicleService {
     private final VehicleRepository vehicleRepository;
@@ -32,6 +34,7 @@ public class VehicleService {
 
     public BaseResponse getAllVehicles() {
         try {
+            log.info("Get all vehicles");
             List<VehicleEntity> buses = vehicleRepository.findAll();
             return new BaseResponse(200, buses, "Get all buses successfully", null, null);
         } catch (Exception e) {
@@ -41,6 +44,7 @@ public class VehicleService {
 
     public BaseResponse getAllVehiclesActive() {
         try {
+            log.info("Get all vehicles active");
             List<VehicleEntity> buses = vehicleRepository.findAllVehiclesActive();
             return new BaseResponse(200, buses, "Get all buses active successfully", null, null);
         } catch (Exception e) {
@@ -50,6 +54,7 @@ public class VehicleService {
 
     public BaseResponse getVehicleById(VehicleRequest vehicleRequest) {
         try {
+            log.info("Get vehicle by id: {}", vehicleRequest.getVehicleId());
             Optional<VehicleEntity> bus = vehicleRepository.findById(vehicleRequest.getVehicleId());
             return new BaseResponse(200, bus, "Get bus successfully", "Get buse successfully", null);
         } catch (Exception e) {
@@ -59,11 +64,25 @@ public class VehicleService {
 
     @Transactional
     public BaseResponse createBus(VehicleRequest request) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        log.info("Start createBus with request: {}", request);
+        UserDetails info = getInfo();
+        log.info("User {} is creating bus", info.getUsername());
+
+        boolean isAdmin = isAdmin(info);
+        if (!isAdmin) {
+            log.warn("User {} does not have permission to create employee", info.getUsername());
+            return new BaseResponse(403, null, "You don't have permission!", null, null);
+        }
+
+        if (request.getLicensePlate() == null || request.getTotalSeat() == null) {
+            log.warn("Missing required fields: licensePlate or totalSeat");
+            return new BaseResponse(400, null, "LicensePlate and TotalSeat are required", null, null);
+        }
         try {
             VehicleEntity existedVehicle = vehicleRepository.findByLicensePlate(request.getLicensePlate());
             if (existedVehicle != null) {
-                return new BaseResponse(400, null,"Xe đã tồn tại", null,null);
+                log.warn("Vehicle already exists with licensePlate: {}", request.getLicensePlate());
+                return new BaseResponse(400, null,"Vehicle already existed", null,null);
             }
 
             // ===== CREATE BUS =====
@@ -80,49 +99,132 @@ public class VehicleService {
             vehicleRepository.save(vehicle);
 
             // ===== CREATE SEATS =====
-            List<SeatEntity> seats = new ArrayList<>();
-            String[] columns = {"A", "B", "C"};
-            int totalRows = 6;
-            // ===== FLOOR 1 (ODD) =====
-            for (int row = 1; row <= totalRows; row++) {
-                int seatIndex = row * 2 - 1; // 1,3,5,7,9,11
-                for (String col : columns) {
-                    seats.add(createSeat(
-                            col + seatIndex,
-                            1,
-                            row,
-                            col,
-                            vehicle,
-                            info
-                    ));
-                }
+            int totalSeat = request.getTotalSeat();
+            switch (totalSeat) {
+                case 40 -> generateSeat40(vehicle, info);
+                case 34 -> generateSeat34(vehicle, info);
+                default -> throw new RuntimeException("Loại xe chưa hỗ trợ");
             }
-            // extra seats floor 1
-            seats.add(createSeat("A13", 1, totalRows + 1, "A", vehicle, info));
-            seats.add(createSeat("C13", 1, totalRows + 1, "C", vehicle, info));
-            // ===== FLOOR 2 (EVEN) =====
-            for (int row = 1; row <= totalRows; row++) {
-                int seatIndex = row * 2; // 2,4,6,8,10,12
-                for (String col : columns) {
-                    seats.add(createSeat(
-                            col + seatIndex,
-                            2,
-                            row,
-                            col,
-                            vehicle,
-                            info
-                    ));
-                }
-            }
-            // extra seats floor 2
-            seats.add(createSeat("A14", 2, totalRows + 1, "A", vehicle, info));
-            seats.add(createSeat("C14", 2, totalRows + 1, "C", vehicle, info));
-            seatRepository.saveAll(seats);
 
-            return new BaseResponse(201,vehicle,"Thêm xe thành công",null,null);
+            log.info("Vehicle created successfully with id: {}", vehicle.getVehicleId());
+            return new BaseResponse(201,vehicle,"Create vehicle successful",null,null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public BaseResponse updateBus(VehicleRequest request) {
+        log.info("Start updateBus with request: {}", request);
+        UserDetails info = getInfo();
+        log.info("User {} is updating bus", info.getUsername());
+        try {
+            VehicleEntity vehicle = vehicleRepository.findByVehicleId(request.getVehicleId());
+            if (vehicle == null) {
+                log.error("Vehicle not found with id: {}", request.getVehicleId());
+                return new BaseResponse(404, null, "Vehicle not found", null, null);
+            } else {
+//                vehicle.setLicensePlate(request.getLicensePlate());
+//                vehicle.setTotalSeat(request.getTotalSeat());
+                vehicle.setActive(request.getActive());
+                vehicle.setUpdatedBy(info.getUsername());
+                vehicle.setUpdatedAt(LocalDateTime.now());
+                vehicleRepository.save(vehicle);
+                log.info("Vehicle updated successfully with id: {}", request.getVehicleId());
+
+                return new BaseResponse(200, vehicle, "Update vehicle successful", null, null);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public BaseResponse deleteBus(VehicleRequest vehicleRequest) {
+        UserDetails info = getInfo();
+        boolean isAdmin = isAdmin(info);
+        if (!isAdmin) {
+            log.warn("User {} does not have permission to delete vehicle", info.getUsername());
+            return new BaseResponse(403, null, "You don't have permission!", null, null);
+        }
+        VehicleEntity bus = vehicleRepository.findByVehicleId(vehicleRequest.getVehicleId());
+        if (bus == null) {
+            return new BaseResponse(404, null, "Vehicle not found", "No error", null);
+        } else {
+            vehicleRepository.delete(bus);
+            return new BaseResponse(204, null, "Delete vehicle successfully", "No error", null);
+        }
+    }
+
+    private void generateSeat40(VehicleEntity vehicle, UserDetails info) {
+        List<SeatEntity> seats = new ArrayList<>();
+        String[] columns = {"A", "B", "C"};
+        int totalRows = 6;
+        // ===== FLOOR 1 (ODD) =====
+        for (int row = 1; row <= totalRows; row++) {
+            int seatIndex = row * 2 - 1; // 1,3,5,7,9,11
+            for (String col : columns) {
+                seats.add(createSeat(
+                        col + seatIndex,
+                        1,
+                        row,
+                        col,
+                        vehicle,
+                        info
+                ));
+            }
+        }
+        // extra seats floor 1
+        seats.add(createSeat("A13", 1, totalRows + 1, "A", vehicle, info));
+        seats.add(createSeat("C13", 1, totalRows + 1, "C", vehicle, info));
+        // ===== FLOOR 2 (EVEN) =====
+        for (int row = 1; row <= totalRows; row++) {
+            int seatIndex = row * 2; // 2,4,6,8,10,12
+            for (String col : columns) {
+                seats.add(createSeat(
+                        col + seatIndex,
+                        2,
+                        row,
+                        col,
+                        vehicle,
+                        info
+                ));
+            }
+        }
+        // extra seats floor 2
+        seats.add(createSeat("A14", 2, totalRows + 1, "A", vehicle, info));
+        seats.add(createSeat("C14", 2, totalRows + 1, "C", vehicle, info));
+        seatRepository.saveAll(seats);
+    }
+
+    private void generateSeat34(VehicleEntity vehicle, UserDetails info) {
+        List<SeatEntity> seats = new ArrayList<>();
+        int totalRows = 6;
+        // ===== FLOOR 1 (ODD) =====
+        for (int row = 1; row <= totalRows; row++) {
+            int seatIndex = row * 2 - 1; // 1,3,5,7,9,11
+            // A luôn có
+            seats.add(createSeat("A" + seatIndex, 1, row, "A", vehicle, info));
+            // B: bỏ row 1
+            if (row > 1) {
+                int bIndex = (row - 1) * 2 - 1; // B1, B3, B5...
+                seats.add(createSeat("B" + bIndex, 1, row, "B", vehicle, info));
+            }
+            // C luôn có
+            seats.add(createSeat("C" + seatIndex, 1, row, "C", vehicle, info));
+        }
+        // ===== FLOOR 2 (EVEN) =====
+        for (int row = 1; row <= totalRows; row++) {
+            int seatIndex = row * 2; // 2,4,6,8,10,12
+            // A luôn có
+            seats.add(createSeat("A" + seatIndex, 2, row, "A", vehicle, info));
+            // B: bỏ row 1
+            if (row > 1) {
+                int bIndex = (row - 1) * 2; // B2, B4, B6...
+                seats.add(createSeat("B" + bIndex, 2, row, "B", vehicle, info));
+            }
+            // C luôn có
+            seats.add(createSeat("C" + seatIndex, 2, row, "C", vehicle, info));
+        }
+        seatRepository.saveAll(seats);
     }
 
     private SeatEntity createSeat(String seatNumber, int floor, int seatRow, String seatColumn, VehicleEntity vehicle, UserDetails info) {
@@ -137,47 +239,13 @@ public class VehicleService {
         return seat;
     }
 
-    public BaseResponse updateBus(VehicleRequest request) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        try {
-            VehicleEntity vehicle = vehicleRepository.findByVehicleId(request.getVehicleId());
-            if (vehicle == null) {
-                return new BaseResponse(404, null, "Không tìm thấy phương tiện", null, null);
-            } else {
-                vehicle.setLicensePlate(request.getLicensePlate());
-                vehicle.setTotalSeat(request.getTotalSeat());
-                vehicle.setActive(request.getActive());
-                vehicle.setUpdatedBy(info.getUsername());
-                vehicle.setUpdatedAt(LocalDateTime.now());
-                vehicleRepository.save(vehicle);
-                return new BaseResponse(200, vehicle, "Cập nhật phương tiện thành công", null, null);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    private boolean isAdmin(UserDetails info) {
+        return info.getAuthorities()
+                .stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 
-    public BaseResponse deleteBus(VehicleRequest vehicleRequest) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String role = info.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .findFirst()
-                .orElse(null);
-        try {
-            if("ROLE_ADMIN".equals(role)) {
-                VehicleEntity bus = vehicleRepository.findByVehicleId(vehicleRequest.getVehicleId());
-                if (bus == null) {
-                    return new BaseResponse(404, null, "Not found bus", "Not found bus", null);
-                } else {
-                    vehicleRepository.delete(bus);
-                    return new BaseResponse(204, null, "Delete bus successfully", "No error", null);
-                }
-            } else {
-                return new BaseResponse(403, null, "You don't has permission", "No error", null);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    private UserDetails getInfo() {
+        return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 }
