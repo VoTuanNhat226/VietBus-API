@@ -57,7 +57,7 @@ public class TripService {
 
     public BaseResponse getAllTripOpenBooking() {
         log.info("Get trips open for booking");
-        List<TripEntity> trips = tripRepository.getAllTripOpenBooking(TripStatusEnum.OPEN_FOR_BOOKING.toString());
+        List<TripEntity> trips = tripRepository.getAllTripOpenBooking(TripStatusEnum.OPEN_FOR_BOOKING);
         return new BaseResponse(200, trips, "Get all trips open for booking successful",null,null);
     }
 
@@ -112,7 +112,8 @@ public class TripService {
                     driver.getEmployeeId(),
                     route.getRouteId(),
                     tripRequest.getDepartureTime(),
-                    tripRequest.getArrivalTime()
+                    tripRequest.getArrivalTime(),
+                    List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
             );
             if (conflict) {
                 return new BaseResponse(400,null,"The driver has been assigned to another trip on the same route during this time",null,null);
@@ -121,7 +122,8 @@ public class TripService {
             boolean vehicleConflict = tripRepository.existsVehicleConflict(
                     vehicle.getVehicleId(),
                     tripRequest.getDepartureTime(),
-                    tripRequest.getArrivalTime()
+                    tripRequest.getArrivalTime(),
+                    List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
             );
 
             if (vehicleConflict) {

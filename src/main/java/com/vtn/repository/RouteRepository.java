@@ -27,7 +27,6 @@ public interface RouteRepository extends JpaRepository<RouteEntity, Integer> {
     WHERE (:fromStationId IS NULL OR r.fromStation.stationId = :fromStationId)
         AND (:toStationId IS NULL OR r.toStation.stationId = :toStationId)
         AND (:distanceKm IS NULL OR r.distanceKm = :distanceKm)
-        AND (:durationMinutes IS NULL OR r.durationMinutes = :durationMinutes)
         AND (:createdBy IS NULL OR r.createdBy LIKE %:createdBy%)
         AND (:updatedBy IS NULL OR r.updatedBy LIKE :updatedBy%)
         AND (:active IS NULL OR r.active = :active)
@@ -36,7 +35,6 @@ public interface RouteRepository extends JpaRepository<RouteEntity, Integer> {
             @Param("fromStationId") UUID fromStationId,
             @Param("toStationId") UUID toStationId,
             @Param("distanceKm") Integer distanceKm,
-            @Param("durationMinutes") Integer durationMinutes,
             @Param("createdBy") String createdBy,
             @Param("updatedBy") String updatedBy,
             @Param("active") Boolean active

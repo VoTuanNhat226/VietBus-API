@@ -29,31 +29,16 @@ public class RouteService {
         this.stationRepository = stationRepository;
     }
 
-    private boolean isAllParametersNull(RouteRequest request) {
-        return ((request.getFromStationId() == null) &&
-                (request.getToStationId() == null) &&
-                (request.getDistanceKm() == null) &&
-                (request.getDurationMinutes() == null) &&
-                (request.getCreatedBy() == null) &&
-                (request.getUpdatedBy() == null) &&
-                (request.getActive() == null));
-    }
-
     public BaseResponse getAllRoutes(RouteRequest request) {
-        List<RouteEntity> routes;
-        if (isAllParametersNull(request)) {
-            routes = routeRepository.findAll();
-        } else {
-            routes = routeRepository.getAllByCondition(
+        List<RouteEntity> routes = routeRepository.getAllByCondition(
                     request.getFromStationId(),
                     request.getToStationId(),
                     request.getDistanceKm(),
-                    request.getDurationMinutes(),
                     request.getCreatedBy(),
                     request.getUpdatedBy(),
                     request.getActive()
             );
-        }
+
         return new BaseResponse(200, routes, "Get all routes successfully", null, null);
     }
 
@@ -79,9 +64,6 @@ public class RouteService {
             if(routeRequest.getDistanceKm() == 0) {
                 return new BaseResponse(400, null,"Khoảng cách phải lớn hơn 0", null,null);
             }
-            if(routeRequest.getDurationMinutes() == 0) {
-                return new BaseResponse(400, null,"Thời gian phải lớn hơn 0", null,null);
-            }
 
             StationEntity fromStaion = stationRepository.findByStationId(routeRequest.getFromStationId());
             StationEntity toStaion = stationRepository.findByStationId(routeRequest.getToStationId());
@@ -90,7 +72,6 @@ public class RouteService {
             route.setFromStation(fromStaion);
             route.setToStation(toStaion);
             route.setDistanceKm(routeRequest.getDistanceKm());
-            route.setDurationMinutes(routeRequest.getDurationMinutes());
             route.setActive(routeRequest.getActive());
             route.setCreatedBy(info.getUsername());
             route.setCreatedAt(LocalDateTime.now());

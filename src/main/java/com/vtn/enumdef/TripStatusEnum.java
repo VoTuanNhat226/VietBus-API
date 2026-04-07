@@ -7,5 +7,6 @@ public enum TripStatusEnum {
     CLOSED_FOR_BOOKING,
     DEPARTED,
     IN_PROGRESS,
-    COMPLETED
+    COMPLETED,
+    CANCELLED
 }

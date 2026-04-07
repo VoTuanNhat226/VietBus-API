@@ -26,13 +26,14 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
           AND t.route.routeId = :routeId
           AND t.departureTime < :arrivalTime
           AND t.arrivalTime > :departureTime
-          AND t.status NOT IN ('COMPLETED', 'CANCELLED')
+          AND t.status NOT IN (:statuses)
     """)
     boolean existsDriverConflict(
             @Param("driverId") UUID driverId,
             @Param("routeId") UUID routeId,
             @Param("departureTime") LocalDateTime departureTime,
-            @Param("arrivalTime") LocalDateTime arrivalTime
+            @Param("arrivalTime") LocalDateTime arrivalTime,
+            @Param("statuses") List<TripStatusEnum> statuses
     );
 
     @Query("""
@@ -41,12 +42,13 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
         WHERE t.vehicle.vehicleId = :vehicleId
           AND t.departureTime < :arrivalTime
           AND t.arrivalTime > :departureTime
-          AND t.status NOT IN ('COMPLETED', 'CANCELLED')
+          AND t.status NOT IN (:statuses)
     """)
     boolean existsVehicleConflict(
             @Param("vehicleId") UUID vehicleId,
             @Param("departureTime") LocalDateTime departureTime,
-            @Param("arrivalTime") LocalDateTime arrivalTime
+            @Param("arrivalTime") LocalDateTime arrivalTime,
+            @Param("statuses") List<TripStatusEnum> statuses
     );
 
     @Query("""
@@ -73,5 +75,5 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
         FROM TripEntity t
         WHERE t.status = :status
     """)
-    List<TripEntity> getAllTripOpenBooking(@Param("status") String status);
+    List<TripEntity> getAllTripOpenBooking(@Param("status") TripStatusEnum status);
 }

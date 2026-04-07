@@ -13,7 +13,6 @@ public class RouteRequest {
     private UUID fromStationId;
     private UUID toStationId;
     private Integer distanceKm;
-    private Integer durationMinutes;
     private Boolean active;
     private String createdBy;
     private String updatedBy;

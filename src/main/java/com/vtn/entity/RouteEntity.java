@@ -30,9 +30,6 @@ public class RouteEntity {
     @Column(name = "distance_km")
     private Integer distanceKm;
 
-    @Column(name = "duration_minutes")
-    private Integer durationMinutes;
-
     @Column(name = "active")
     private boolean active;
 
