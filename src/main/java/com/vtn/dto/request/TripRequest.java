@@ -17,8 +17,6 @@ public class TripRequest {
     private LocalDateTime arrivalTime;
     private BigDecimal price;
     private TripStatusEnum status;
-    private String restStop;
-    private LocalDateTime restTime;
     private UUID routeId;
     private UUID vehicleId;
     private UUID driverId;

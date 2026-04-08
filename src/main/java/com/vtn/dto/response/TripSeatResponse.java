@@ -31,7 +31,5 @@ public class TripSeatResponse {
     private LocalDateTime tripDepartureTime;
     private LocalDateTime tripArrivalTime;
     private BigDecimal tripPrice;
-    private String tripRestStop;
-    private LocalDateTime tripRestTime;
     private TripStatusEnum tripStatus;
 }

@@ -33,12 +33,6 @@ public class TripEntity {
     @Column(name = "price", nullable = false)
     private BigDecimal price;
 
-    @Column(name = "rest_stop")
-    private String restStop;
-
-    @Column(name = "rest_time")
-    private LocalDateTime restTime;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private TripStatusEnum status;

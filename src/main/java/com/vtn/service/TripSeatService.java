@@ -60,8 +60,6 @@ public class TripSeatService {
                             ts.getTrip().getDepartureTime(),
                             ts.getTrip().getArrivalTime(),
                             ts.getTrip().getPrice(),
-                            ts.getTrip().getRestStop(),
-                            ts.getTrip().getRestTime(),
                             ts.getTrip().getStatus()
                     ))
                     .toList();

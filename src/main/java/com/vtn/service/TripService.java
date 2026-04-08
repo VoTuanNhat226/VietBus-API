@@ -140,10 +140,8 @@ public class TripService {
 
             trip.setDepartureTime(tripRequest.getDepartureTime());
             trip.setArrivalTime(tripRequest.getArrivalTime());
-            trip.setRestTime(tripRequest.getRestTime());
             trip.setPrice(tripRequest.getPrice());
             trip.setStatus(TripStatusEnum.CREATED);
-            trip.setRestStop(tripRequest.getRestStop());
             trip.setRoute(route);
             trip.setVehicle(vehicle);
             trip.setDriver(driver);
