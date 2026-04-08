@@ -18,32 +18,32 @@ import java.util.UUID;
 public class EmployeeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID employeeId;
+    UUID employeeId;
 
     @Column(name = "full_name", nullable = false)
-    private String fullName;
+    String fullName;
 
     @Column(name = "phone_number", nullable = false)
-    private String phoneNumber;
+    String phoneNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "position", nullable = false)
-    private EmployeePositionEnum position;
+    EmployeePositionEnum position;
 
     @Column(name = "active")
-    private boolean active;
+    boolean active;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    String updatedBy;
 
     @OneToOne
     @JoinColumn(name = "account_id", unique = true, foreignKey = @ForeignKey(name = "fk_employee_account_id"))

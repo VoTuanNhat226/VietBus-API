@@ -1,5 +1,6 @@
 package com.vtn.entity;
 
+import com.vtn.enumdef.PaymentMethodEnum;
 import com.vtn.enumdef.PaymentStatusEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -19,34 +20,35 @@ import java.util.UUID;
 public class PaymentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID paymentId;
+    UUID paymentId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "method")
-    private String method; // CASH, VNPAY, MOMO
+    PaymentMethodEnum method;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private PaymentStatusEnum status;
+    PaymentStatusEnum status;
 
     @Column(name = "amount",nullable = false)
-    private BigDecimal amount;
+    BigDecimal amount;
 
     @Column(name = "paid_at")
-    private LocalDateTime paidAt;
+    LocalDateTime paidAt;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    String updatedBy;
 
     @OneToOne
     @JoinColumn(name = "ticket_id", unique = true)
-    private TicketEntity ticket;
+    TicketEntity ticket;
 }

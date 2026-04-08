@@ -17,7 +17,7 @@ import java.util.UUID;
 public class RouteEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID routeId;
+    UUID routeId;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "from_station_id", nullable = false)
@@ -27,21 +27,21 @@ public class RouteEntity {
     @JoinColumn(name = "to_station_id", nullable = false)
     StationEntity toStation;
 
-    @Column(name = "distance_km")
-    private Integer distanceKm;
+    @Column(name = "distance_km", nullable = false)
+    Integer distanceKm;
 
     @Column(name = "active")
-    private boolean active;
+    boolean active;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    String updatedBy;
 }

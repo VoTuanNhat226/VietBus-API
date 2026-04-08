@@ -19,35 +19,35 @@ import java.util.UUID;
 public class TripEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID tripId;
+    UUID tripId;
 
     @Column(name = "trip_code", nullable = false, unique = true, length = 10)
-    private String tripCode;
+    String tripCode;
 
     @Column(name = "departure_time", nullable = false)
-    private LocalDateTime departureTime;
+    LocalDateTime departureTime;
 
     @Column(name = "arrival_time", nullable = false)
-    private LocalDateTime arrivalTime;
+    LocalDateTime arrivalTime;
 
     @Column(name = "price", nullable = false)
-    private BigDecimal price;
+    BigDecimal price;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private TripStatusEnum status;
+    TripStatusEnum status;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    String updatedBy;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "route_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_route_id"))

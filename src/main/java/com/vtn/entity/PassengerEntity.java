@@ -17,32 +17,32 @@ import java.util.UUID;
 public class PassengerEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID passengerId;
+    UUID passengerId;
 
     @Column(name = "full_name", nullable = false)
-    private String fullName;
+    String fullName;
 
     @Column(name = "phone_number", nullable = false, unique = true)
-    private String phoneNumber;
+    String phoneNumber;
 
     @Column(name = "email", nullable = false, unique = true)
-    private String email;
+    String email;
 
     @Column(name = "id_card", nullable = false, unique = true)
-    private String idCard;
+    String idCard;
 
     @Column(name = "note")
-    private String note;
+    String note;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    String updatedBy;
 }

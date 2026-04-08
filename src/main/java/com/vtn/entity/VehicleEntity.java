@@ -17,35 +17,35 @@ import java.util.UUID;
 public class VehicleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID vehicleId;
+    UUID vehicleId;
 
-    @Column(name = "license_plate")
-    private String licensePlate;
+    @Column(name = "license_plate", nullable = false)
+    String licensePlate;
 
-    @Column(name = "total_seat")
-    private Integer totalSeat;
+    @Column(name = "total_seat", nullable = false)
+    Integer totalSeat;
 
     @Column(name = "active")
-    private boolean active;
+    boolean active;
 
     @Column(name = "model")
-    private String model;
+    String model;
 
     @Column(name = "manufacture_year")
-    private String manufactureYear;
+    String manufactureYear;
 
     @Column(name = "total_km")
-    private Integer totalKm;
+    Integer totalKm;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    String updatedBy;
 }

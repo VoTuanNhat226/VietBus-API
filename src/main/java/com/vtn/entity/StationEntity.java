@@ -17,26 +17,26 @@ import java.util.UUID;
 public class StationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID stationId;
+    UUID stationId;
 
     @Column(name = "name", nullable = false)
     String name;
 
-    @Column(name = "city")
+    @Column(name = "city", nullable = false)
     String city;
 
     @Column(name = "address")
     String address;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    String updatedBy;
 }

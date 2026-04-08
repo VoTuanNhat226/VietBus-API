@@ -1,5 +1,6 @@
 package com.vtn.dto.request;
 
+import com.vtn.enumdef.PaymentMethodEnum;
 import com.vtn.enumdef.TicketStatusEnum;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,5 +26,5 @@ public class TicketRequest {
     private String tripCode;
 
     private UUID passengerId;
-    private String paymentMethod;
+    private PaymentMethodEnum paymentMethod;
 }

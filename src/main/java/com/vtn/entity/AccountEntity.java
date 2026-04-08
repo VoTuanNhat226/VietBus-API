@@ -1,6 +1,7 @@
 package com.vtn.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vtn.enumdef.AccountRoleEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,32 +24,33 @@ import java.util.UUID;
 public class AccountEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID accountId;
+    UUID accountId;
 
     @Column(name = "username", unique = true, nullable = false)
-    private String username;
+    String username;
 
     @Column(name = "password", nullable = false)
     @JsonIgnore
-    private String password;
+    String password;
 
     @Column(name = "active")
-    private Boolean active;
+    Boolean active;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "role")
-    private String role; // ADMIN, MANAGER, STAFF, DRIVER
+    AccountRoleEnum role;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    String updatedBy;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

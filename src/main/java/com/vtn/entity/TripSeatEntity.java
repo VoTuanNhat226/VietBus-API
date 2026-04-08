@@ -18,18 +18,18 @@ import java.util.UUID;
 public class TripSeatEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    UUID id;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private TripSeatStatusEnum status;
+    TripSeatStatusEnum status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
     @JsonIgnore
-    private TripEntity trip;
+    TripEntity trip;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "seat_id", nullable = false)
-    private SeatEntity seat;
+    SeatEntity seat;
 }

@@ -19,51 +19,51 @@ import java.util.UUID;
 public class TicketEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID ticketId;
+    UUID ticketId;
 
     @Column(name = "ticket_code", nullable = false, unique = true, length = 10)
-    private String ticketCode;
+    String ticketCode;
 
     @Column(name = "note")
-    private String note;
+    String note;
 
-    @Column(name = "price")
-    private BigDecimal price;
+    @Column(name = "price", nullable = false)
+    BigDecimal price;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private TicketStatusEnum status;
+    TicketStatusEnum status;
 
     @Column(name = "payment_type")
-    private String paymentType;
+    String paymentType;
 
     @Column(name = "sold_by")
-    private String soldBy;
+    String soldBy;
 
     @Column(name = "sold_at")
-    private LocalDateTime soldAt;
+    LocalDateTime soldAt;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    String updatedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
-    private TripEntity trip;
+    TripEntity trip;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_seat_id", nullable = false, unique = true)
-    private TripSeatEntity tripSeat;
+    TripSeatEntity tripSeat;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "passenger_id")
-    private PassengerEntity passenger;
+    PassengerEntity passenger;
 }

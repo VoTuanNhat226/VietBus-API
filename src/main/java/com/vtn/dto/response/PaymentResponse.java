@@ -1,5 +1,6 @@
 package com.vtn.dto.response;
 
+import com.vtn.enumdef.PaymentMethodEnum;
 import com.vtn.enumdef.PaymentStatusEnum;
 import com.vtn.enumdef.TicketStatusEnum;
 import lombok.AllArgsConstructor;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class PaymentResponse {
     private UUID paymentId;
-    private String method;
+    private PaymentMethodEnum method;
     private PaymentStatusEnum status;
     private BigDecimal amount;
     private LocalDateTime paidAt;

@@ -1,16 +1,17 @@
 package com.vtn.service;
 
-import com.vtn.dto.request.TripRequest;
 import com.vtn.dto.request.TripSeatRequest;
 import com.vtn.dto.response.TripSeatResponse;
 import com.vtn.entity.TripSeatEntity;
 import com.vtn.repository.TripSeatRepository;
 import com.vtn.utils.BaseResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class TripSeatService {
     private final TripSeatRepository tripSeatRepository;
@@ -21,21 +22,24 @@ public class TripSeatService {
     }
 
     public BaseResponse countTripSeatSoldByTripId(TripSeatRequest request) {
-        try {
-            Integer count = tripSeatRepository.countTripSeatSoldByTripId(request.getTripId());
-            return new BaseResponse(200, count, "Get trip seat sold successfully",null,null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        log.info("Get quantity trip seat sold by tripId: {}", request.getTripId());
+        if (request.getTripId() == null) {
+            log.warn("TripId is required");
+            return new BaseResponse(400, null, "TripId is required", null, null);
         }
+        Integer count = tripSeatRepository.countTripSeatSoldByTripId(request.getTripId());
+        return new BaseResponse(200, count, "Get quantity trip seat sold successful",null,null);
     }
 
     public BaseResponse getAllTripSeatsByTripId(TripSeatRequest request) {
-        try {
-            List<TripSeatEntity> tripSeats = tripSeatRepository.findAllTripSeatsByTripId(request.getTripId());
-            return new BaseResponse(200, tripSeats, "Get all trip seats successfully",null,null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        log.info("Get all trip seat sold by tripId: {}", request.getTripId());
+        if (request.getTripId() == null) {
+            log.warn("TripId is required");
+            return new BaseResponse(400, null, "TripId is required", null, null);
         }
+        List<TripSeatEntity> tripSeats = tripSeatRepository.findAllTripSeatsByTripId(request.getTripId());
+        return new BaseResponse(200, tripSeats, "Get all trip seats successful",null,null);
+
     }
 
     public BaseResponse getAllTripSeatAvailableByTripId(TripSeatRequest request) {
@@ -63,7 +67,7 @@ public class TripSeatService {
                             ts.getTrip().getStatus()
                     ))
                     .toList();
-            return new BaseResponse(200, result, "Get all trip seats can sell successfully",null,null);
+            return new BaseResponse(200, result, "Get all trip seats can sell successful",null,null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

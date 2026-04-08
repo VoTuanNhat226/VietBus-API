@@ -18,31 +18,31 @@ import java.util.UUID;
 public class SeatEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID seatId;
+    UUID seatId;
 
     @Column(name = "seat_number", nullable = false)
-    private String seatNumber;
+    String seatNumber;
 
-    @Column(name = "floor")
-    private Integer floor; // 1 or 2
+    @Column(name = "floor", nullable = false)
+    Integer floor; // 1 or 2
 
-    @Column(name = "seat_row")
-    private Integer seatRow; // row (1 → 6)
+    @Column(name = "seat_row", nullable = false)
+    Integer seatRow; // row (1 → 6)
 
-    @Column(name = "seat_column")
-    private String seatColumn; // A, B, C
+    @Column(name = "seat_column", nullable = false)
+    String seatColumn; // A, B, C
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    String createdBy;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    String updatedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false, foreignKey = @ForeignKey(name = "fk_seat_vehicle_id"))
