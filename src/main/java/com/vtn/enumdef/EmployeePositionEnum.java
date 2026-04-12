@@ -4,5 +4,6 @@ public enum EmployeePositionEnum {
     ADMIN,
     MANAGER,
     STAFF,
-    DRIVER
+    DRIVER,
+    ASSISTANT
 }

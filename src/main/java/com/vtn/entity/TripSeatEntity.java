@@ -24,7 +24,7 @@ public class TripSeatEntity {
     @Column(name = "status", nullable = false)
     TripSeatStatusEnum status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_id", nullable = false)
     @JsonIgnore
     TripEntity trip;

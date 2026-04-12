@@ -20,29 +20,27 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
     TripEntity findByTripCode(String tripCode);
 
     @Query("""
-        SELECT COUNT(t) > 0
-        FROM TripEntity t
-        WHERE t.driver.employeeId = :driverId
-          AND t.route.routeId = :routeId
-          AND t.departureTime < :arrivalTime
-          AND t.arrivalTime > :departureTime
-          AND t.status NOT IN (:statuses)
+    SELECT COUNT(te) > 0
+    FROM TripEmployeeEntity te
+    WHERE te.employee.employeeId = :employeeId
+        AND te.trip.departureTime < :arrivalTime
+        AND te.trip.arrivalTime > :departureTime
+        AND te.trip.status NOT IN (:statuses)
     """)
-    boolean existsDriverConflict(
-            @Param("driverId") UUID driverId,
-            @Param("routeId") UUID routeId,
+    boolean existsEmployeeConflict(
+            @Param("employeeId") UUID employeeId,
             @Param("departureTime") LocalDateTime departureTime,
             @Param("arrivalTime") LocalDateTime arrivalTime,
             @Param("statuses") List<TripStatusEnum> statuses
     );
 
     @Query("""
-        SELECT COUNT(t) > 0
-        FROM TripEntity t
-        WHERE t.vehicle.vehicleId = :vehicleId
-          AND t.departureTime < :arrivalTime
-          AND t.arrivalTime > :departureTime
-          AND t.status NOT IN (:statuses)
+    SELECT COUNT(t) > 0
+    FROM TripEntity t
+    WHERE t.vehicle.vehicleId = :vehicleId
+        AND t.departureTime < :arrivalTime
+        AND t.arrivalTime > :departureTime
+        AND t.status NOT IN (:statuses)
     """)
     boolean existsVehicleConflict(
             @Param("vehicleId") UUID vehicleId,
@@ -52,28 +50,29 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
     );
 
     @Query("""
-    SELECT t
+    SELECT DISTINCT t
     FROM TripEntity t
+    JOIN TripEmployeeEntity te ON t.tripId = te.trip.tripId
     WHERE (:fromStationId IS NULL OR t.route.fromStation.stationId = :fromStationId)
         AND (:toStationId IS NULL OR t.route.toStation.stationId = :toStationId)
-        AND (:driverId IS NULL OR t.driver.employeeId = :driverId)
         AND (:vehicleId IS NULL OR t.vehicle.vehicleId = :vehicleId)
         AND (:status IS NULL OR t.status = :status)
         AND (:tripCode IS NULL OR t.tripCode LIKE %:tripCode%)
+        AND (:driverId IS NULL OR te.employee.employeeId = :driverId)
     """)
     List<TripEntity> getAllByCondition(
             @Param("fromStationId") UUID fromStationId,
             @Param("toStationId") UUID toStationId,
-            @Param("driverId") UUID driverId,
             @Param("vehicleId") UUID vehicleId,
             @Param("status") TripStatusEnum status,
-            @Param("tripCode") String tripCode
+            @Param("tripCode") String tripCode,
+            @Param("driverId") UUID driverId
     );
 
     @Query("""
-        SELECT t
-        FROM TripEntity t
-        WHERE t.status = :status
+    SELECT t
+    FROM TripEntity t
+    WHERE t.status = :status
     """)
-    List<TripEntity> getAllTripOpenBooking(@Param("status") TripStatusEnum status);
+    List<TripEntity> getAllTripByStatus(@Param("status") TripStatusEnum status);
 }

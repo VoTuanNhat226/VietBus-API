@@ -1,7 +1,9 @@
 package com.vtn.service;
 
 import com.vtn.dto.request.TripRequest;
+import com.vtn.dto.response.TripResponse;
 import com.vtn.entity.*;
+import com.vtn.enumdef.AccountRoleEnum;
 import com.vtn.enumdef.TripSeatStatusEnum;
 import com.vtn.enumdef.TripStatusEnum;
 import com.vtn.repository.*;
@@ -16,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -45,20 +49,26 @@ public class TripService {
 
     public BaseResponse getAllTrips(TripRequest request) {
         List<TripEntity> trips = tripRepository.getAllByCondition(
-                    request.getFromStationId(),
-                    request.getToStationId(),
-                    request.getDriverId(),
-                    request.getVehicleId(),
-                    request.getStatus(),
-                    request.getTripCode()
-            );
-        return new BaseResponse(200, trips, "Get all trips successful",null,null);
+                request.getFromStationId(),
+                request.getToStationId(),
+                request.getVehicleId(),
+                request.getStatus(),
+                request.getTripCode(),
+                request.getDriverId()
+        );
+        List<TripResponse> result = trips.stream()
+                .map(this::toResponse)
+                .toList();
+        return new BaseResponse(200, result, "Get all trips successful", null, null);
     }
 
     public BaseResponse getAllTripOpenBooking() {
         log.info("Get trips open for booking");
-        List<TripEntity> trips = tripRepository.getAllTripOpenBooking(TripStatusEnum.OPEN_FOR_BOOKING);
-        return new BaseResponse(200, trips, "Get all trips open for booking successful",null,null);
+        List<TripEntity> trips = tripRepository.getAllTripByStatus(TripStatusEnum.OPEN_FOR_BOOKING);
+        List<TripResponse> result = trips.stream()
+                .map(this::toResponse)
+                .toList();
+        return new BaseResponse(200, result, "Get all trips open for booking successful",null,null);
     }
 
     public BaseResponse getTripByTripId(TripRequest request) {
@@ -72,7 +82,8 @@ public class TripService {
             log.error("Trip not found with id: {}", request.getTripId());
             return new BaseResponse(404, null,"Trip not found",null,null);
         }
-        return new BaseResponse(200, trip, "Get trip successfully",null,null);
+        TripResponse response = toResponse(trip);
+        return new BaseResponse(200, response, "Get trip successfully",null,null);
     }
 
     @Transactional
@@ -81,21 +92,18 @@ public class TripService {
         UserDetails info = getInfo();
         log.info("User {} is creating trip", info.getUsername());
         try {
+            // Validate route
             RouteEntity route = routeRepository.findByRouteId(tripRequest.getRouteId());
             if (route == null) {
                 return new BaseResponse(400,null,"Route not found",null,null);
             }
-
+            // Validate vehicle
             VehicleEntity vehicle = vehicleRepository.findByVehicleId(tripRequest.getVehicleId());
             if (vehicle == null) {
                 return new BaseResponse(400,null,"Vehicle not found",null,null);
             }
 
-            EmployeeEntity driver = employeeRepository.findByEmployeeId(tripRequest.getDriverId());
-            if (driver == null) {
-                return new BaseResponse(400,null,"Driver not fount",null,null);
-            }
-
+            // Validate time
             if (tripRequest.getArrivalTime().isBefore(tripRequest.getDepartureTime())) {
                 return new BaseResponse(400, null, "Arrival time and Departure time are invalid", null, null);
             }
@@ -103,22 +111,59 @@ public class TripService {
             if (tripRequest.getDepartureTime().isBefore(LocalDateTime.now())) {
                 return new BaseResponse(400,null,"Departure time must be longer than current time",null,null);
             }
-
+            // Validate price
             if (tripRequest.getPrice() == null || tripRequest.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
                 return new BaseResponse(400,null,"Ticket prices invalid",null,null);
             }
 
-            boolean conflict = tripRepository.existsDriverConflict(
-                    driver.getEmployeeId(),
-                    route.getRouteId(),
-                    tripRequest.getDepartureTime(),
-                    tripRequest.getArrivalTime(),
-                    List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
-            );
-            if (conflict) {
-                return new BaseResponse(400,null,"The driver has been assigned to another trip on the same route during this time",null,null);
+            // ── Validate & load drivers (bắt buộc có ít nhất 1) ──────────────
+            if (tripRequest.getDriverIds() == null || tripRequest.getDriverIds().isEmpty()) {
+                return new BaseResponse(400, null, "At least one driver is required", null, null);
+            }
+            List<EmployeeEntity> drivers = new ArrayList<>();
+            for (UUID driverId : tripRequest.getDriverIds()) {
+                EmployeeEntity driver = employeeRepository.findByEmployeeId(driverId);
+                if (driver == null) {
+                    return new BaseResponse(400, null, "Driver not found: " + driverId, null, null);
+                }
+                boolean conflict = tripRepository.existsEmployeeConflict(
+                        driverId,
+                        tripRequest.getDepartureTime(),
+                        tripRequest.getArrivalTime(),
+                        List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
+                );
+                if (conflict) {
+                    return new BaseResponse(400, null,
+                            "Driver " + driver.getFullName() + " has been assigned to another trip during this time",
+                            null, null);
+                }
+                drivers.add(driver);
             }
 
+            // ── Validate & load assistants (tuỳ chọn) ────────────────────────
+            List<EmployeeEntity> assistants = new ArrayList<>();
+            if (tripRequest.getAssistantIds() != null) {
+                for (UUID assistantId : tripRequest.getAssistantIds()) {
+                    EmployeeEntity assistant = employeeRepository.findByEmployeeId(assistantId);
+                    if (assistant == null) {
+                        return new BaseResponse(400, null, "Assistant not found: " + assistantId, null, null);
+                    }
+                    boolean conflict = tripRepository.existsEmployeeConflict(
+                            assistantId,
+                            tripRequest.getDepartureTime(),
+                            tripRequest.getArrivalTime(),
+                            List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
+                    );
+                    if (conflict) {
+                        return new BaseResponse(400, null,
+                                "Assistant " + assistant.getFullName() + " has been assigned to another trip during this time",
+                                null, null);
+                    }
+                    assistants.add(assistant);
+                }
+            }
+
+            // Validate vehicle conflict
             boolean vehicleConflict = tripRepository.existsVehicleConflict(
                     vehicle.getVehicleId(),
                     tripRequest.getDepartureTime(),
@@ -144,9 +189,12 @@ public class TripService {
             trip.setStatus(TripStatusEnum.CREATED);
             trip.setRoute(route);
             trip.setVehicle(vehicle);
-            trip.setDriver(driver);
             trip.setCreatedBy(info.getUsername());
             trip.setCreatedAt(LocalDateTime.now());
+            // Gán drivers và assistants qua bảng trung gian
+            drivers.forEach(d -> trip.addEmployee(d, AccountRoleEnum.DRIVER));
+            assistants.forEach(a -> trip.addEmployee(a, AccountRoleEnum.ASSISTANT));
+
             tripRepository.save(trip);
 
             List<SeatEntity> seats = seatRepository.findByVehicleId(vehicle.getVehicleId());
@@ -160,13 +208,14 @@ public class TripService {
                         return ts;
                     }).toList();
             tripSeatRepository.saveAll(tripSeats);
-
-            return new BaseResponse(200,trip,"Create trip successful",null,null);
+            TripResponse response = toResponse(trip);
+            return new BaseResponse(200,response,"Create trip successful",null,null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Transactional
     public BaseResponse updateTrip(TripRequest request) {
         log.info("Start updateTrip with request: {}", request);
         UserDetails info = getInfo();
@@ -183,8 +232,8 @@ public class TripService {
         trip.setUpdatedAt(LocalDateTime.now());
         tripRepository.save(trip);
         log.info("Trip updated successful with id: {}", trip.getTripId());
-
-        return new BaseResponse(200,trip,"Update trip successful", null, null);
+        TripResponse response = toResponse(trip);
+        return new BaseResponse(200,response,"Update trip successful", null, null);
     }
 
     private boolean isAdmin(UserDetails info) {
@@ -195,5 +244,24 @@ public class TripService {
 
     private UserDetails getInfo() {
         return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
+    private TripResponse toResponse(TripEntity trip) {
+        return TripResponse.builder()
+                .tripId(trip.getTripId())
+                .tripCode(trip.getTripCode())
+                .departureTime(trip.getDepartureTime())
+                .arrivalTime(trip.getArrivalTime())
+                .price(trip.getPrice())
+                .status(trip.getStatus())
+                .fromStation(trip.getRoute().getFromStation().getName())
+                .toStation(trip.getRoute().getToStation().getName())
+                .licensePlate(trip.getVehicle().getLicensePlate())
+                .totalSeat(trip.getVehicle().getTotalSeat())
+                .driverNames(trip.getDrivers().stream()
+                        .map(EmployeeEntity::getFullName).toList())
+                .assistantNames(trip.getAssistants().stream()
+                        .map(EmployeeEntity::getFullName).toList())
+                .build();
     }
 }

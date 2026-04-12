@@ -4,5 +4,6 @@ public enum AccountRoleEnum {
     ADMIN,
     MANAGER,
     STAFF,
-    DRIVER
+    DRIVER,
+    ASSISTANT,
 }

@@ -2,6 +2,7 @@ package com.vtn.repository;
 
 import com.vtn.entity.AccountEntity;
 import com.vtn.entity.EmployeeEntity;
+import com.vtn.enumdef.AccountRoleEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,7 +27,7 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
     """)
     List<AccountEntity> getAllByCondition(
             @Param("username") String username,
-            @Param("role") String role,
+            @Param("role") AccountRoleEnum role,
             @Param("active") Boolean active,
             @Param("createdBy") String createdBy,
             @Param("updatedBy") String updatedBy
@@ -50,7 +51,7 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
             WHERE e.account = a
             )
     """)
-    List<AccountEntity> findAccountsNotUsedByEmployee(@Param("role") String role);
+    List<AccountEntity> findAccountsNotUsedByEmployee(@Param("role") AccountRoleEnum role);
 
     boolean existsByUsername(String username);
 }

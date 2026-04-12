@@ -55,11 +55,11 @@ public class TicketEntity {
     @Column(name = "updated_by")
     String updatedBy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_id", nullable = false)
     TripEntity trip;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_seat_id", nullable = false, unique = true)
     TripSeatEntity tripSeat;
 
