@@ -47,7 +47,7 @@ public class VehicleController {
     @PostMapping(value = APIConstants.API_CREATE_VEHICLE)
     public ResponseEntity<BaseResponse> create(@RequestBody VehicleRequest request) {
         long beginTime = System.currentTimeMillis();
-        BaseResponse response = vehicleService.createBus(request);
+        BaseResponse response = vehicleService.createVehicle(request);
         response.setTook(System.currentTimeMillis() - beginTime);
         return  ResponseEntity
                 .status(response.getStatusCode())
@@ -57,7 +57,7 @@ public class VehicleController {
     @PostMapping(value = APIConstants.API_UPDATE_VEHICLE)
     public ResponseEntity<BaseResponse> update(@RequestBody VehicleRequest request) {
         long beginTime = System.currentTimeMillis();
-        BaseResponse response = vehicleService.updateBus(request);
+        BaseResponse response = vehicleService.updateVehicle(request);
         response.setTook(System.currentTimeMillis() - beginTime);
         return  ResponseEntity
                 .status(response.getStatusCode())
@@ -67,7 +67,7 @@ public class VehicleController {
     @PostMapping(value = APIConstants.API_DELETE_VEHICLE)
     public ResponseEntity<BaseResponse> delete(@RequestBody VehicleRequest request) {
         long beginTime = System.currentTimeMillis();
-        BaseResponse response = vehicleService.deleteBus(request);
+        BaseResponse response = vehicleService.deleteVehicle(request);
         response.setTook(System.currentTimeMillis() - beginTime);
         return ResponseEntity
                 .status(response.getStatusCode())
