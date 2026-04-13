@@ -103,6 +103,7 @@ public class VehicleService {
             switch (totalSeat) {
                 case 40 -> generateSeat40(vehicle, info);
                 case 34 -> generateSeat34(vehicle, info);
+                case 24 -> generateSeat24(vehicle, info);
                 default -> throw new RuntimeException("Loại xe chưa hỗ trợ");
             }
 
@@ -223,6 +224,41 @@ public class VehicleService {
             }
             // C luôn có
             seats.add(createSeat("C" + seatIndex, 2, row, "C", vehicle, info));
+        }
+        seatRepository.saveAll(seats);
+    }
+
+    private void generateSeat24(VehicleEntity vehicle, UserDetails info) {
+        List<SeatEntity> seats = new ArrayList<>();
+        String[] columns = {"A", "B"};
+        int totalRows = 6;
+        // ===== FLOOR 1 (ODD) =====
+        for (int row = 1; row <= totalRows; row++) {
+            int seatIndex = row * 2 - 1; // 1,3,5,7,9,11
+            for (String col : columns) {
+                seats.add(createSeat(
+                        col + seatIndex,
+                        1,
+                        row,
+                        col,
+                        vehicle,
+                        info
+                ));
+            }
+        }
+        // ===== FLOOR 2 (EVEN) =====
+        for (int row = 1; row <= totalRows; row++) {
+            int seatIndex = row * 2; // 2,4,6,8,10,12
+            for (String col : columns) {
+                seats.add(createSeat(
+                        col + seatIndex,
+                        2,
+                        row,
+                        col,
+                        vehicle,
+                        info
+                ));
+            }
         }
         seatRepository.saveAll(seats);
     }
