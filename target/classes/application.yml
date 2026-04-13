@@ -6,17 +6,18 @@ spring:
   application:
     name: VietBus
   datasource:
-    url: jdbc:postgresql://localhost:5432/VietBusDB
-    username: postgres
-    password: 123456789
+    url: jdbc:postgresql://ep-gentle-frog-a17gg7m0-pooler.ap-southeast-1.aws.neon.tech:5432/neondb?sslmode=require
+    username: neondb_owner
+    password: npg_MbB7R8YCcjEa
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
+    open-in-view: false
   main:
     web-application-type: servlet
   mail:
@@ -31,6 +32,12 @@ spring:
           starttls:
             enable: true
 
+logging:
+  level:
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+
 jwt:
   secret: mX4r9FQ+Z8nZ0Y8bW+1E8g4b7v7pZbM+KcZl0YJm8mM=
-  expiration: 86400000 # 1 ngày (ms)
+  expiration: 86400000 # 1 day (ms)
