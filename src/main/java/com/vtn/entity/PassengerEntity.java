@@ -28,8 +28,8 @@ public class PassengerEntity {
     @Column(name = "email", nullable = false, unique = true)
     String email;
 
-    @Column(name = "id_card", nullable = false, unique = true)
-    String idCard;
+    @Column(name = "id_card_number", nullable = false, unique = true)
+    String idCardNumber;
 
     @Column(name = "note")
     String note;
