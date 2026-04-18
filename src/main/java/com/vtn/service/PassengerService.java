@@ -28,12 +28,12 @@ public class PassengerService {
         PassengerEntity passengerEntity = new PassengerEntity();
         passengerEntity.setFullName(request.getFullName().trim());
         passengerEntity.setEmail(request.getEmail().trim().toLowerCase());
-        passengerEntity.setIdCard(request.getIdCard());
+        passengerEntity.setIdCardNumber(request.getIdCardNumber());
         passengerEntity.setNote(request.getNote());
         passengerEntity.setPhoneNumber(request.getPhoneNumber());
 
         passengerRepository.save(passengerEntity);
 
-        return new BaseResponse(200, passengerEntity, "Create a passenger successfully!", null, null);
+        return new BaseResponse(200, passengerEntity, "Create a passenger successful", null, null);
     }
 }

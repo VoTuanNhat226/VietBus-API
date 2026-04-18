@@ -42,6 +42,7 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
         SELECT t
         FROM TicketEntity t
         JOIN TripEntity tr ON t.trip.tripId = tr.tripId
+        WHERE tr.tripId = :tripId
     """)
     List<TicketEntity> getAllByTripId(
             @Param("tripId") UUID tripId

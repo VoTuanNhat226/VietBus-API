@@ -9,7 +9,7 @@ public class PassengerRequest {
     private String fullName;
     private String phoneNumber;
     private String email;
-    private String idCard;
+    private String idCardNumber;
     private String note;
     private String createdBy;
     private String updatedBy;
