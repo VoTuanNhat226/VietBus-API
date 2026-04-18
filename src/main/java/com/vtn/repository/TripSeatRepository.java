@@ -1,6 +1,7 @@
 package com.vtn.repository;
 
 import com.vtn.entity.TripSeatEntity;
+import com.vtn.enumdef.TripSeatStatusEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,9 +22,11 @@ public interface TripSeatRepository extends JpaRepository<TripSeatEntity, UUID> 
         SELECT COUNT(t)
         FROM TripSeatEntity t
         WHERE t.trip.tripId = :tripId
-            AND t.status = 'SOLD'
+            AND t.status IN :statuses
     """)
-    Integer countTripSeatSoldByTripId(@Param("tripId") UUID tripId);
+    Integer countTripSeatSoldByTripId(
+            @Param("tripId") UUID tripId,
+            @Param("statuses") List<TripSeatStatusEnum> statuses);
 
     @Query("""
         SELECT t

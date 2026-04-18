@@ -3,6 +3,7 @@ package com.vtn.service;
 import com.vtn.dto.request.TripSeatRequest;
 import com.vtn.dto.response.TripSeatResponse;
 import com.vtn.entity.TripSeatEntity;
+import com.vtn.enumdef.TripSeatStatusEnum;
 import com.vtn.repository.TripSeatRepository;
 import com.vtn.utils.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,9 @@ public class TripSeatService {
             log.warn("TripId is required");
             return new BaseResponse(400, null, "TripId is required", null, null);
         }
-        Integer count = tripSeatRepository.countTripSeatSoldByTripId(request.getTripId());
+        Integer count = tripSeatRepository.countTripSeatSoldByTripId(
+                            request.getTripId(),
+                            List.of(TripSeatStatusEnum.SOLD, TripSeatStatusEnum.HOLD));
         return new BaseResponse(200, count, "Get quantity trip seat sold successful",null,null);
     }
 
