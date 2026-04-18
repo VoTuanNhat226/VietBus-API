@@ -71,6 +71,7 @@ public class APIConstants {
     public static final String API_CREATE_TICKET = API_VIET_BUS + TICKET + "/create";
     public static final String API_UPDATE_TICKET = API_VIET_BUS + TICKET + "/update";
     public static final String API_GET_ALL_TICKET_UNPAID = API_VIET_BUS + TICKET + "/get-all-ticket-unpaid";
+    public static final String API_GET_ALL_TICKET_BY_TRIP_ID = API_VIET_BUS + TICKET + "/get-all-ticket-by-trip-id";
 
     //Payment
     public static final String PAYMENT = "/payment";

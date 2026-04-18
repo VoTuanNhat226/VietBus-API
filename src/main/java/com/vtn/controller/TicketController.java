@@ -1,7 +1,6 @@
 package com.vtn.controller;
 
 import com.vtn.constant.APIConstants;
-import com.vtn.dto.request.EmployeeRequest;
 import com.vtn.dto.request.TicketRequest;
 import com.vtn.service.TicketService;
 import com.vtn.utils.BaseResponse;
@@ -25,6 +24,14 @@ public class TicketController {
     public  ResponseEntity<BaseResponse> getAllTicketUnpaid(@RequestBody TicketRequest ticketRequest) {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = ticketService.getAllTicketsUnpaid(ticketRequest);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping(value = APIConstants.API_GET_ALL_TICKET_BY_TRIP_ID)
+    public  ResponseEntity<BaseResponse> getAllTicketByTripId(@RequestBody TicketRequest ticketRequest) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = ticketService.getAllTicketsByTripId(ticketRequest);
         response.setTook(System.currentTimeMillis() - beginTime);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

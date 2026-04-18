@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -16,6 +18,7 @@ public class TicketResponse {
     private TicketStatusEnum ticketStatus;
     private String ticketPaymentType; //PAY_NOW - PAY_LATER
     private String ticketSoldBy;
+    private LocalDateTime ticketSoldAt;
 
     private String tripCode;
     private String fromStation;

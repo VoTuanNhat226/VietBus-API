@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
@@ -35,5 +36,14 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
             @Param("tripCode") String tripCode,
             @Param("ticketPaymentType") String ticketPaymentType,
             @Param("ticketSoldBy") String ticketSoldBy
+    );
+
+    @Query("""
+        SELECT t
+        FROM TicketEntity t
+        JOIN TripEntity tr ON t.trip.tripId = tr.tripId
+    """)
+    List<TicketEntity> getAllByTripId(
+            @Param("tripId") UUID tripId
     );
 }
