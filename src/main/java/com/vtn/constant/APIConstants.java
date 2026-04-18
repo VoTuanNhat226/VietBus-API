@@ -76,4 +76,8 @@ public class APIConstants {
     //Payment
     public static final String PAYMENT = "/payment";
     public static final String API_GET_ALL_PAYMENT = API_VIET_BUS + PAYMENT + "/get-all";
+
+    //Passenger
+    public static final String PASSENGER = "/passenger";
+    public  static final String API_CREATE_PASSENGER = API_VIET_BUS + PASSENGER + "/create";
 }
