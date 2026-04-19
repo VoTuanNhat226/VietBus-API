@@ -122,6 +122,16 @@ public class EmployeeService {
             employee.setActive(employeeRequest.getActive());
             employee.setUpdatedBy(info.getUsername());
             employee.setUpdatedAt(LocalDateTime.now());
+            if(employeeRequest.getAccountId() != null) {
+                log.info("Mapping accountId: {}", employeeRequest.getAccountId());
+                AccountEntity account = accountRepository.findByAccountId(employeeRequest.getAccountId());
+                if (account == null) {
+                    log.error("Account not found with id: {}", employeeRequest.getAccountId());
+                    return new BaseResponse(404, null, "Account not found", null, null);
+                } else {
+                    employee.setAccount(account);
+                }
+            }
             employeeRepository.save(employee);
             log.info("Employee updated successful with id: {}", employee.getEmployeeId());
 
