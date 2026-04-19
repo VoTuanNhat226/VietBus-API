@@ -80,4 +80,5 @@ public class APIConstants {
     //Passenger
     public static final String PASSENGER = "/passenger";
     public  static final String API_CREATE_PASSENGER = API_VIET_BUS + PASSENGER + "/create";
+    public static final String API_GET_PASSENGER = API_VIET_BUS + PASSENGER + "/get";
 }

@@ -1,11 +1,9 @@
-package com.vtn.dto.request;
+package com.vtn.dto.request.PassengerRequest;
 
 import lombok.Data;
-import java.util.UUID;
 
 @Data
-public class PassengerRequest {
-    private UUID passengerId;
+public class CreatePassengerRequest {
     private String fullName;
     private String phoneNumber;
     private String email;
