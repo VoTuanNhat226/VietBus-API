@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.security.core.parameters.P;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -75,4 +76,15 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
     WHERE t.status = :status
     """)
     List<TripEntity> getAllTripByStatus(@Param("status") TripStatusEnum status);
+
+    @Query("""
+        SELECT COUNT(t)
+        FROM TripEntity t
+        WHERE t.departureTime >= :startOfMonth
+            AND t.departureTime < :endOfMonth
+    """)
+    BigDecimal countTripByMonth(
+            LocalDateTime startOfMonth,
+            LocalDateTime endOfMonth
+    );
 }

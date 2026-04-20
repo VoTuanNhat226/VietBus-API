@@ -79,5 +79,11 @@ public class APIConstants {
 
     //Passenger
     public static final String PASSENGER = "/passenger";
-    public  static final String API_CREATE_PASSENGER = API_VIET_BUS + PASSENGER + "/create";
+    public static final String API_CREATE_PASSENGER = API_VIET_BUS + PASSENGER + "/create";
+
+    //Statistics
+    public static final String STATISTICS = "/statistics";
+    public static final String API_GET_REVENUE_BY_MONTH = API_VIET_BUS + STATISTICS + "/get-revenue-by-month";
+    public static final String API_GET_TOTAL_TICKET_BY_MONTH = API_VIET_BUS + STATISTICS + "/total-ticket-by-month";
+    public static final String API_GET_TOTAL_TRIP_BY_MONTH = API_VIET_BUS + STATISTICS + "/total-trip-by-month";
 }

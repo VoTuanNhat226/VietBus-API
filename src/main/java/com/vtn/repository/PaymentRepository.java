@@ -1,11 +1,14 @@
 package com.vtn.repository;
 
 import com.vtn.entity.PaymentEntity;
+import com.vtn.enumdef.PaymentStatusEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,5 +30,18 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, UUID> {
             @Param("ticketCode") String ticketCode,
             @Param("ticketStatus") String ticketStatus,
             @Param("ticketPaymentType") String ticketPaymentType
+    );
+
+    @Query("""
+        SELECT SUM(p.amount)
+        FROM PaymentEntity p
+        WHERE p.status = :status
+            AND p.paidAt >= :startOfMonth
+            AND p.paidAt < :endOfMonth
+    """)
+    BigDecimal getRevenueByMonth(
+            PaymentStatusEnum status,
+            LocalDateTime startOfMonth,
+            LocalDateTime endOfMonth
     );
 }
