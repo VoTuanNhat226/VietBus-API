@@ -88,4 +88,5 @@ public class APIConstants {
     public static final String API_GET_TOTAL_TRIP_BY_MONTH = API_VIET_BUS + STATISTICS + "/total-trip-by-month";
     public static final String API_GET_TOTAL_PASSENGER_BY_MONTH = API_VIET_BUS + STATISTICS + "/total-passenger-by-month";
     public static final String API_GET_TOTAL_VEHICLE = API_VIET_BUS + STATISTICS + "/total-vehicle";
+    public static final String API_GET_All_TRIP_DEPARTED = API_VIET_BUS + STATISTICS + "/get-all-trip-departed";
 }

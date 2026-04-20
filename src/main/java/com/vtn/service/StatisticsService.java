@@ -2,7 +2,11 @@ package com.vtn.service;
 
 import com.vtn.dto.request.StatisticsRequest;
 import com.vtn.dto.response.StatisticsResponse;
+import com.vtn.dto.response.TripResponse;
+import com.vtn.entity.EmployeeEntity;
+import com.vtn.entity.TripEntity;
 import com.vtn.enumdef.PaymentStatusEnum;
+import com.vtn.enumdef.TripStatusEnum;
 import com.vtn.repository.*;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +16,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class StatisticsService {
@@ -231,5 +237,37 @@ public class StatisticsService {
         response.setTotalVehicleInActive(inActive);
 
         return new BaseResponse(200, response, "Get all vehicle successful", null, null);
+    }
+
+    public BaseResponse getAllTripDeparted(StatisticsRequest request) {
+        List<TripEntity> trips = tripRepository.getAllByStatus(TripStatusEnum.DEPARTED);
+        if (trips != null && !trips.isEmpty()) {
+            List<TripResponse> responses = trips.stream()
+                    .map(this::TriptoResponse)
+                    .toList();
+
+            return new BaseResponse(200, responses, "Get all trip departed successful", null, null);
+        }
+        return new BaseResponse(200, Collections.emptyList(), "Get all trip departed successful", null, null);
+    }
+
+    // Helper
+    private TripResponse TriptoResponse(TripEntity trip) {
+        return TripResponse.builder()
+                .tripId(trip.getTripId())
+                .tripCode(trip.getTripCode())
+                .departureTime(trip.getDepartureTime())
+                .arrivalTime(trip.getArrivalTime())
+                .price(trip.getPrice())
+                .status(trip.getStatus())
+                .fromStation(trip.getRoute().getFromStation().getName())
+                .toStation(trip.getRoute().getToStation().getName())
+                .licensePlate(trip.getVehicle().getLicensePlate())
+                .totalSeat(trip.getVehicle().getTotalSeat())
+                .driverNames(trip.getDrivers().stream()
+                        .map(EmployeeEntity::getFullName).toList())
+                .assistantNames(trip.getAssistants().stream()
+                        .map(EmployeeEntity::getFullName).toList())
+                .build();
     }
 }

@@ -78,13 +78,20 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
     List<TripEntity> getAllTripByStatus(@Param("status") TripStatusEnum status);
 
     @Query("""
-        SELECT COUNT(t)
-        FROM TripEntity t
-        WHERE t.departureTime >= :startOfMonth
-            AND t.departureTime < :endOfMonth
+    SELECT COUNT(t)
+    FROM TripEntity t
+    WHERE t.departureTime >= :startOfMonth
+        AND t.departureTime < :endOfMonth
     """)
     BigDecimal countTripByMonth(
             LocalDateTime startOfMonth,
             LocalDateTime endOfMonth
     );
+
+    @Query("""
+    SELECT t
+    FROM TripEntity t
+    WHERE t.status = :status
+    """)
+    List<TripEntity> getAllByStatus(TripStatusEnum status);
 }

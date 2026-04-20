@@ -59,4 +59,12 @@ public class StatisticsController {
         response.setTook(System.currentTimeMillis() - beginTime);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @PostMapping(value = APIConstants.API_GET_All_TRIP_DEPARTED)
+    public ResponseEntity<BaseResponse> getAllTripDeparted(@RequestBody StatisticsRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = statisticsService.getAllTripDeparted(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
