@@ -1,5 +1,6 @@
 package com.vtn.repository;
 
+import com.vtn.dto.response.TicketRouteStats;
 import com.vtn.entity.TicketEntity;
 import com.vtn.enumdef.PaymentStatusEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -58,6 +59,24 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
             AND t.createdAt < :endOfMonth
     """)
     BigDecimal countTicketByMonth(
+            LocalDateTime startOfMonth,
+            LocalDateTime endOfMonth
+    );
+
+    @Query("""
+        SELECT new com.vtn.dto.response.TicketRouteStats(
+            count(t),
+            r.fromStation.name,
+            r.toStation.name
+        )
+        FROM TicketEntity t
+        JOIN t.trip tr
+        JOIN tr.route r
+        WHERE tr.departureTime >= :startOfMonth
+            AND tr.arrivalTime <= :endOfMonth
+        GROUP BY r.fromStation.name, r.toStation.name
+    """)
+    List<TicketRouteStats> countTicketPerRoute(
             LocalDateTime startOfMonth,
             LocalDateTime endOfMonth
     );

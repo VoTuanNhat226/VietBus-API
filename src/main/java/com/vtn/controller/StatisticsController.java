@@ -67,4 +67,12 @@ public class StatisticsController {
         response.setTook(System.currentTimeMillis() - beginTime);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @PostMapping(value = APIConstants.API_GET_TOTAL_TICKET_PER_ROUTE)
+    public ResponseEntity<BaseResponse> getTotalTicketPerRoute(@RequestBody StatisticsRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = statisticsService.countTicketPerRoute(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

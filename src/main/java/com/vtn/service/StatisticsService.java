@@ -2,6 +2,7 @@ package com.vtn.service;
 
 import com.vtn.dto.request.StatisticsRequest;
 import com.vtn.dto.response.StatisticsResponse;
+import com.vtn.dto.response.TicketRouteStats;
 import com.vtn.dto.response.TripResponse;
 import com.vtn.entity.EmployeeEntity;
 import com.vtn.entity.TripEntity;
@@ -249,6 +250,20 @@ public class StatisticsService {
             return new BaseResponse(200, responses, "Get all trip departed successful", null, null);
         }
         return new BaseResponse(200, Collections.emptyList(), "Get all trip departed successful", null, null);
+    }
+
+    public BaseResponse countTicketPerRoute(StatisticsRequest request) {
+        // Parse month, format 2026-04
+        YearMonth yearMonth = YearMonth.parse(request.getMonth());
+
+        // ===== Current month =====
+        LocalDateTime start = yearMonth.atDay(1).atStartOfDay();
+        LocalDateTime end = yearMonth.plusMonths(1).atDay(1).atStartOfDay();
+
+        // ===== Query =====
+        List<TicketRouteStats> list = ticketRepository.countTicketPerRoute(start, end);
+
+        return new BaseResponse(200, list, "Get total ticket per route successful", null, null);
     }
 
     // Helper

@@ -1,13 +1,10 @@
 package com.vtn.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Getter
-@Setter
+@Data
 public class StatisticsResponse {
     private BigDecimal revenue;
     private BigDecimal revenuePrev;
