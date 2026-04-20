@@ -20,4 +20,8 @@ public class StatisticsResponse {
     private BigDecimal totalTrip;
     private BigDecimal totalTripPrev;
     private BigDecimal growthTripPercent;
+
+    private BigDecimal totalPassenger;
+    private BigDecimal totalPassengerPrev;
+    private BigDecimal growthPassengerPercent;
 }

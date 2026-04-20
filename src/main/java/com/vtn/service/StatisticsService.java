@@ -3,6 +3,7 @@ package com.vtn.service;
 import com.vtn.dto.request.StatisticsRequest;
 import com.vtn.dto.response.StatisticsResponse;
 import com.vtn.enumdef.PaymentStatusEnum;
+import com.vtn.repository.PassengerRepository;
 import com.vtn.repository.PaymentRepository;
 import com.vtn.repository.TicketRepository;
 import com.vtn.repository.TripRepository;
@@ -20,15 +21,18 @@ public class StatisticsService {
     private final PaymentRepository paymentRepository;
     private final TicketRepository ticketRepository;
     private final TripRepository tripRepository;
+    private final PassengerRepository passengerRepository;
 
     @Autowired
     public StatisticsService(
             PaymentRepository paymentRepository,
             TicketRepository ticketRepository,
-            TripRepository tripRepository) {
+            TripRepository tripRepository,
+            PassengerRepository passengerRepository) {
         this.paymentRepository = paymentRepository;
         this.ticketRepository = ticketRepository;
         this.tripRepository = tripRepository;
+        this.passengerRepository = passengerRepository;
     }
 
     public BaseResponse getRevenueByMonth(StatisticsRequest request) {
@@ -166,5 +170,50 @@ public class StatisticsService {
         }
 
         return new BaseResponse(200, response, "Get total trip by month successful", null, null);
+    }
+
+    public BaseResponse countPassengerByMonth(StatisticsRequest request) {
+        // Parse month, format 2026-04
+        YearMonth yearMonth = YearMonth.parse(request.getMonth());
+
+        // ===== Current month =====
+        LocalDateTime start = yearMonth.atDay(1).atStartOfDay();
+        LocalDateTime end = yearMonth.plusMonths(1).atDay(1).atStartOfDay();
+
+        // ===== Previous month =====
+        YearMonth prevMonth = yearMonth.minusMonths(1);
+        LocalDateTime prevStart = prevMonth.atDay(1).atStartOfDay();
+        LocalDateTime prevEnd = yearMonth.atDay(1).atStartOfDay();
+
+        // ===== Query =====
+        BigDecimal total = passengerRepository.countPassengerByMonth(
+                start,
+                end
+        );
+
+        BigDecimal totalPrev = passengerRepository.countPassengerByMonth(
+                prevStart,
+                prevEnd
+        );
+
+        // Null -> 0
+        if (total == null) total = BigDecimal.ZERO;
+        if (totalPrev == null) totalPrev = BigDecimal.ZERO;
+
+        StatisticsResponse response = new StatisticsResponse();
+        response.setTotalPassenger(total);
+        response.setTotalPassengerPrev(totalPrev);
+
+        // (optional) % tăng trưởng
+        if (totalPrev.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal growth = total.subtract(totalPrev)
+                    .divide(totalPrev, 2, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+            response.setGrowthPassengerPercent(growth);
+        } else {
+            response.setGrowthPassengerPercent(BigDecimal.valueOf(100));
+        }
+
+        return new BaseResponse(200, response, "Get total passenger by month successful", null, null);
     }
 }

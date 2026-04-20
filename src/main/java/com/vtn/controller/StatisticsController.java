@@ -43,4 +43,12 @@ public class StatisticsController {
         response.setTook(System.currentTimeMillis() - beginTime);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @PostMapping(value = APIConstants.API_GET_TOTAL_PASSENGER_BY_MONTH)
+    public ResponseEntity<BaseResponse> getAllPassengerByMonth(@RequestBody StatisticsRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = statisticsService.countPassengerByMonth(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
