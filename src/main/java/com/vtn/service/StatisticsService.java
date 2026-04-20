@@ -3,10 +3,7 @@ package com.vtn.service;
 import com.vtn.dto.request.StatisticsRequest;
 import com.vtn.dto.response.StatisticsResponse;
 import com.vtn.enumdef.PaymentStatusEnum;
-import com.vtn.repository.PassengerRepository;
-import com.vtn.repository.PaymentRepository;
-import com.vtn.repository.TicketRepository;
-import com.vtn.repository.TripRepository;
+import com.vtn.repository.*;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,17 +19,20 @@ public class StatisticsService {
     private final TicketRepository ticketRepository;
     private final TripRepository tripRepository;
     private final PassengerRepository passengerRepository;
+    private final VehicleRepository vehicleRepository;
 
     @Autowired
     public StatisticsService(
             PaymentRepository paymentRepository,
             TicketRepository ticketRepository,
             TripRepository tripRepository,
-            PassengerRepository passengerRepository) {
+            PassengerRepository passengerRepository,
+            VehicleRepository vehicleRepository) {
         this.paymentRepository = paymentRepository;
         this.ticketRepository = ticketRepository;
         this.tripRepository = tripRepository;
         this.passengerRepository = passengerRepository;
+        this.vehicleRepository = vehicleRepository;
     }
 
     public BaseResponse getRevenueByMonth(StatisticsRequest request) {
@@ -215,5 +215,21 @@ public class StatisticsService {
         }
 
         return new BaseResponse(200, response, "Get total passenger by month successful", null, null);
+    }
+
+    public BaseResponse getTotalVehicle(StatisticsRequest request) {
+        // ===== Query =====
+        BigDecimal active = vehicleRepository.countVehiclesActiveByStatus(true);
+        BigDecimal inActive = vehicleRepository.countVehiclesActiveByStatus(false);
+
+        // Null -> 0
+        if (active == null) active = BigDecimal.ZERO;
+        if (inActive == null) inActive = BigDecimal.ZERO;
+
+        StatisticsResponse response = new StatisticsResponse();
+        response.setTotalVehicleActive(active);
+        response.setTotalVehicleInActive(inActive);
+
+        return new BaseResponse(200, response, "Get all vehicle successful", null, null);
     }
 }

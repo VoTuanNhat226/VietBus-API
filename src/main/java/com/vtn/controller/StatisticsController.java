@@ -51,4 +51,12 @@ public class StatisticsController {
         response.setTook(System.currentTimeMillis() - beginTime);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @PostMapping(value = APIConstants.API_GET_TOTAL_VEHICLE)
+    public ResponseEntity<BaseResponse> getTotalVehicle(@RequestBody StatisticsRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = statisticsService.getTotalVehicle(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

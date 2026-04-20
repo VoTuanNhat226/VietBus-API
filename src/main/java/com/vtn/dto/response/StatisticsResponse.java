@@ -24,4 +24,7 @@ public class StatisticsResponse {
     private BigDecimal totalPassenger;
     private BigDecimal totalPassengerPrev;
     private BigDecimal growthPassengerPercent;
+
+    private BigDecimal totalVehicleActive;
+    private BigDecimal totalVehicleInActive;
 }
