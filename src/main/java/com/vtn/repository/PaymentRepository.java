@@ -1,6 +1,7 @@
 package com.vtn.repository;
 
 import com.vtn.entity.PaymentEntity;
+import com.vtn.enumdef.PaymentMethodEnum;
 import com.vtn.enumdef.PaymentStatusEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -25,7 +26,7 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, UUID> {
             AND (:ticketPaymentType IS NULL OR p.ticket.paymentType = :ticketPaymentType)
     """)
     List<PaymentEntity> getAllByCondition(
-            @Param("method") String method,
+            @Param("method") PaymentMethodEnum method,
             @Param("status") String status,
             @Param("ticketCode") String ticketCode,
             @Param("ticketStatus") String ticketStatus,

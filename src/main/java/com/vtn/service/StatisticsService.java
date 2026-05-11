@@ -75,16 +75,7 @@ public class StatisticsService {
             StatisticsResponse response = new StatisticsResponse();
             response.setRevenue(revenue);
             response.setRevenuePrev(revenuePrev);
-
-            // (optional) % tăng trưởng
-            if (revenuePrev.compareTo(BigDecimal.ZERO) > 0) {
-                BigDecimal growth = revenue.subtract(revenuePrev)
-                        .divide(revenuePrev, 2, RoundingMode.HALF_UP)
-                        .multiply(BigDecimal.valueOf(100));
-                response.setGrowthPercent(growth);
-            } else {
-                response.setGrowthPercent(BigDecimal.valueOf(100));
-            }
+            response.setGrowthPercent(calculateGrowth(revenue, revenuePrev));
 
             return new BaseResponse(200, response, "Get revenue by month successful", null, null);
     }
@@ -120,16 +111,7 @@ public class StatisticsService {
         StatisticsResponse response = new StatisticsResponse();
         response.setTotalTicket(total);
         response.setTotalTicketPrev(totalPrev);
-
-        // (optional) % tăng trưởng
-        if (totalPrev.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal growth = total.subtract(totalPrev)
-                    .divide(totalPrev, 2, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
-            response.setGrowthTicketPercent(growth);
-        } else {
-            response.setGrowthTicketPercent(BigDecimal.valueOf(100));
-        }
+        response.setGrowthTicketPercent(calculateGrowth(total, totalPrev));
 
         return new BaseResponse(200, response, "Get total ticket by month successful", null, null);
     }
@@ -165,16 +147,7 @@ public class StatisticsService {
         StatisticsResponse response = new StatisticsResponse();
         response.setTotalTrip(total);
         response.setTotalTripPrev(totalPrev);
-
-        // (optional) % tăng trưởng
-        if (totalPrev.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal growth = total.subtract(totalPrev)
-                    .divide(totalPrev, 2, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
-            response.setGrowthTripPercent(growth);
-        } else {
-            response.setGrowthTripPercent(BigDecimal.valueOf(100));
-        }
+        response.setGrowthTripPercent(calculateGrowth(total, totalPrev));
 
         return new BaseResponse(200, response, "Get total trip by month successful", null, null);
     }
@@ -210,16 +183,7 @@ public class StatisticsService {
         StatisticsResponse response = new StatisticsResponse();
         response.setTotalPassenger(total);
         response.setTotalPassengerPrev(totalPrev);
-
-        // (optional) % tăng trưởng
-        if (totalPrev.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal growth = total.subtract(totalPrev)
-                    .divide(totalPrev, 2, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
-            response.setGrowthPassengerPercent(growth);
-        } else {
-            response.setGrowthPassengerPercent(BigDecimal.valueOf(100));
-        }
+        response.setGrowthPassengerPercent(calculateGrowth(total, totalPrev));
 
         return new BaseResponse(200, response, "Get total passenger by month successful", null, null);
     }
@@ -240,7 +204,7 @@ public class StatisticsService {
         return new BaseResponse(200, response, "Get all vehicle successful", null, null);
     }
 
-    public BaseResponse getAllTripDeparted(StatisticsRequest request) {
+    public BaseResponse getDepartedTrips(StatisticsRequest request) {
         List<TripEntity> trips = tripRepository.getAllByStatus(TripStatusEnum.DEPARTED);
         if (trips != null && !trips.isEmpty()) {
             List<TripResponse> responses = trips.stream()
@@ -284,5 +248,14 @@ public class StatisticsService {
                 .assistantNames(trip.getAssistants().stream()
                         .map(EmployeeEntity::getFullName).toList())
                 .build();
+    }
+
+    private BigDecimal calculateGrowth(BigDecimal current, BigDecimal prev) {
+        if (prev.compareTo(BigDecimal.ZERO) > 0) {
+            return current.subtract(prev)
+                    .divide(prev, 2, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+        }
+        return BigDecimal.valueOf(100);
     }
 }
