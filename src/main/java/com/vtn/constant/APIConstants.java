@@ -80,6 +80,10 @@ public class APIConstants {
     //Passenger
     public static final String PASSENGER = "/passenger";
     public static final String API_CREATE_PASSENGER = API_VIET_BUS + PASSENGER + "/create";
+    public static final String API_GET_PASSENGER = API_VIET_BUS + PASSENGER + "/get";
+    public static final String API_UPDATE_PASSENGER = API_VIET_BUS + PASSENGER + "/update";
+    public static final String API_DELETE_PASSENGER = API_VIET_BUS + PASSENGER + "/delete";
+    public static final String API_SEARCH_PASSENGER = API_VIET_BUS + PASSENGER + "/search";
 
     //Statistics
     public static final String STATISTICS = "/statistics";
