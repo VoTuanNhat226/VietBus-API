@@ -17,7 +17,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "payments")
 @Entity
-public class PaymentEntity {
+public class PaymentEntity extends AuditModel{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID paymentId;
@@ -35,18 +35,6 @@ public class PaymentEntity {
 
     @Column(name = "paid_at")
     LocalDateTime paidAt;
-
-    @Column(name = "created_at")
-    LocalDateTime createdAt;
-
-    @Column(name = "created_by")
-    String createdBy;
-
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
-
-    @Column(name = "updated_by")
-    String updatedBy;
 
     @OneToOne
     @JoinColumn(name = "ticket_id", unique = true)

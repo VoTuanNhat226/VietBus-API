@@ -8,7 +8,6 @@ import com.vtn.repository.SeatRepository;
 import com.vtn.utils.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -33,126 +32,92 @@ public class VehicleService {
     }
 
     public BaseResponse getAllVehicles() {
-        try {
-            log.info("Get all vehicles");
-            List<VehicleEntity> vehicles = vehicleRepository.findAll();
-            return new BaseResponse(200, vehicles, "Get all vehicle successful", null, null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        List<VehicleEntity> vehicles = vehicleRepository.findAll();
+        return new BaseResponse(200, vehicles, "Get all vehicle successful", null, null);
     }
 
     public BaseResponse getAllVehiclesActive() {
-        try {
-            log.info("Get all vehicles active");
-            List<VehicleEntity> vehicles = vehicleRepository.findAllVehiclesActive();
-            return new BaseResponse(200, vehicles, "Get all vehicle active successful", null, null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        List<VehicleEntity> vehicles = vehicleRepository.findAllVehiclesActive();
+        return new BaseResponse(200, vehicles, "Get all vehicle active successful", null, null);
     }
 
     public BaseResponse getVehicleById(VehicleRequest request) {
-        try {
-            log.info("Get vehicle by id: {}", request.getVehicleId());
-            Optional<VehicleEntity> vehicle = vehicleRepository.findById(request.getVehicleId());
-            return new BaseResponse(200, vehicle, "Get vehicle successful", null, null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        Optional<VehicleEntity> vehicle = vehicleRepository.findById(request.getVehicleId());
+        return new BaseResponse(200, vehicle, "Get vehicle successful", null, null);
     }
 
     @Transactional
     public BaseResponse createVehicle(VehicleRequest request) {
-        log.info("Start createVehicle with request: {}", request);
         UserDetails info = getInfo();
-        log.info("User {} is creating vehicle", info.getUsername());
-
         boolean isAdmin = isAdmin(info);
+
         if (!isAdmin) {
-            log.warn("User {} does not have permission to create vehicle", info.getUsername());
             return new BaseResponse(403, null, "You don't have permission!", null, null);
         }
 
         if (request.getLicensePlate() == null || request.getTotalSeat() == null) {
-            log.warn("Missing required fields: licensePlate or totalSeat");
             return new BaseResponse(400, null, "LicensePlate and TotalSeat are required", null, null);
         }
-        try {
-            VehicleEntity existedVehicle = vehicleRepository.findByLicensePlate(request.getLicensePlate());
-            if (existedVehicle != null) {
-                log.warn("Vehicle already exists with licensePlate: {}", request.getLicensePlate());
-                return new BaseResponse(400, null,"Vehicle already existed", null,null);
-            }
 
-            // ===== CREATE BUS =====
-            VehicleEntity vehicle = new VehicleEntity();
-            vehicle.setLicensePlate(request.getLicensePlate());
-            vehicle.setTotalSeat(request.getTotalSeat());
-            vehicle.setActive(request.getActive());
-            vehicle.setModel(request.getModel());
-            vehicle.setManufactureYear(request.getManufactureYear());
-            vehicle.setTotalKm(0);
-            vehicle.setCreatedBy(info.getUsername());
-            vehicle.setCreatedAt(LocalDateTime.now());
-
-            vehicleRepository.save(vehicle);
-
-            // ===== CREATE SEATS =====
-            int totalSeat = request.getTotalSeat();
-            switch (totalSeat) {
-                case 40 -> generateSeat40(vehicle, info);
-                case 34 -> generateSeat34(vehicle, info);
-                case 24 -> generateSeat24(vehicle, info);
-                default -> throw new RuntimeException("Loại xe chưa hỗ trợ");
-            }
-
-            log.info("Vehicle created successfully with id: {}", vehicle.getVehicleId());
-            return new BaseResponse(201,vehicle,"Create vehicle successful",null,null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        VehicleEntity existedVehicle = vehicleRepository.findByLicensePlate(request.getLicensePlate());
+        if (existedVehicle != null) {
+            return new BaseResponse(400, null,"Vehicle already existed", null,null);
         }
+
+        // ===== CREATE BUS =====
+        VehicleEntity vehicle = new VehicleEntity();
+        vehicle.setLicensePlate(request.getLicensePlate());
+        vehicle.setTotalSeat(request.getTotalSeat());
+        vehicle.setActive(request.getActive());
+        vehicle.setModel(request.getModel());
+        vehicle.setManufactureYear(request.getManufactureYear());
+        vehicle.setTotalKm(0);
+        vehicle.setCreatedBy(info.getUsername());
+        vehicle.setCreatedAt(LocalDateTime.now());
+
+        vehicleRepository.save(vehicle);
+
+        // ===== CREATE SEATS =====
+        int totalSeat = request.getTotalSeat();
+        switch (totalSeat) {
+            case 40 -> generateSeat40(vehicle, info);
+            case 34 -> generateSeat34(vehicle, info);
+            case 24 -> generateSeat24(vehicle, info);
+            default -> throw new RuntimeException("Loại xe chưa hỗ trợ");
+        }
+
+        return new BaseResponse(201,vehicle,"Create vehicle successful",null,null);
     }
 
     public BaseResponse updateVehicle(VehicleRequest request) {
-        log.info("Start updateVehicle with request: {}", request);
         UserDetails info = getInfo();
-        log.info("User {} is updating vehicle", info.getUsername());
-        try {
-            VehicleEntity vehicle = vehicleRepository.findByVehicleId(request.getVehicleId());
-            if (vehicle == null) {
-                log.error("Vehicle not found with id: {}", request.getVehicleId());
-                return new BaseResponse(404, null, "Vehicle not found", null, null);
-            } else {
-                vehicle.setActive(request.getActive());
-                vehicle.setUpdatedBy(info.getUsername());
-                vehicle.setUpdatedAt(LocalDateTime.now());
-                vehicleRepository.save(vehicle);
-                log.info("Vehicle updated successful with id: {}", request.getVehicleId());
 
-                return new BaseResponse(200, vehicle, "Update vehicle successful", null, null);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        VehicleEntity vehicle = vehicleRepository.findByVehicleId(request.getVehicleId());
+        if (vehicle == null) {
+            return new BaseResponse(404, null, "Vehicle not found", null, null);
+        } else {
+            vehicle.setActive(request.getActive());
+            vehicle.setUpdatedBy(info.getUsername());
+            vehicle.setUpdatedAt(LocalDateTime.now());
+            vehicleRepository.save(vehicle);
+
+            return new BaseResponse(200, vehicle, "Update vehicle successful", null, null);
         }
     }
 
     public BaseResponse deleteVehicle(VehicleRequest request) {
-        log.info("Start deleteVehicle with request: {}", request);
         UserDetails info = getInfo();
-        log.info("User {} is deleting vehicle", info.getUsername());
         boolean isAdmin = isAdmin(info);
+
         if (!isAdmin) {
-            log.warn("User {} does not have permission to delete vehicle", info.getUsername());
             return new BaseResponse(403, null, "You don't have permission!", null, null);
         }
+
         VehicleEntity vehicle = vehicleRepository.findByVehicleId(request.getVehicleId());
         if (vehicle == null) {
-            log.error("Vehicle not found with id: {}", request.getVehicleId());
             return new BaseResponse(404, null, "Vehicle not found", "No error", null);
         } else {
             vehicleRepository.delete(vehicle);
-            log.info("Vehicle deleted successful with id: {}", request.getVehicleId());
             return new BaseResponse(204, null, "Delete vehicle successfully", "No error", null);
         }
     }

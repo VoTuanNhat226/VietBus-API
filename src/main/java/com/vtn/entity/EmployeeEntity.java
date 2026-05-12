@@ -15,7 +15,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "employees")
 @Entity
-public class EmployeeEntity {
+public class EmployeeEntity extends AuditModel{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID employeeId;
@@ -32,18 +32,6 @@ public class EmployeeEntity {
 
     @Column(name = "active")
     boolean active;
-
-    @Column(name = "created_at")
-    LocalDateTime createdAt;
-
-    @Column(name = "created_by")
-    String createdBy;
-
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
-
-    @Column(name = "updated_by")
-    String updatedBy;
 
     @OneToOne
     @JoinColumn(name = "account_id", unique = true, foreignKey = @ForeignKey(name = "fk_employee_account_id"))

@@ -23,9 +23,7 @@ public class TripSeatService {
     }
 
     public BaseResponse countTripSeatSoldByTripId(TripSeatRequest request) {
-        log.info("Get quantity trip seat sold by tripId: {}", request.getTripId());
         if (request.getTripId() == null) {
-            log.warn("TripId is required");
             return new BaseResponse(400, null, "TripId is required", null, null);
         }
         Integer count = tripSeatRepository.countTripSeatSoldByTripId(
@@ -35,9 +33,7 @@ public class TripSeatService {
     }
 
     public BaseResponse getAllTripSeatsByTripId(TripSeatRequest request) {
-        log.info("Get all trip seat sold by tripId: {}", request.getTripId());
         if (request.getTripId() == null) {
-            log.warn("TripId is required");
             return new BaseResponse(400, null, "TripId is required", null, null);
         }
         List<TripSeatEntity> tripSeats = tripSeatRepository.findAllTripSeatsByTripId(request.getTripId());
@@ -46,33 +42,29 @@ public class TripSeatService {
     }
 
     public BaseResponse getAllTripSeatAvailableByTripId(TripSeatRequest request) {
-        try {
-            List<TripSeatResponse> result  = tripSeatRepository.findAllTripSeatAvailableByTripId(request.getTripId())
-                    .stream()
-                    .map(ts -> new TripSeatResponse(
-                            //TripSeat
-                            ts.getId(),
-                            ts.getStatus(),
-                            //Seat
-                            ts.getSeat().getSeatId(),
-                            ts.getSeat().getSeatNumber(),
-                            ts.getSeat().getFloor(),
-                            ts.getSeat().getSeatRow(),
-                            ts.getSeat().getSeatColumn(),
-                            //Trip
-                            ts.getTrip().getTripId(),
-                            ts.getTrip().getTripCode(),
-                            ts.getTrip().getRoute().getFromStation().getName(),
-                            ts.getTrip().getRoute().getToStation().getName(),
-                            ts.getTrip().getDepartureTime(),
-                            ts.getTrip().getArrivalTime(),
-                            ts.getTrip().getPrice(),
-                            ts.getTrip().getStatus()
-                    ))
-                    .toList();
-            return new BaseResponse(200, result, "Get all trip seats can sell successful",null,null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        List<TripSeatResponse> result  = tripSeatRepository.findAllTripSeatAvailableByTripId(request.getTripId())
+                .stream()
+                .map(ts -> new TripSeatResponse(
+                        //TripSeat
+                        ts.getId(),
+                        ts.getStatus(),
+                        //Seat
+                        ts.getSeat().getSeatId(),
+                        ts.getSeat().getSeatNumber(),
+                        ts.getSeat().getFloor(),
+                        ts.getSeat().getSeatRow(),
+                        ts.getSeat().getSeatColumn(),
+                        //Trip
+                        ts.getTrip().getTripId(),
+                        ts.getTrip().getTripCode(),
+                        ts.getTrip().getRoute().getFromStation().getName(),
+                        ts.getTrip().getRoute().getToStation().getName(),
+                        ts.getTrip().getDepartureTime(),
+                        ts.getTrip().getArrivalTime(),
+                        ts.getTrip().getPrice(),
+                        ts.getTrip().getStatus()
+                ))
+                .toList();
+        return new BaseResponse(200, result, "Get all trip seats can sell successful",null,null);
     }
 }

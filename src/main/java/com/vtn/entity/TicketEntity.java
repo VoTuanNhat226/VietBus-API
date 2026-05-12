@@ -16,7 +16,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "tickets")
 @Entity
-public class TicketEntity {
+public class TicketEntity extends AuditModel{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID ticketId;
@@ -42,18 +42,6 @@ public class TicketEntity {
 
     @Column(name = "sold_at")
     LocalDateTime soldAt;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "created_by")
-    String createdBy;
-
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
-
-    @Column(name = "updated_by")
-    String updatedBy;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_id", nullable = false)

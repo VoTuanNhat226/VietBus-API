@@ -42,9 +42,7 @@ public class EmployeeService {
     }
 
     public BaseResponse getAllEmployeeActiveByPosition(EmployeeRequest request) {
-        log.info("Get active employees by position: {}", request.getPosition());
         if (request.getPosition() == null) {
-            log.warn("Position is required");
             return new BaseResponse(400, null, "Position is required", null, null);
         }
         List<EmployeeEntity> employeeActive = employeeRepository.getAllEmployeeActiveByPosition(request.getPosition());
@@ -53,27 +51,19 @@ public class EmployeeService {
 
     @Transactional
     public BaseResponse createEmployee(EmployeeRequest employeeRequest) {
-        log.info("Start createEmployee with request: {}", employeeRequest);
         UserDetails info = getInfo();
-        log.info("User {} is creating employee", info.getUsername());
-
         boolean isAdmin = isAdmin(info);
+
         if (!isAdmin) {
-            log.warn("User {} does not have permission to create employee", info.getUsername());
             return new BaseResponse(403, null, "You don't have permission!", null, null);
         }
 
         if (employeeRequest.getFullName() == null || employeeRequest.getPhoneNumber() == null) {
-            log.warn("Missing required fields: fullName or phoneNumber");
             return new BaseResponse(400, null, "FullName and Phone are required", null, null);
         }
 
-        EmployeeEntity existed = employeeRepository.findByFullNameAndPhoneNumber(
-                        employeeRequest.getFullName(),
-                        employeeRequest.getPhoneNumber());
-
+        EmployeeEntity existed = employeeRepository.findByFullNameAndPhoneNumber(employeeRequest.getFullName(), employeeRequest.getPhoneNumber());
         if (existed != null) {
-            log.warn("Employee already exists with name {} and phone {}", employeeRequest.getFullName(), employeeRequest.getPhoneNumber());
             return new BaseResponse(409, null, "Employee already existed", null, null);
         }
 
@@ -83,10 +73,8 @@ public class EmployeeService {
         employee.setPosition(employeeRequest.getPosition());
         employee.setActive(employeeRequest.getActive());
         if(employeeRequest.getAccountId() != null) {
-            log.info("Mapping accountId: {}", employeeRequest.getAccountId());
             AccountEntity account = accountRepository.findByAccountId(employeeRequest.getAccountId());
             if (account == null) {
-                log.error("Account not found with id: {}", employeeRequest.getAccountId());
                 return new BaseResponse(404, null, "Account not found", null, null);
             } else {
                 employee.setAccount(account);
@@ -95,20 +83,16 @@ public class EmployeeService {
         employee.setCreatedBy(info.getUsername());
         employee.setCreatedAt(LocalDateTime.now());
         employeeRepository.save(employee);
-        log.info("Employee created successful with id: {}", employee.getEmployeeId());
 
         return new BaseResponse(201, employee, "Create employee successful", null, null);
     }
 
     @Transactional
     public BaseResponse updateEmployee(EmployeeRequest employeeRequest) {
-        log.info("Start updateEmployee with request: {}", employeeRequest);
         UserDetails info = getInfo();
-        log.info("User {} is updating employee", info.getUsername());
-
         boolean isAdmin = isAdmin(info);
+
         if (!isAdmin) {
-            log.warn("User {} does not have permission to create employee", info.getUsername());
             return new BaseResponse(403, null, "You don't have permission!", null, null);
         }
 
@@ -123,47 +107,36 @@ public class EmployeeService {
             employee.setUpdatedBy(info.getUsername());
             employee.setUpdatedAt(LocalDateTime.now());
             if(employeeRequest.getAccountId() != null) {
-                log.info("Mapping accountId: {}", employeeRequest.getAccountId());
                 AccountEntity account = accountRepository.findByAccountId(employeeRequest.getAccountId());
                 if (account == null) {
-                    log.error("Account not found with id: {}", employeeRequest.getAccountId());
                     return new BaseResponse(404, null, "Account not found", null, null);
                 } else {
                     employee.setAccount(account);
                 }
             }
             employeeRepository.save(employee);
-            log.info("Employee updated successful with id: {}", employee.getEmployeeId());
 
             return new BaseResponse(200, employee, "Update employee successful", null, null);
         }
     }
 
     public BaseResponse deleteEmployee(EmployeeRequest employeeRequest) {
-        log.info("Start deleteEmployee with request: {}", employeeRequest);
         UserDetails info = getInfo();
-        log.info("User {} is deleting employee", info.getUsername());
         boolean isAdmin = isAdmin(info);
+
         if (!isAdmin) {
-            log.warn("User {} does not have permission to delete employee", info.getUsername());
             return new BaseResponse(403, null, "You don't have permission!", null, null);
         }
 
         if (employeeRequest.getEmployeeId() == null) {
-            log.warn("Missing required fields: employeeId");
             return new BaseResponse(400, null, "EmployeeId is required", null, null);
         }
 
-        EmployeeEntity employee = employeeRepository
-                .findByEmployeeId(employeeRequest.getEmployeeId());
-
+        EmployeeEntity employee = employeeRepository.findByEmployeeId(employeeRequest.getEmployeeId());
         if (employee == null) {
-            log.error("Employee not found with id: {}", employeeRequest.getEmployeeId());
             return new BaseResponse(404, null, "Employee not found", null, null);
         }
-
         employeeRepository.delete(employee);
-        log.info("Employee deleted successful with id: {}", employee.getEmployeeId());
 
         return new BaseResponse(200, null, "Delete employee successful", null, null);
     }

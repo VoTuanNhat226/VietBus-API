@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "trips")
 @Entity
-public class TripEntity {
+public class TripEntity extends AuditModel{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID tripId;
@@ -40,18 +40,6 @@ public class TripEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     TripStatusEnum status;
-
-    @Column(name = "created_at")
-    LocalDateTime createdAt;
-
-    @Column(name = "created_by")
-    String createdBy;
-
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
-
-    @Column(name = "updated_by")
-    String updatedBy;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "route_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_route_id"))

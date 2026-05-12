@@ -15,7 +15,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "seats", uniqueConstraints = {@UniqueConstraint(name = "uk_seat_number_bus", columnNames = {"seat_number", "bus_id"})})
 @Entity
-public class SeatEntity {
+public class SeatEntity extends AuditModel{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID seatId;
@@ -31,18 +31,6 @@ public class SeatEntity {
 
     @Column(name = "seat_column", nullable = false)
     String seatColumn; // A, B, C
-
-    @Column(name = "created_at")
-    LocalDateTime createdAt;
-
-    @Column(name = "created_by")
-    String createdBy;
-
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
-
-    @Column(name = "updated_by")
-    String updatedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false, foreignKey = @ForeignKey(name = "fk_seat_vehicle_id"))

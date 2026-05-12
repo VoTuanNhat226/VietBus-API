@@ -1,9 +1,7 @@
 package com.vtn.service;
 
 import com.vtn.dto.request.AccountRequest;
-import com.vtn.dto.request.EmployeeRequest;
 import com.vtn.entity.AccountEntity;
-import com.vtn.entity.RouteEntity;
 import com.vtn.repository.AccountRepository;
 import com.vtn.utils.BaseResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +23,11 @@ public class AccountDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
 
-        AccountEntity account = accountRepository
+        return accountRepository
                 .findByUsername(username)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found")
                 );
-
-        return account;
     }
 
     private boolean isAllParametersNull(AccountRequest request) {
@@ -55,34 +51,26 @@ public class AccountDetailsService implements UserDetailsService {
                     request.getUpdatedBy()
             );
         }
-        return new BaseResponse(200, accounts, "Get all accounts successfully", null,null);
+        return new BaseResponse(200, accounts, "Get all accounts successful", null,null);
     }
 
     public BaseResponse getAllAccountsByRole(AccountRequest request) {
-        try {
-            List<AccountEntity> accounts = accountRepository.findAccountsNotUsedByEmployee(request.getRole());
-            return new BaseResponse(200, accounts, "Get all accounts by role successfully", null,null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        List<AccountEntity> accounts = accountRepository.findAccountsNotUsedByEmployee(request.getRole());
+        return new BaseResponse(200, accounts, "Get all accounts by role successful", null,null);
     }
 
     public BaseResponse updateAccount(AccountRequest request) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-        try {
-            AccountEntity account = accountRepository.findByAccountId(request.getAccountId());
-            if (account != null) {
-                account.setActive(request.getActive());
-                account.setUpdatedBy(info.getUsername());
-                account.setUpdatedAt(LocalDateTime.now());
-                accountRepository.save(account);
-                return new BaseResponse(200, "Account updated successfully", null, null,null);
-            } else {
-                return new BaseResponse(404, "Account not found", null, null,null);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        AccountEntity account = accountRepository.findByAccountId(request.getAccountId());
+        if (account == null ) {
+            return new BaseResponse(404, "Account not found", null, null,null);
+        } else {
+            account.setActive(request.getActive());
+            account.setUpdatedBy(info.getUsername());
+            account.setUpdatedAt(LocalDateTime.now());
+            accountRepository.save(account);
+            return new BaseResponse(200, "Account updated successful", null, null,null);
         }
     }
 }

@@ -18,30 +18,26 @@ public class PaymentService {
     }
 
     public BaseResponse getAllPayments(PaymentRequest request) {
-        try {
-            List<PaymentResponse> payments = paymentRepository.getAllByCondition(
-                                request.getMethod(),
-                                request.getStatus(),
-                                request.getTicketCode(),
-                                request.getTicketStatus(),
-                                request.getTicketPaymentType())
-                        .stream()
-                        .map(p -> new PaymentResponse(
-                                p.getPaymentId(),
-                                p.getMethod(),
-                                p.getStatus(),
-                                p.getAmount(),
-                                p.getPaidAt(),
-                                p.getTicket().getTicketId(),
-                                p.getTicket().getTicketCode(),
-                                p.getTicket().getPrice(),
-                                p.getTicket().getStatus(),
-                                p.getTicket().getPaymentType()
-                        ))
-                        .toList();
-            return new BaseResponse(200, payments,null,null,null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        List<PaymentResponse> payments = paymentRepository.getAllByCondition(
+                        request.getMethod(),
+                        request.getStatus(),
+                        request.getTicketCode(),
+                        request.getTicketStatus(),
+                        request.getTicketPaymentType())
+                .stream()
+                .map(p -> new PaymentResponse(
+                        p.getPaymentId(),
+                        p.getMethod(),
+                        p.getStatus(),
+                        p.getAmount(),
+                        p.getPaidAt(),
+                        p.getTicket().getTicketId(),
+                        p.getTicket().getTicketCode(),
+                        p.getTicket().getPrice(),
+                        p.getTicket().getStatus(),
+                        p.getTicket().getPaymentType()
+                ))
+                .toList();
+        return new BaseResponse(200, payments,null,null,null);
     }
 }

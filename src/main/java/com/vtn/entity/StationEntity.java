@@ -14,7 +14,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "stations")
 @Entity
-public class StationEntity {
+public class StationEntity extends AuditModel{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID stationId;
@@ -27,16 +27,4 @@ public class StationEntity {
 
     @Column(name = "address")
     String address;
-
-    @Column(name = "created_at")
-    LocalDateTime createdAt;
-
-    @Column(name = "created_by")
-    String createdBy;
-
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
-
-    @Column(name = "updated_by")
-    String updatedBy;
 }

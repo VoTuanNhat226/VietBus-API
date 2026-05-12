@@ -3,7 +3,6 @@ package com.vtn.service;
 import com.vtn.dto.request.RouteRequest;
 import com.vtn.entity.RouteEntity;
 import com.vtn.entity.StationEntity;
-import com.vtn.entity.TripEntity;
 import com.vtn.repository.RouteRepository;
 import com.vtn.repository.StationRepository;
 import com.vtn.utils.BaseResponse;
@@ -39,86 +38,81 @@ public class RouteService {
                     request.getActive()
             );
 
-        return new BaseResponse(200, routes, "Get all routes successfully", null, null);
+        return new BaseResponse(200, routes, "Get all routes successful", null, null);
     }
 
     public BaseResponse getAllRoutesActive() {
-        try {
-            List<RouteEntity> routes = routeRepository.findAllRoutesActive();
-            return new BaseResponse(200, routes, "Get all routes active successfully",null,null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        List<RouteEntity> routes = routeRepository.findAllRoutesActive();
+        return new BaseResponse(200, routes, "Get all routes active successful",null,null);
     }
 
     public BaseResponse createRoute(RouteRequest routeRequest) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        try {
-            RouteEntity routeEntity = routeRepository.findByFromStationAndToStation(routeRequest.getFromStationId(), routeRequest.getToStationId());
-            if(routeEntity != null) {
-                return new BaseResponse(400, null,"Tuyến xe đã tồn tại", null,null);
-            }
-            if(routeRequest.getFromStationId().equals(routeRequest.getToStationId())) {
-                return new BaseResponse(400, null,"Điểm đi trùng điểm đến", null,null);
-            }
-            if(routeRequest.getDistanceKm() == 0) {
-                return new BaseResponse(400, null,"Khoảng cách phải lớn hơn 0", null,null);
-            }
+        UserDetails info = getInfo();
 
-            StationEntity fromStaion = stationRepository.findByStationId(routeRequest.getFromStationId());
-            StationEntity toStaion = stationRepository.findByStationId(routeRequest.getToStationId());
-
-            RouteEntity route = new RouteEntity();
-            route.setFromStation(fromStaion);
-            route.setToStation(toStaion);
-            route.setDistanceKm(routeRequest.getDistanceKm());
-            route.setActive(routeRequest.getActive());
-            route.setCreatedBy(info.getUsername());
-            route.setCreatedAt(LocalDateTime.now());
-            routeRepository.save(route);
-            return new BaseResponse(201, route, "Create route successfully", "No error", null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        RouteEntity routeEntity = routeRepository.findByFromStationAndToStation(routeRequest.getFromStationId(), routeRequest.getToStationId());
+        if(routeEntity != null) {
+            return new BaseResponse(400, null,"Tuyến xe đã tồn tại", null,null);
         }
+        if(routeRequest.getFromStationId().equals(routeRequest.getToStationId())) {
+            return new BaseResponse(400, null,"Điểm đi trùng điểm đến", null,null);
+        }
+        if(routeRequest.getDistanceKm() == 0) {
+            return new BaseResponse(400, null,"Khoảng cách phải lớn hơn 0", null,null);
+        }
+
+        StationEntity fromStation = stationRepository.findByStationId(routeRequest.getFromStationId());
+        StationEntity toStation = stationRepository.findByStationId(routeRequest.getToStationId());
+
+        RouteEntity route = new RouteEntity();
+        route.setFromStation(fromStation);
+        route.setToStation(toStation);
+        route.setDistanceKm(routeRequest.getDistanceKm());
+        route.setActive(routeRequest.getActive());
+        route.setCreatedBy(info.getUsername());
+        route.setCreatedAt(LocalDateTime.now());
+        routeRepository.save(route);
+
+        return new BaseResponse(201, route, "Create route successful", null, null);
     }
 
     public BaseResponse updateRoute(RouteRequest routeRequest) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        try {
-            RouteEntity route = routeRepository.findByRouteId(routeRequest.getRouteId());
-            if(route != null) {
-                route.setActive(routeRequest.getActive());
-                route.setUpdatedBy(info.getUsername());
-                route.setUpdatedAt(LocalDateTime.now());
-                routeRepository.save(route);
-            }
-            return new BaseResponse(200, route, "Update route successfully", "No error", null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        UserDetails info = getInfo();
+
+        RouteEntity route = routeRepository.findByRouteId(routeRequest.getRouteId());
+        if(route != null) {
+            route.setActive(routeRequest.getActive());
+            route.setUpdatedBy(info.getUsername());
+            route.setUpdatedAt(LocalDateTime.now());
+            routeRepository.save(route);
         }
+
+        return new BaseResponse(200, route, "Update route successful", null, null);
     }
 
     public BaseResponse deleteRoute(RouteRequest routeRequest) {
-        UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String role = info.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .findFirst()
-                .orElse(null);
-        try {
-            if("ROLE_ADMIN".equals(role)) {
-                RouteEntity route = routeRepository.findByRouteId(routeRequest.getRouteId());
-                if(route == null) {
-                    return new BaseResponse(404, null, "Not found route", "Not found route", null);
-                } else {
-                    routeRepository.delete(route);
-                    return new BaseResponse(204, route, "Delete route successfully", "No error", null);
-                }
+        UserDetails info = getInfo();
+        boolean isAdmin = isAdmin(info);
+
+        if(!isAdmin) {
+            return new BaseResponse(403, null, "You don't has permission", null, null);
+        } else {
+            RouteEntity route = routeRepository.findByRouteId(routeRequest.getRouteId());
+            if(route == null) {
+                return new BaseResponse(404, null, "Not found route", null, null);
             } else {
-                return new BaseResponse(403, null, "You don't has permission", "No error", null);
+                routeRepository.delete(route);
+                return new BaseResponse(204, route, "Delete route successful", null, null);
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+    }
+
+    private boolean isAdmin(UserDetails info) {
+        return info.getAuthorities()
+                .stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+    }
+
+    private UserDetails getInfo() {
+        return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 }
