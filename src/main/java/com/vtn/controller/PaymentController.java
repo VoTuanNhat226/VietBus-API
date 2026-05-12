@@ -21,7 +21,7 @@ public class PaymentController {
     }
 
     @PostMapping(value = APIConstants.API_GET_ALL_PAYMENT)
-    public ResponseEntity<BaseResponse> getAllPayment(@RequestBody PaymentRequest request) {
+    public ResponseEntity<BaseResponse> getAll(@RequestBody PaymentRequest request) {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = paymentService.getAllPayments(request);
         response.setTook(System.currentTimeMillis() - beginTime);

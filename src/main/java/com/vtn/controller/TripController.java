@@ -20,7 +20,7 @@ public class TripController {
     }
 
     @PostMapping(value = APIConstants.API_GET_ALL_TRIP)
-    public ResponseEntity<BaseResponse> getAllTrip(@RequestBody TripRequest request) {
+    public ResponseEntity<BaseResponse> getAll(@RequestBody TripRequest request) {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = tripService.getAllTrips(request);
         response.setTook(System.currentTimeMillis() - beginTime);

@@ -41,7 +41,6 @@ public class TicketController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = ticketService.createTicket(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-
         return ResponseEntity
                 .status(response.getStatusCode())
                 .body(response);
@@ -52,7 +51,6 @@ public class TicketController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = ticketService.updateTicket(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-
         return ResponseEntity
                 .status(response.getStatusCode())
                 .body(response);

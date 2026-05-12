@@ -25,7 +25,7 @@ public class PassengerController {
     }
 
     @PostMapping(value = APIConstants.API_GET_ALL_PASSENGER)
-    public ResponseEntity<BaseResponse> getAllPassengers() {
+    public ResponseEntity<BaseResponse> getAll() {
         long begin = System.currentTimeMillis();
         BaseResponse response = passengerService.getAllPassenger();
         response.setTook(System.currentTimeMillis() - begin);
