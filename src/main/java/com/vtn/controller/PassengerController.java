@@ -24,10 +24,18 @@ public class PassengerController {
         this.passengerService = passengerService;
     }
 
+    @PostMapping(value = APIConstants.API_GET_ALL_PASSENGER)
+    public ResponseEntity<BaseResponse> getAllPassengers() {
+        long begin = System.currentTimeMillis();
+        BaseResponse response = passengerService.getAllPassenger();
+        response.setTook(System.currentTimeMillis() - begin);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping(value = APIConstants.API_CREATE_PASSENGER)
     public ResponseEntity<BaseResponse> createPassenger(@RequestBody PassengerRequest request) {
         long begin = System.currentTimeMillis();
-        BaseResponse response = passengerService.createAPassenger(request);
+        BaseResponse response = passengerService.createPassenger(request);
         response.setTook(System.currentTimeMillis() - begin);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

@@ -1,8 +1,10 @@
 package com.vtn.service;
 
+import com.vtn.dto.request.EmployeeRequest;
 import com.vtn.dto.request.PassengerRequest;
 import com.vtn.dto.request.PassengerSearchRequest;
 import com.vtn.dto.response.PassengerResponse;
+import com.vtn.entity.EmployeeEntity;
 import com.vtn.entity.PassengerEntity;
 import com.vtn.repository.PassengerRepository;
 import com.vtn.utils.*;
@@ -25,11 +27,22 @@ public class PassengerService {
         this.passengerRepository = passengerRepository;
     }
 
-    public BaseResponse createAPassenger(PassengerRequest request) {
+    public BaseResponse getAllPassenger() {
+        List<PassengerEntity> passengers = passengerRepository.findAll();
+        return new BaseResponse(200, passengers, "Get all passengers successful", null, null);
+    }
 
-        // check duplicate
+    public BaseResponse createPassenger(PassengerRequest request) {
+
+        // validate exists
         if (passengerRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
+        }
+        if (passengerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new RuntimeException("Phone number already exists");
+        }
+        if (passengerRepository.existsByIdCardNumber(request.getIdCardNumber())) {
+            throw new RuntimeException("ID number already exists");
         }
 
         PassengerEntity passengerEntity = new PassengerEntity();
