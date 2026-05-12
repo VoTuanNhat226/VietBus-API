@@ -37,7 +37,7 @@ public class TicketController {
     }
 
     @PostMapping(value =APIConstants.API_CREATE_TICKET)
-    public ResponseEntity<BaseResponse> create(@RequestBody TicketRequest request) {
+    public ResponseEntity<BaseResponse> create(@RequestBody TicketRequest request) throws Exception {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = ticketService.createTicket(request);
         response.setTook(System.currentTimeMillis() - beginTime);
@@ -48,7 +48,7 @@ public class TicketController {
     }
 
     @PostMapping(value =APIConstants.API_UPDATE_TICKET)
-    public ResponseEntity<BaseResponse> update(@RequestBody TicketRequest request) {
+    public ResponseEntity<BaseResponse> update(@RequestBody TicketRequest request) throws Exception {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = ticketService.updateTicket(request);
         response.setTook(System.currentTimeMillis() - beginTime);

@@ -9,6 +9,7 @@ import com.vtn.enumdef.TicketStatusEnum;
 import com.vtn.enumdef.TripSeatStatusEnum;
 import com.vtn.repository.*;
 import com.vtn.service.Mail.MailService;
+import com.vtn.service.QR.QrCodeService;
 import com.vtn.utils.BaseResponse;
 import com.vtn.utils.CodeGeneratorUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ public class TicketService {
     private final PassengerRepository passengerRepository;
     private final PaymentRepository paymentRepository;
     private final MailService mailService;
+    private final QrCodeService qrCodeService;
 
     @Autowired
     public TicketService(
@@ -42,13 +44,15 @@ public class TicketService {
             TripSeatRepository tripSeatRepository,
             PassengerRepository passengerRepository,
             PaymentRepository paymentRepository,
-            MailService mailService) {
+            MailService mailService,
+            QrCodeService qrCodeService) {
         this.ticketRepository = ticketRepository;
         this.tripRepository = tripRepository;
         this.tripSeatRepository = tripSeatRepository;
         this.passengerRepository = passengerRepository;
         this.paymentRepository = paymentRepository;
         this.mailService = mailService;
+        this.qrCodeService = qrCodeService;
     }
 
     public BaseResponse getAllTicketsUnpaid(TicketRequest request) {
@@ -97,14 +101,13 @@ public class TicketService {
     }
 
     @Transactional
-    public BaseResponse createTicket(TicketRequest request) {
+    public BaseResponse createTicket(TicketRequest request) throws Exception {
         UserDetails info = getInfo();
 
-        TripEntity trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new RuntimeException("Trip not found"));
+        // Validate input
+        TripEntity trip = tripRepository.findById(request.getTripId()).orElseThrow(() -> new RuntimeException("Trip not found"));
 
-        TripSeatEntity tripSeat = tripSeatRepository.findById(request.getTripSeatId())
-                .orElseThrow(() -> new RuntimeException("Trip seat not found"));
+        TripSeatEntity tripSeat = tripSeatRepository.findById(request.getTripSeatId()).orElseThrow(() -> new RuntimeException("Trip seat not found"));
 
         if (!TripSeatStatusEnum.AVAILABLE.equals(tripSeat.getStatus())) {
             return new BaseResponse(404,null,"Seat have been hold or sold",null,null);
@@ -112,11 +115,9 @@ public class TicketService {
 
         PassengerEntity passenger = null;
         if (request.getPassengerId() != null) {
-            passenger = passengerRepository.findById(request.getPassengerId())
-                    .orElseThrow(() -> new RuntimeException("Passenger not found"));
+            passenger = passengerRepository.findById(request.getPassengerId()).orElseThrow(() -> new RuntimeException("Passenger not found"));
         }
         String passengerEmail = passenger != null ? passenger.getEmail() : null;
-
 
         //Generate ticketCode
         String ticketCode;
@@ -155,6 +156,9 @@ public class TicketService {
 
             //Send Mail
             if (passengerEmail != null) {
+                String qrContent = ticket.getTicketCode();
+                byte[] qrCode = qrCodeService.generateQrCode(qrContent);
+
                 String subject = "Xác nhận đặt vé xe VietBus";
                 String content = buildTicketMailContent(ticket);
 
@@ -162,10 +166,11 @@ public class TicketService {
                         new TransactionSynchronization() {
                             @Override
                             public void afterCommit() {
-                                mailService.sendMail(
+                                mailService.sendTicketMail(
                                         passengerEmail,
                                         subject,
-                                        content
+                                        content,
+                                        qrCode
                                 );
                             }
                         }
@@ -190,17 +195,12 @@ public class TicketService {
     }
 
     @Transactional
-    public BaseResponse updateTicket(TicketRequest request) {
+    public BaseResponse updateTicket(TicketRequest request) throws Exception {
         UserDetails info = getInfo();
 
         TicketEntity ticket = ticketRepository.findByTicketCode(request.getTicketCode());
         if (ticket == null) {
             return new BaseResponse(404,null,"Ticket not found",null,null);
-        }
-
-        TripEntity trip = tripRepository.findByTripCode(request.getTripCode());
-        if (trip == null) {
-            return new BaseResponse(404,null,"Trip not found",null,null);
         }
 
         TicketStatusEnum currentTicketStatus = ticket.getStatus();
@@ -223,6 +223,34 @@ public class TicketService {
             PaymentEntity payment = buildPaymentEntity(ticket, request.getPaymentMethod(), info.getUsername());
             paymentRepository.save(payment);
 
+            // Send Mail
+            PassengerEntity passenger = ticket.getPassenger();
+
+            if (passenger != null && passenger.getEmail() != null) {
+
+                String passengerEmail = passenger.getEmail();
+
+                String qrContent = ticket.getTicketCode();
+                byte[] qrCode = qrCodeService.generateQrCode(qrContent);
+
+                String subject = "Xác nhận đặt vé xe VietBus";
+                String content = buildTicketMailContent(ticket);
+
+                TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                mailService.sendTicketMail(
+                                        passengerEmail,
+                                        subject,
+                                        content,
+                                        qrCode
+                                );
+                            }
+                        }
+                );
+            }
+
             return new BaseResponse(200, null, "Update ticket successful, created payment", null, null);
         }
         return new BaseResponse(200, null, "Update ticket successful", null, null);
@@ -242,33 +270,55 @@ public class TicketService {
     };
 
     private String buildTicketMailContent(TicketEntity ticket) {
+
         String bookingTime = ticket.getCreatedAt().format(MAIL_DATE_FORMAT);
-        String departureTime = ticket.getTrip().getDepartureTime().format(MAIL_DATE_FORMAT);
-        String arrivalTime = ticket.getTrip().getArrivalTime().format(MAIL_DATE_FORMAT);
+
+        String departureTime = ticket.getTrip()
+                .getDepartureTime()
+                .format(MAIL_DATE_FORMAT);
+
+        String arrivalTime = ticket.getTrip()
+                .getArrivalTime()
+                .format(MAIL_DATE_FORMAT);
 
         return """
-            Xin chào,
-            Vé xe của bạn đã được đặt thành công.
-            Mã vé: %s
-            Ngày đặt: %s
-            Điểm đi: %s
-            Thời gian xuất bến: %s
-            Điểm đến: %s
-            Thời gian đến(dự kiến): %s
+        <div style='font-family: Arial'>
+            <h2>VietBus - Xác nhận đặt vé</h2>
 
-            Cảm ơn bạn đã sử dụng VietBus!
-            """.formatted(
+            <p><b>Mã vé:</b> %s</p>
+            <p><b>Ngày đặt:</b> %s</p>
+
+            <p><b>Điểm đi:</b> %s</p>
+            <p><b>Giờ xuất bến:</b> %s</p>
+
+            <p><b>Điểm đến:</b> %s</p>
+            <p><b>Giờ đến:</b> %s</p>
+
+            <p><b>Ghế:</b> %s</p>
+
+            <h3>QR Check-in</h3>
+
+            <img src="cid:ticketQr" width="250"/>
+
+            <p>
+                Vui lòng đưa mã QR cho nhân viên khi lên xe.
+            </p>
+
+            <p>Cảm ơn bạn đã sử dụng VietBus!</p>
+        </div>
+        """.formatted(
                 ticket.getTicketCode(),
                 bookingTime,
                 ticket.getTrip().getRoute().getFromStation().getName(),
                 departureTime,
                 ticket.getTrip().getRoute().getToStation().getName(),
-                arrivalTime
+                arrivalTime,
+                ticket.getTripSeat().getSeat().getSeatNumber()
         );
     }
 
     private static final DateTimeFormatter MAIL_DATE_FORMAT =
-            DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy");
+            DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy");
 
     private UserDetails getInfo() {
         return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
