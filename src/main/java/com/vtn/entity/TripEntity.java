@@ -52,6 +52,9 @@ public class TripEntity extends AuditModel{
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     List<TripEmployeeEntity> tripEmployees = new ArrayList<>();
 
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TripLog> logs = new ArrayList<>();
+
     // ── Helpers ──────────────────────────────────────────────────────────────
     /** Trả về danh sách tất cả tài xế của chuyến */
     public List<EmployeeEntity> getDrivers() {

@@ -31,6 +31,7 @@ public class TripService {
     private final VehicleRepository vehicleRepository;
     private final SeatRepository seatRepository;
     private final TripSeatRepository tripSeatRepository;
+    private final TripLogRepository tripLogRepository;
 
     @Autowired
     public TripService(TripRepository tripRepository,
@@ -38,13 +39,15 @@ public class TripService {
                        EmployeeRepository employeeRepository,
                        VehicleRepository vehicleRepository,
                        SeatRepository seatRepository,
-                       TripSeatRepository tripSeatRepository) {
+                       TripSeatRepository tripSeatRepository,
+                       TripLogRepository tripLogRepository) {
         this.tripRepository = tripRepository;
         this.routeRepository = routeRepository;
         this.employeeRepository = employeeRepository;
         this.vehicleRepository = vehicleRepository;
         this.seatRepository = seatRepository;
         this.tripSeatRepository = tripSeatRepository;
+        this.tripLogRepository = tripLogRepository;
     }
 
     public BaseResponse getAllTrips(TripRequest request) {
@@ -190,8 +193,16 @@ public class TripService {
 
         tripRepository.save(trip);
 
-        List<SeatEntity> seats = seatRepository.findByVehicleId(vehicle.getVehicleId());
+        // Save log
+        TripLog tripLog = new TripLog();
+        tripLog.setStaff(info.getUsername());
+        tripLog.setChangeAt(LocalDateTime.now());
+        tripLog.setStatus(TripStatusEnum.CREATED);
+        tripLog.setTrip(trip);
+        tripLogRepository.save(tripLog);
 
+        // Create TripSeat
+        List<SeatEntity> seats = seatRepository.findByVehicleId(vehicle.getVehicleId());
         List<TripSeatEntity> tripSeats = seats.stream()
                 .map(seat -> {
                     TripSeatEntity ts = new TripSeatEntity();
@@ -218,6 +229,15 @@ public class TripService {
         trip.setUpdatedBy(info.getUsername());
         trip.setUpdatedAt(LocalDateTime.now());
         tripRepository.save(trip);
+
+        // Save log
+        TripLog tripLog = new TripLog();
+        tripLog.setStaff(info.getUsername());
+        tripLog.setChangeAt(LocalDateTime.now());
+        tripLog.setStatus(request.getStatus());
+        tripLog.setTrip(trip);
+        tripLogRepository.save(tripLog);
+
         TripResponse response = toResponse(trip);
         return new BaseResponse(200,response,"Update trip successful", null, null);
     }
