@@ -17,19 +17,19 @@ public interface RouteRepository extends JpaRepository<RouteEntity, Integer> {
         SELECT r
         FROM RouteEntity r
         WHERE r.fromStation.stationId = :fromStationId
-        AND r.toStation.stationId = :toStationId
+            AND r.toStation.stationId = :toStationId
     """)
     RouteEntity findByFromStationAndToStation(UUID fromStationId, UUID toStationId);
 
     @Query("""
-    SELECT r
-    FROM RouteEntity r
-    WHERE (:fromStationId IS NULL OR r.fromStation.stationId = :fromStationId)
-        AND (:toStationId IS NULL OR r.toStation.stationId = :toStationId)
-        AND (:distanceKm IS NULL OR r.distanceKm = :distanceKm)
-        AND (:createdBy IS NULL OR r.createdBy LIKE %:createdBy%)
-        AND (:updatedBy IS NULL OR r.updatedBy LIKE :updatedBy%)
-        AND (:active IS NULL OR r.active = :active)
+        SELECT r
+        FROM RouteEntity r
+        WHERE (:fromStationId IS NULL OR r.fromStation.stationId = :fromStationId)
+            AND (:toStationId IS NULL OR r.toStation.stationId = :toStationId)
+            AND (:distanceKm IS NULL OR r.distanceKm = :distanceKm)
+            AND (:createdBy IS NULL OR r.createdBy LIKE %:createdBy%)
+            AND (:updatedBy IS NULL OR r.updatedBy LIKE :updatedBy%)
+            AND (:active IS NULL OR r.active = :active)
     """)
     List<RouteEntity> getAllByCondition(
             @Param("fromStationId") UUID fromStationId,

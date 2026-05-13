@@ -205,7 +205,7 @@ public class StatisticsService {
     }
 
     public BaseResponse getDepartedTrips(StatisticsRequest request) {
-        List<TripEntity> trips = tripRepository.getAllByStatus(TripStatusEnum.DEPARTED);
+        List<TripEntity> trips = tripRepository.getAllTripByStatus(TripStatusEnum.DEPARTED);
         if (trips != null && !trips.isEmpty()) {
             List<TripResponse> responses = trips.stream()
                     .map(this::TriptoResponse)

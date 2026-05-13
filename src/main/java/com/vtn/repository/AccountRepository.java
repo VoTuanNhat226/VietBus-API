@@ -17,13 +17,13 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
     Optional<AccountEntity> findByUsername(String username);
 
     @Query("""
-    SELECT a
-    FROM AccountEntity a
-    WHERE (:username IS NULL OR a.username LIKE %:username%)
-        AND (:role IS NULL OR a.role = :role)
-        AND (:active IS NULL OR a.active = :active)
-        AND (:createdBy IS NULL OR a.createdBy LIKE %:createdBy%)
-        AND (:updatedBy IS NULL OR a.updatedBy LIKE :updatedBy%)
+        SELECT a
+        FROM AccountEntity a
+        WHERE (:username IS NULL OR a.username LIKE %:username%)
+            AND (:role IS NULL OR a.role = :role)
+            AND (:active IS NULL OR a.active = :active)
+            AND (:createdBy IS NULL OR a.createdBy LIKE %:createdBy%)
+            AND (:updatedBy IS NULL OR a.updatedBy LIKE :updatedBy%)
     """)
     List<AccountEntity> getAllByCondition(
             @Param("username") String username,
@@ -34,9 +34,9 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
     );
 
     @Query("""
-    SELECT a
-    FROM AccountEntity a
-    WHERE a.accountId = :accountId
+        SELECT a
+        FROM AccountEntity a
+        WHERE a.accountId = :accountId
     """)
     AccountEntity findByAccountId(@Param("accountId") UUID accountId);
 

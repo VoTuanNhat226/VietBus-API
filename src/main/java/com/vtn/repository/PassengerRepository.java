@@ -30,12 +30,13 @@ public interface PassengerRepository extends JpaRepository<PassengerEntity, UUID
     );
 
     @Query("""
-        SELECT p FROM PassengerEntity p
+        SELECT p
+        FROM PassengerEntity p
         WHERE (:fullName IS NULL OR LOWER(p.fullName) LIKE LOWER(CONCAT('%', CAST(:fullName AS string), '%')))
-        AND (:phoneNumber IS NULL OR p.phoneNumber LIKE CONCAT('%', CAST(:phoneNumber AS string), '%'))
-        AND (:email IS NULL OR LOWER(p.email) LIKE LOWER(CONCAT('%', CAST(:email AS string), '%')))
-        AND (:idCardNumber IS NULL OR p.idCardNumber LIKE CONCAT('%', CAST(:idCardNumber AS string), '%'))
-        """)
+            AND (:phoneNumber IS NULL OR p.phoneNumber LIKE CONCAT('%', CAST(:phoneNumber AS string), '%'))
+            AND (:email IS NULL OR LOWER(p.email) LIKE LOWER(CONCAT('%', CAST(:email AS string), '%')))
+            AND (:idCardNumber IS NULL OR p.idCardNumber LIKE CONCAT('%', CAST(:idCardNumber AS string), '%'))
+    """)
     Page<PassengerEntity> searchPassengers(
             @Param("fullName") String fullName,
             @Param("phoneNumber") String phoneNumber,

@@ -15,18 +15,16 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TripRepository extends JpaRepository<TripEntity, UUID> {
-
     boolean existsByTripCode(String tripCode);
-
     TripEntity findByTripCode(String tripCode);
 
     @Query("""
-    SELECT COUNT(te) > 0
-    FROM TripEmployeeEntity te
-    WHERE te.employee.employeeId = :employeeId
-        AND te.trip.departureTime < :arrivalTime
-        AND te.trip.arrivalTime > :departureTime
-        AND te.trip.status NOT IN (:statuses)
+        SELECT COUNT(te) > 0
+        FROM TripEmployeeEntity te
+        WHERE te.employee.employeeId = :employeeId
+            AND te.trip.departureTime < :arrivalTime
+            AND te.trip.arrivalTime > :departureTime
+            AND te.trip.status NOT IN (:statuses)
     """)
     boolean existsEmployeeConflict(
             @Param("employeeId") UUID employeeId,
@@ -36,12 +34,12 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
     );
 
     @Query("""
-    SELECT COUNT(t) > 0
-    FROM TripEntity t
-    WHERE t.vehicle.vehicleId = :vehicleId
-        AND t.departureTime < :arrivalTime
-        AND t.arrivalTime > :departureTime
-        AND t.status NOT IN (:statuses)
+        SELECT COUNT(t) > 0
+        FROM TripEntity t
+        WHERE t.vehicle.vehicleId = :vehicleId
+            AND t.departureTime < :arrivalTime
+            AND t.arrivalTime > :departureTime
+            AND t.status NOT IN (:statuses)
     """)
     boolean existsVehicleConflict(
             @Param("vehicleId") UUID vehicleId,
@@ -51,15 +49,15 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
     );
 
     @Query("""
-    SELECT DISTINCT t
-    FROM TripEntity t
-    JOIN TripEmployeeEntity te ON t.tripId = te.trip.tripId
-    WHERE (:fromStationId IS NULL OR t.route.fromStation.stationId = :fromStationId)
-        AND (:toStationId IS NULL OR t.route.toStation.stationId = :toStationId)
-        AND (:vehicleId IS NULL OR t.vehicle.vehicleId = :vehicleId)
-        AND (:status IS NULL OR t.status = :status)
-        AND (:tripCode IS NULL OR t.tripCode LIKE %:tripCode%)
-        AND (:driverId IS NULL OR te.employee.employeeId = :driverId)
+        SELECT DISTINCT t
+        FROM TripEntity t
+        JOIN TripEmployeeEntity te ON t.tripId = te.trip.tripId
+        WHERE (:fromStationId IS NULL OR t.route.fromStation.stationId = :fromStationId)
+            AND (:toStationId IS NULL OR t.route.toStation.stationId = :toStationId)
+            AND (:vehicleId IS NULL OR t.vehicle.vehicleId = :vehicleId)
+            AND (:status IS NULL OR t.status = :status)
+            AND (:tripCode IS NULL OR t.tripCode LIKE %:tripCode%)
+            AND (:driverId IS NULL OR te.employee.employeeId = :driverId)
     """)
     List<TripEntity> getAllByCondition(
             @Param("fromStationId") UUID fromStationId,
@@ -71,27 +69,20 @@ public interface TripRepository extends JpaRepository<TripEntity, UUID> {
     );
 
     @Query("""
-    SELECT t
-    FROM TripEntity t
-    WHERE t.status = :status
+        SELECT t
+        FROM TripEntity t
+        WHERE t.status = :status
     """)
     List<TripEntity> getAllTripByStatus(@Param("status") TripStatusEnum status);
 
     @Query("""
-    SELECT COUNT(t)
-    FROM TripEntity t
-    WHERE t.departureTime >= :startOfMonth
-        AND t.departureTime < :endOfMonth
+        SELECT COUNT(t)
+        FROM TripEntity t
+        WHERE t.departureTime >= :startOfMonth
+            AND t.departureTime < :endOfMonth
     """)
     BigDecimal countTripByMonth(
             LocalDateTime startOfMonth,
             LocalDateTime endOfMonth
     );
-
-    @Query("""
-    SELECT t
-    FROM TripEntity t
-    WHERE t.status = :status
-    """)
-    List<TripEntity> getAllByStatus(TripStatusEnum status);
 }

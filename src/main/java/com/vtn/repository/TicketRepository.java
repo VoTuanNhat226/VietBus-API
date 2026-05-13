@@ -22,7 +22,7 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     @Query("""
         SELECT t
         FROM TicketEntity t
-            WHERE t.status = 'UNPAID'
+        WHERE t.status = 'UNPAID'
     """)
     List<TicketEntity> findAllTicketUnPaid();
 

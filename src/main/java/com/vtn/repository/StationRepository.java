@@ -11,7 +11,7 @@ public interface StationRepository extends JpaRepository<StationEntity, UUID> {
     @Query("""
         SELECT s
         FROM StationEntity s
-        WHERE s.stationId = :stationId    
+        WHERE s.stationId = :stationId
     """)
     StationEntity findByStationId(UUID stationId);
 }

@@ -10,9 +10,9 @@ import java.util.UUID;
 public interface SeatRepository extends JpaRepository<SeatEntity, UUID> {
 
     @Query("""
-        SELECT s 
+        SELECT s
         FROM SeatEntity s
-        WHERE s.vehicle.vehicleId = :vehicleId    
+        WHERE s.vehicle.vehicleId = :vehicleId
     """)
     List<SeatEntity> findByVehicleId(UUID vehicleId);
 }
