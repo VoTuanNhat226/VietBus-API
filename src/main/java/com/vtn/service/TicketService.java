@@ -65,28 +65,12 @@ public class TicketService {
                         request.getPassengerName(),
                         request.getPassengerPhoneNumber())
                 .stream()
-                .map(t -> {
-                    PassengerEntity passenger = t.getPassenger();
-                    return new TicketResponse(
-                            t.getTicketId(),
-                            t.getTicketCode(),
-                            t.getPrice(),
-                            t.getStatus(),
-                            t.getPaymentType(),
-                            t.getSoldBy(),
-                            t.getSoldAt(),
-                            t.getTrip().getTripId(),
-                            t.getTrip().getTripCode(),
-                            t.getTrip().getRoute().getFromStation().getName(),
-                            t.getTrip().getRoute().getToStation().getName(),
-                            t.getTripSeat().getSeat().getSeatNumber(),
-                            passenger != null ? passenger.getFullName() : null,
-                            passenger != null ? passenger.getPhoneNumber() : null
-                    );
-                })
+                .map(this::toTicketResponse)
                 .toList();
-        return new BaseResponse(200,tickets,"Get all tickets unpaid successful", null,null);
+
+        return new BaseResponse(200, tickets, "Get all tickets successful", null, null);
     }
+
 
     public BaseResponse getAllTicketsUnpaid(TicketRequest request) {
         List<TicketResponse> tickets = ticketRepository.getAllTicketUnpaid(
@@ -95,151 +79,58 @@ public class TicketService {
                         request.getTicketPaymentType(),
                         request.getTicketSoldBy())
                 .stream()
-                .map(t -> {
-                    PassengerEntity passenger = t.getPassenger();
-                    return new TicketResponse(
-                            t.getTicketId(),
-                            t.getTicketCode(),
-                            t.getPrice(),
-                            t.getStatus(),
-                            t.getPaymentType(),
-                            t.getSoldBy(),
-                            t.getSoldAt(),
-                            t.getTrip().getTripId(),
-                            t.getTrip().getTripCode(),
-                            t.getTrip().getRoute().getFromStation().getName(),
-                            t.getTrip().getRoute().getToStation().getName(),
-                            t.getTripSeat().getSeat().getSeatNumber(),
-                            passenger != null ? passenger.getFullName() : null,
-                            passenger != null ? passenger.getPhoneNumber() : null
-                    );
-                })
+                .map(this::toTicketResponse)
                 .toList();
-        return new BaseResponse(200,tickets,"Get all tickets unpaid successful", null,null);
+
+        return new BaseResponse(200, tickets, "Get all tickets unpaid successful", null, null);
     }
 
+
     public BaseResponse getAllTicketsByTripId(TicketRequest request) {
-        List<TicketResponse> tickets = ticketRepository.getAllByTripId(
-                        request.getTripId())
+        List<TicketResponse> tickets = ticketRepository.getAllByTripId(request.getTripId())
                 .stream()
-                .map(t -> {
-                    PassengerEntity passenger = t.getPassenger();
-                    return new TicketResponse(
-                            t.getTicketId(),
-                            t.getTicketCode(),
-                            t.getPrice(),
-                            t.getStatus(),
-                            t.getPaymentType(),
-                            t.getSoldBy(),
-                            t.getSoldAt(),
-                            t.getTrip().getTripId(),
-                            t.getTrip().getTripCode(),
-                            t.getTrip().getRoute().getFromStation().getName(),
-                            t.getTrip().getRoute().getToStation().getName(),
-                            t.getTripSeat().getSeat().getSeatNumber(),
-                            passenger != null ? passenger.getFullName() : null,
-                            passenger != null ? passenger.getPhoneNumber() : null
-                    );
-                })
+                .map(this::toTicketResponse)
                 .toList();
-        return new BaseResponse(200,tickets,"Get all tickets by tripId successful", null,null);
+
+        return new BaseResponse(200, tickets, "Get all tickets by tripId successful", null, null);
     }
 
     @Transactional
     public BaseResponse createTicket(TicketRequest request) throws Exception {
         UserDetails info = getInfo();
 
-        // Validate input
-        TripEntity trip = tripRepository.findById(request.getTripId()).orElseThrow(() -> new RuntimeException("Trip not found"));
+        TripEntity trip = tripRepository.findById(request.getTripId())
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
 
-        TripSeatEntity tripSeat = tripSeatRepository.findById(request.getTripSeatId()).orElseThrow(() -> new RuntimeException("Trip seat not found"));
+        TripSeatEntity tripSeat = tripSeatRepository.findById(request.getTripSeatId())
+                .orElseThrow(() -> new RuntimeException("Trip seat not found"));
 
         if (!TripSeatStatusEnum.AVAILABLE.equals(tripSeat.getStatus())) {
-            return new BaseResponse(409,null,"Seat have been hold or sold",null,null);
+            return new BaseResponse(409, null, "Seat have been hold or sold", null, null);
         }
 
         PassengerEntity passenger = null;
         if (request.getPassengerId() != null) {
-            passenger = passengerRepository.findById(request.getPassengerId()).orElseThrow(() -> new RuntimeException("Passenger not found"));
-        }
-        String passengerEmail = passenger != null ? passenger.getEmail() : null;
-
-        //Generate ticketCode
-        String ticketCode;
-        do {
-            ticketCode = CodeGeneratorUtil.generateCode();
-        } while (ticketRepository.existsByTicketCode(ticketCode));
-
-        TicketEntity ticket = new TicketEntity();
-        ticket.setTicketCode(ticketCode);
-        ticket.setTrip(trip);
-        ticket.setTripSeat(tripSeat);
-        ticket.setPassenger(passenger);
-        ticket.setPrice(request.getTicketPrice());
-        ticket.setNote(request.getNote());
-        ticket.setPaymentType(request.getPaymentType());
-        ticket.setSoldBy(info.getUsername());
-        ticket.setSoldAt(LocalDateTime.now());
-        ticket.setCreatedBy(info.getUsername());
-        ticket.setCreatedAt(LocalDateTime.now());
-
-        if (PAY_NOW.equals(request.getPaymentType())) {
-            ticket.setStatus(TicketStatusEnum.PAID);
-            tripSeat.setStatus(TripSeatStatusEnum.SOLD);
-        } else {
-            // PAY_LATER
-            ticket.setStatus(TicketStatusEnum.UNPAID);
-            tripSeat.setStatus(TripSeatStatusEnum.HOLD);
+            passenger = passengerRepository.findById(request.getPassengerId())
+                    .orElseThrow(() -> new RuntimeException("Passenger not found"));
         }
 
+        String ticketCode = generateUniqueTicketCode();
+        boolean isPayNow = PAY_NOW.equals(request.getPaymentType());
+
+        TicketEntity ticket = buildTicketEntity(request, trip, tripSeat, passenger, ticketCode, info.getUsername(), isPayNow);
+
+        tripSeat.setStatus(isPayNow ? TripSeatStatusEnum.SOLD : TripSeatStatusEnum.HOLD);
         tripSeatRepository.save(tripSeat);
         ticketRepository.save(ticket);
 
-        if (PAY_NOW.equals(request.getPaymentType())) {
+        if (isPayNow) {
             PaymentEntity payment = buildPaymentEntity(ticket, request.getPaymentMethod(), info.getUsername());
             paymentRepository.save(payment);
-
-            //Send Mail
-            if (passengerEmail != null) {
-                String qrContent = ticket.getTicketCode();
-                byte[] qrCode = qrCodeService.generateQrCode(qrContent);
-
-                String subject = "Xác nhận đặt vé xe VietBus";
-                String content = buildTicketMailContent(ticket);
-
-                TransactionSynchronizationManager.registerSynchronization(
-                        new TransactionSynchronization() {
-                            @Override
-                            public void afterCommit() {
-                                mailService.sendTicketMail(
-                                        passengerEmail,
-                                        subject,
-                                        content,
-                                        qrCode
-                                );
-                            }
-                        }
-                );
-            }
+            sendTicketMailAfterCommit(ticket);
         }
 
-        TicketResponse ticketResponse = new TicketResponse(
-                ticket.getTicketId(),
-                ticket.getTicketCode(),
-                ticket.getPrice(),
-                ticket.getStatus(),
-                ticket.getPaymentType(),
-                ticket.getSoldBy(),
-                ticket.getSoldAt(),
-                ticket.getTrip().getTripId(),
-                ticket.getTrip().getTripCode(),
-                ticket.getTrip().getRoute().getFromStation().getName(),
-                ticket.getTrip().getRoute().getToStation().getName(),
-                ticket.getTripSeat().getSeat().getSeatNumber(),
-                ticket.getPassenger().getFullName(),
-                ticket.getPassenger().getPhoneNumber());
-
-        return new BaseResponse(201, ticketResponse, "Create ticket successful", null, null);
+        return new BaseResponse(201, toTicketResponse(ticket), "Create ticket successful", null, null);
     }
 
     @Transactional
@@ -248,20 +139,21 @@ public class TicketService {
 
         TicketEntity ticket = ticketRepository.findByTicketCode(request.getTicketCode());
         if (ticket == null) {
-            return new BaseResponse(404,null,"Ticket not found",null,null);
+            return new BaseResponse(404, null, "Ticket not found", null, null);
         }
 
-        TicketStatusEnum currentTicketStatus = ticket.getStatus();
-        if (TicketStatusEnum.PAID.equals(currentTicketStatus)) {
+        TicketStatusEnum currentStatus = ticket.getStatus();
+
+        if (TicketStatusEnum.PAID.equals(currentStatus)) {
             return new BaseResponse(409, null, "Ticket have been paid", null, null);
         }
 
-        if(ticket.getStatus().equals(request.getTicketStatus())) {
+        if (currentStatus.equals(request.getTicketStatus())) {
             return new BaseResponse(400, null, "No status change", null, null);
         }
 
-        if(TicketStatusEnum.UNPAID.equals(currentTicketStatus) && TicketStatusEnum.PAID.equals(request.getTicketStatus())) {
-            ticket.setStatus(request.getTicketStatus());
+        if (TicketStatusEnum.UNPAID.equals(currentStatus) && TicketStatusEnum.PAID.equals(request.getTicketStatus())) {
+            ticket.setStatus(TicketStatusEnum.PAID);
             ticketRepository.save(ticket);
 
             TripSeatEntity tripSeat = ticket.getTripSeat();
@@ -271,90 +163,118 @@ public class TicketService {
             PaymentEntity payment = buildPaymentEntity(ticket, request.getPaymentMethod(), info.getUsername());
             paymentRepository.save(payment);
 
-            // Send Mail
-            PassengerEntity passenger = ticket.getPassenger();
-
-            if (passenger != null && passenger.getEmail() != null) {
-
-                String passengerEmail = passenger.getEmail();
-
-                String qrContent = ticket.getTicketCode();
-                byte[] qrCode = qrCodeService.generateQrCode(qrContent);
-
-                String subject = "Xác nhận đặt vé xe VietBus";
-                String content = buildTicketMailContent(ticket);
-
-                TransactionSynchronizationManager.registerSynchronization(
-                        new TransactionSynchronization() {
-                            @Override
-                            public void afterCommit() {
-                                mailService.sendTicketMail(
-                                        passengerEmail,
-                                        subject,
-                                        content,
-                                        qrCode
-                                );
-                            }
-                        }
-                );
-            }
+            sendTicketMailAfterCommit(ticket);
 
             return new BaseResponse(200, null, "Update ticket successful, created payment", null, null);
         }
+
         return new BaseResponse(200, null, "Update ticket successful", null, null);
     }
 
-    // helper
-    private PaymentEntity buildPaymentEntity(TicketEntity ticket, PaymentMethodEnum paymentMethod, String createdBy) {
+    // ------------------ helper ------------------
+    private TicketResponse toTicketResponse(TicketEntity t) {
+        PassengerEntity passenger = t.getPassenger();
+        return new TicketResponse(
+                t.getTicketId(),
+                t.getTicketCode(),
+                t.getPrice(),
+                t.getStatus(),
+                t.getPaymentType(),
+                t.getSoldBy(),
+                t.getSoldAt(),
+                t.getTrip().getTripId(),
+                t.getTrip().getTripCode(),
+                t.getTrip().getRoute().getFromStation().getName(),
+                t.getTrip().getRoute().getToStation().getName(),
+                t.getTripSeat().getSeat().getSeatNumber(),
+                passenger != null ? passenger.getFullName() : null,
+                passenger != null ? passenger.getPhoneNumber() : null
+        );
+    }
+
+    private TicketEntity buildTicketEntity(
+            TicketRequest request,
+            TripEntity trip,
+            TripSeatEntity tripSeat,
+            PassengerEntity passenger,
+            String ticketCode,
+            String username,
+            boolean isPayNow) {
+
+        TicketEntity ticket = new TicketEntity();
+        ticket.setTicketCode(ticketCode);
+        ticket.setTrip(trip);
+        ticket.setTripSeat(tripSeat);
+        ticket.setPassenger(passenger);
+        ticket.setPrice(request.getTicketPrice());
+        ticket.setNote(request.getNote());
+        ticket.setPaymentType(request.getPaymentType());
+        ticket.setSoldBy(username);
+        ticket.setSoldAt(LocalDateTime.now());
+        ticket.setCreatedBy(username);
+        ticket.setCreatedAt(LocalDateTime.now());
+        ticket.setStatus(isPayNow ? TicketStatusEnum.PAID : TicketStatusEnum.UNPAID);
+        return ticket;
+    }
+
+    private PaymentEntity buildPaymentEntity(TicketEntity ticket, PaymentMethodEnum method, String createdBy) {
         PaymentEntity payment = new PaymentEntity();
         payment.setTicket(ticket);
         payment.setAmount(ticket.getPrice());
-        payment.setMethod(paymentMethod);
+        payment.setMethod(method);
         payment.setStatus(PaymentStatusEnum.SUCCESS);
         payment.setPaidAt(LocalDateTime.now());
         payment.setCreatedBy(createdBy);
         payment.setCreatedAt(LocalDateTime.now());
         return payment;
-    };
+    }
+
+    private void sendTicketMailAfterCommit(TicketEntity ticket) throws Exception {
+        PassengerEntity passenger = ticket.getPassenger();
+        if (passenger == null || passenger.getEmail() == null) return;
+
+        String passengerEmail = passenger.getEmail();
+        byte[] qrCode = qrCodeService.generateQrCode(ticket.getTicketCode());
+        String subject = "Xác nhận đặt vé xe VietBus";
+        String content = buildTicketMailContent(ticket);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        mailService.sendTicketMail(passengerEmail, subject, content, qrCode);
+                    }
+                }
+        );
+    }
 
     private String buildTicketMailContent(TicketEntity ticket) {
-
-        String bookingTime = ticket.getCreatedAt().format(MAIL_DATE_FORMAT);
-
-        String departureTime = ticket.getTrip()
-                .getDepartureTime()
-                .format(MAIL_DATE_FORMAT);
-
-        String arrivalTime = ticket.getTrip()
-                .getArrivalTime()
-                .format(MAIL_DATE_FORMAT);
+        String bookingTime   = ticket.getCreatedAt().format(MAIL_DATE_FORMAT);
+        String departureTime = ticket.getTrip().getDepartureTime().format(MAIL_DATE_FORMAT);
+        String arrivalTime   = ticket.getTrip().getArrivalTime().format(MAIL_DATE_FORMAT);
 
         return """
-        <div style='font-family: Arial'>
-            <h2>VietBus - Xác nhận đặt vé</h2>
-
-            <p><b>Mã vé:</b> %s</p>
-            <p><b>Ngày đặt:</b> %s</p>
-
-            <p><b>Điểm đi:</b> %s</p>
-            <p><b>Giờ xuất bến:</b> %s</p>
-
-            <p><b>Điểm đến:</b> %s</p>
-            <p><b>Giờ đến:</b> %s</p>
-
-            <p><b>Ghế:</b> %s</p>
-
-            <h3>QR Check-in</h3>
-
-            <img src="cid:ticketQr" width="250"/>
-
-            <p>
-                Vui lòng đưa mã QR cho nhân viên khi lên xe.
-            </p>
-
-            <p>Cảm ơn bạn đã sử dụng VietBus!</p>
-        </div>
-        """.formatted(
+                <div style='font-family: Arial'>
+                    <h2>VietBus - Xác nhận đặt vé</h2>
+ 
+                    <p><b>Mã vé:</b> %s</p>
+                    <p><b>Ngày đặt:</b> %s</p>
+ 
+                    <p><b>Điểm đi:</b> %s</p>
+                    <p><b>Giờ xuất bến:</b> %s</p>
+ 
+                    <p><b>Điểm đến:</b> %s</p>
+                    <p><b>Giờ đến:</b> %s</p>
+ 
+                    <p><b>Ghế:</b> %s</p>
+ 
+                    <h3>QR Check-in</h3>
+                    <img src="cid:ticketQr" width="250"/>
+ 
+                    <p>Vui lòng đưa mã QR cho nhân viên khi lên xe.</p>
+                    <p>Cảm ơn bạn đã sử dụng VietBus!</p>
+                </div>
+                """.formatted(
                 ticket.getTicketCode(),
                 bookingTime,
                 ticket.getTrip().getRoute().getFromStation().getName(),
@@ -365,10 +285,17 @@ public class TicketService {
         );
     }
 
-    private static final DateTimeFormatter MAIL_DATE_FORMAT =
-            DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy");
+    private String generateUniqueTicketCode() {
+        String code;
+        do {
+            code = CodeGeneratorUtil.generateCode();
+        } while (ticketRepository.existsByTicketCode(code));
+        return code;
+    }
 
     private UserDetails getInfo() {
         return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
+
+    private static final DateTimeFormatter MAIL_DATE_FORMAT = DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy");
 }
