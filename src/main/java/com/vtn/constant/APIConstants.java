@@ -10,6 +10,9 @@ public class APIConstants {
     //Auth
     public static final String AUTH = "/auth";
     public static final String API_LOGIN = API_VIET_BUS + AUTH + "/login";
+    public static final String API_REFRESH_TOKEN = API_VIET_BUS + AUTH + "/refresh";
+    public static final String API_LOGOUT = API_VIET_BUS + AUTH + "/logout";
+    public static final String API_LOGOUT_ALL = API_VIET_BUS + AUTH + "/logout-all";
 
     //Account
     public static final String ACCOUNT = "/account";
