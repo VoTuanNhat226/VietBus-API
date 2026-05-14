@@ -22,13 +22,13 @@ public class TripLog {
     UUID id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status")
     TripStatusEnum status;
 
-    @Column(name = "change_by", nullable = false)
+    @Column(name = "change_by")
     String changeBy;
 
-    @Column(name = "change_at", nullable = false)
+    @Column(name = "change_at")
     LocalDateTime changeAt;
 
     @ManyToOne(fetch = FetchType.LAZY)

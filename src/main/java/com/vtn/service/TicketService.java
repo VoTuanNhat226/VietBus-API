@@ -55,26 +55,65 @@ public class TicketService {
         this.qrCodeService = qrCodeService;
     }
 
+    public BaseResponse getAllTickets(TicketRequest request) {
+        List<TicketResponse> tickets = ticketRepository.getAllTicketByCondition(
+                        request.getTicketCode(),
+                        request.getTicketStatus(),
+                        request.getTripCode(),
+                        request.getTripId(),
+                        request.getTicketPaymentType(),
+                        request.getPassengerName(),
+                        request.getPassengerPhoneNumber())
+                .stream()
+                .map(t -> {
+                    PassengerEntity passenger = t.getPassenger();
+                    return new TicketResponse(
+                            t.getTicketId(),
+                            t.getTicketCode(),
+                            t.getPrice(),
+                            t.getStatus(),
+                            t.getPaymentType(),
+                            t.getSoldBy(),
+                            t.getSoldAt(),
+                            t.getTrip().getTripId(),
+                            t.getTrip().getTripCode(),
+                            t.getTrip().getRoute().getFromStation().getName(),
+                            t.getTrip().getRoute().getToStation().getName(),
+                            t.getTripSeat().getSeat().getSeatNumber(),
+                            passenger != null ? passenger.getFullName() : null,
+                            passenger != null ? passenger.getPhoneNumber() : null
+                    );
+                })
+                .toList();
+        return new BaseResponse(200,tickets,"Get all tickets unpaid successful", null,null);
+    }
+
     public BaseResponse getAllTicketsUnpaid(TicketRequest request) {
-        List<TicketResponse> tickets = ticketRepository.getAllByCondition(
+        List<TicketResponse> tickets = ticketRepository.getAllTicketUnpaid(
                         request.getTicketCode(),
                         request.getTripCode(),
                         request.getTicketPaymentType(),
                         request.getTicketSoldBy())
                 .stream()
-                .map(t -> new TicketResponse(
-                        t.getTicketId(),
-                        t.getTicketCode(),
-                        t.getPrice(),
-                        t.getStatus(),
-                        t.getPaymentType(),
-                        t.getSoldBy(),
-                        t.getSoldAt(),
-                        t.getTrip().getTripCode(),
-                        t.getTrip().getRoute().getFromStation().getName(),
-                        t.getTrip().getRoute().getToStation().getName(),
-                        t.getTripSeat().getSeat().getSeatNumber()
-                ))
+                .map(t -> {
+                    PassengerEntity passenger = t.getPassenger();
+                    return new TicketResponse(
+                            t.getTicketId(),
+                            t.getTicketCode(),
+                            t.getPrice(),
+                            t.getStatus(),
+                            t.getPaymentType(),
+                            t.getSoldBy(),
+                            t.getSoldAt(),
+                            t.getTrip().getTripId(),
+                            t.getTrip().getTripCode(),
+                            t.getTrip().getRoute().getFromStation().getName(),
+                            t.getTrip().getRoute().getToStation().getName(),
+                            t.getTripSeat().getSeat().getSeatNumber(),
+                            passenger != null ? passenger.getFullName() : null,
+                            passenger != null ? passenger.getPhoneNumber() : null
+                    );
+                })
                 .toList();
         return new BaseResponse(200,tickets,"Get all tickets unpaid successful", null,null);
     }
@@ -83,19 +122,25 @@ public class TicketService {
         List<TicketResponse> tickets = ticketRepository.getAllByTripId(
                         request.getTripId())
                 .stream()
-                .map(t -> new TicketResponse(
-                        t.getTicketId(),
-                        t.getTicketCode(),
-                        t.getPrice(),
-                        t.getStatus(),
-                        t.getPaymentType(),
-                        t.getSoldBy(),
-                        t.getSoldAt(),
-                        t.getTrip().getTripCode(),
-                        t.getTrip().getRoute().getFromStation().getName(),
-                        t.getTrip().getRoute().getToStation().getName(),
-                        t.getTripSeat().getSeat().getSeatNumber()
-                ))
+                .map(t -> {
+                    PassengerEntity passenger = t.getPassenger();
+                    return new TicketResponse(
+                            t.getTicketId(),
+                            t.getTicketCode(),
+                            t.getPrice(),
+                            t.getStatus(),
+                            t.getPaymentType(),
+                            t.getSoldBy(),
+                            t.getSoldAt(),
+                            t.getTrip().getTripId(),
+                            t.getTrip().getTripCode(),
+                            t.getTrip().getRoute().getFromStation().getName(),
+                            t.getTrip().getRoute().getToStation().getName(),
+                            t.getTripSeat().getSeat().getSeatNumber(),
+                            passenger != null ? passenger.getFullName() : null,
+                            passenger != null ? passenger.getPhoneNumber() : null
+                    );
+                })
                 .toList();
         return new BaseResponse(200,tickets,"Get all tickets by tripId successful", null,null);
     }
@@ -186,10 +231,13 @@ public class TicketService {
                 ticket.getPaymentType(),
                 ticket.getSoldBy(),
                 ticket.getSoldAt(),
+                ticket.getTrip().getTripId(),
                 ticket.getTrip().getTripCode(),
                 ticket.getTrip().getRoute().getFromStation().getName(),
                 ticket.getTrip().getRoute().getToStation().getName(),
-                ticket.getTripSeat().getSeat().getSeatNumber());
+                ticket.getTripSeat().getSeat().getSeatNumber(),
+                ticket.getPassenger().getFullName(),
+                ticket.getPassenger().getPhoneNumber());
 
         return new BaseResponse(201, ticketResponse, "Create ticket successful", null, null);
     }

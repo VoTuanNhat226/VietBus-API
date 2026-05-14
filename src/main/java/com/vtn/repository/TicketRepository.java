@@ -3,6 +3,7 @@ package com.vtn.repository;
 import com.vtn.dto.response.TicketRouteStats;
 import com.vtn.entity.TicketEntity;
 import com.vtn.enumdef.PaymentStatusEnum;
+import com.vtn.enumdef.TicketStatusEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,13 +30,36 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     @Query("""
         SELECT t
         FROM TicketEntity t
+        LEFT JOIN FETCH t.passenger p
+        LEFT JOIN t.trip tr
+        WHERE (:ticketCode IS NULL OR t.ticketCode = :ticketCode)
+            AND (:ticketStatus IS NULL OR t.status = :ticketStatus)
+            AND (:tripCode IS NULL OR tr.tripCode = :tripCode)
+            AND (:tripId IS NULL OR tr.tripId = :tripId)
+            AND (:ticketPaymentType IS NULL OR t.paymentType = :ticketPaymentType)
+            AND (:passengerName IS NULL OR p.fullName LIKE %:passengerName%)
+            AND (:passengerPhoneNumber IS NULL OR p.phoneNumber = :passengerPhoneNumber)
+    """)
+    List<TicketEntity> getAllTicketByCondition(
+            @Param("ticketCode") String ticketCode,
+            @Param("ticketStatus") TicketStatusEnum ticketStatus,
+            @Param("tripCode") String tripCode,
+            @Param("tripId") UUID tripId,
+            @Param("ticketPaymentType") String ticketPaymentType,
+            @Param("passengerName") String passengerName,
+            @Param("passengerPhoneNumber") String passengerPhoneNumber
+    );
+
+    @Query("""
+        SELECT t
+        FROM TicketEntity t
         WHERE (t.status = 'UNPAID')
             AND (:ticketCode IS NULL OR t.ticketCode LIKE %:ticketCode%)
             AND (:tripCode IS NULL OR t.trip.tripCode LIKE %:tripCode%)
             AND (:ticketPaymentType IS NULL OR t.paymentType = :ticketPaymentType)
             AND (:ticketSoldBy IS NULL OR t.soldBy LIKE %:ticketSoldBy%)
     """)
-    List<TicketEntity> getAllByCondition(
+    List<TicketEntity> getAllTicketUnpaid(
             @Param("ticketCode") String ticketCode,
             @Param("tripCode") String tripCode,
             @Param("ticketPaymentType") String ticketPaymentType,
@@ -45,7 +69,8 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     @Query("""
         SELECT t
         FROM TicketEntity t
-        JOIN TripEntity tr ON t.trip.tripId = tr.tripId
+        LEFT JOIN FETCH t.passenger p
+        LEFT JOIN t.trip tr
         WHERE tr.tripId = :tripId
     """)
     List<TicketEntity> getAllByTripId(

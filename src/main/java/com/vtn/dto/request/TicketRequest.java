@@ -20,11 +20,13 @@ public class TicketRequest {
 
     private String note;
     private String paymentType;
+    private PaymentMethodEnum paymentMethod;
 
     private UUID tripId;
     private UUID tripSeatId;
     private String tripCode;
 
     private UUID passengerId;
-    private PaymentMethodEnum paymentMethod;
+    private String passengerName;
+    private String passengerPhoneNumber;
 }

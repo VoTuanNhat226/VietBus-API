@@ -20,9 +20,13 @@ public class TicketResponse {
     private String ticketSoldBy;
     private LocalDateTime ticketSoldAt;
 
+    private UUID tripId;
     private String tripCode;
     private String fromStation;
     private String toStation;
 
     private String seatNumber;
+
+    private String passengerName;
+    private String passengerPhone;
 }

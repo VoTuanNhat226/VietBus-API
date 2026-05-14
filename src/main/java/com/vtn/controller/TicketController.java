@@ -20,6 +20,14 @@ public class TicketController {
         this.ticketService = ticketService;
     }
 
+    @PostMapping(value = APIConstants.API_GET_ALL_TICKET)
+    public  ResponseEntity<BaseResponse> getAll(@RequestBody TicketRequest ticketRequest) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = ticketService.getAllTickets(ticketRequest);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping(value = APIConstants.API_GET_ALL_TICKET_UNPAID)
     public  ResponseEntity<BaseResponse> getAllTicketUnpaid(@RequestBody TicketRequest ticketRequest) {
         long beginTime = System.currentTimeMillis();
