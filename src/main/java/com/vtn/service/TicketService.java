@@ -110,7 +110,7 @@ public class TicketService {
         TripSeatEntity tripSeat = tripSeatRepository.findById(request.getTripSeatId()).orElseThrow(() -> new RuntimeException("Trip seat not found"));
 
         if (!TripSeatStatusEnum.AVAILABLE.equals(tripSeat.getStatus())) {
-            return new BaseResponse(404,null,"Seat have been hold or sold",null,null);
+            return new BaseResponse(409,null,"Seat have been hold or sold",null,null);
         }
 
         PassengerEntity passenger = null;
@@ -205,7 +205,7 @@ public class TicketService {
 
         TicketStatusEnum currentTicketStatus = ticket.getStatus();
         if (TicketStatusEnum.PAID.equals(currentTicketStatus)) {
-            return new BaseResponse(400, null, "Ticket have been paid", null, null);
+            return new BaseResponse(409, null, "Ticket have been paid", null, null);
         }
 
         if(ticket.getStatus().equals(request.getTicketStatus())) {

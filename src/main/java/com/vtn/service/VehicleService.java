@@ -61,7 +61,7 @@ public class VehicleService {
 
         VehicleEntity existedVehicle = vehicleRepository.findByLicensePlate(request.getLicensePlate());
         if (existedVehicle != null) {
-            return new BaseResponse(400, null,"Vehicle already existed", null,null);
+            return new BaseResponse(409, null,"Vehicle already existed", null,null);
         }
 
         // ===== CREATE BUS =====

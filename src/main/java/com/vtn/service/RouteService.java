@@ -51,7 +51,7 @@ public class RouteService {
 
         RouteEntity routeEntity = routeRepository.findByFromStationAndToStation(routeRequest.getFromStationId(), routeRequest.getToStationId());
         if(routeEntity != null) {
-            return new BaseResponse(400, null,"Tuyến xe đã tồn tại", null,null);
+            return new BaseResponse(409, null,"Tuyến xe đã tồn tại", null,null);
         }
         if(routeRequest.getFromStationId().equals(routeRequest.getToStationId())) {
             return new BaseResponse(400, null,"Điểm đi trùng điểm đến", null,null);
@@ -79,7 +79,9 @@ public class RouteService {
         UserDetails info = getInfo();
 
         RouteEntity route = routeRepository.findByRouteId(routeRequest.getRouteId());
-        if(route != null) {
+        if(route == null) {
+            return new BaseResponse(404, null, "Route not found", null, null);
+        } else {
             route.setActive(routeRequest.getActive());
             route.setUpdatedBy(info.getUsername());
             route.setUpdatedAt(LocalDateTime.now());
@@ -98,7 +100,7 @@ public class RouteService {
         } else {
             RouteEntity route = routeRepository.findByRouteId(routeRequest.getRouteId());
             if(route == null) {
-                return new BaseResponse(404, null, "Not found route", null, null);
+                return new BaseResponse(404, null, "Route not found", null, null);
             } else {
                 routeRepository.delete(route);
                 return new BaseResponse(204, route, "Delete route successful", null, null);

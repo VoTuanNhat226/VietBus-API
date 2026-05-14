@@ -3,6 +3,7 @@ package com.vtn.service;
 import com.vtn.dto.request.TripRequest;
 import com.vtn.dto.response.TripResponse;
 import com.vtn.entity.*;
+import com.vtn.entity.log.TripLog;
 import com.vtn.enumdef.AccountRoleEnum;
 import com.vtn.enumdef.TripSeatStatusEnum;
 import com.vtn.enumdef.TripStatusEnum;
@@ -92,12 +93,12 @@ public class TripService {
         // Validate route
         RouteEntity route = routeRepository.findByRouteId(tripRequest.getRouteId());
         if (route == null) {
-            return new BaseResponse(400,null,"Route not found",null,null);
+            return new BaseResponse(404,null,"Route not found",null,null);
         }
         // Validate vehicle
         VehicleEntity vehicle = vehicleRepository.findByVehicleId(tripRequest.getVehicleId());
         if (vehicle == null) {
-            return new BaseResponse(400,null,"Vehicle not found",null,null);
+            return new BaseResponse(404,null,"Vehicle not found",null,null);
         }
         // Validate time
         if (tripRequest.getArrivalTime().isBefore(tripRequest.getDepartureTime())) {
@@ -120,7 +121,7 @@ public class TripService {
         for (UUID driverId : tripRequest.getDriverIds()) {
             EmployeeEntity driver = employeeRepository.findByEmployeeId(driverId);
             if (driver == null) {
-                return new BaseResponse(400, null, "Driver not found: " + driverId, null, null);
+                return new BaseResponse(404, null, "Driver not found: " + driverId, null, null);
             }
             boolean conflict = tripRepository.existsEmployeeConflict(
                     driverId,
@@ -142,7 +143,7 @@ public class TripService {
             for (UUID assistantId : tripRequest.getAssistantIds()) {
                 EmployeeEntity assistant = employeeRepository.findByEmployeeId(assistantId);
                 if (assistant == null) {
-                    return new BaseResponse(400, null, "Assistant not found: " + assistantId, null, null);
+                    return new BaseResponse(404, null, "Assistant not found: " + assistantId, null, null);
                 }
                 boolean conflict = tripRepository.existsEmployeeConflict(
                         assistantId,
@@ -195,7 +196,7 @@ public class TripService {
 
         // Save log
         TripLog tripLog = new TripLog();
-        tripLog.setStaff(info.getUsername());
+        tripLog.setChangeBy(info.getUsername());
         tripLog.setChangeAt(LocalDateTime.now());
         tripLog.setStatus(TripStatusEnum.CREATED);
         tripLog.setTrip(trip);
@@ -232,7 +233,7 @@ public class TripService {
 
         // Save log
         TripLog tripLog = new TripLog();
-        tripLog.setStaff(info.getUsername());
+        tripLog.setChangeBy(info.getUsername());
         tripLog.setChangeAt(LocalDateTime.now());
         tripLog.setStatus(request.getStatus());
         tripLog.setTrip(trip);

@@ -1,5 +1,6 @@
 package com.vtn.entity;
 
+import com.vtn.entity.log.TripLog;
 import com.vtn.enumdef.AccountRoleEnum;
 import com.vtn.enumdef.TripStatusEnum;
 import jakarta.persistence.*;

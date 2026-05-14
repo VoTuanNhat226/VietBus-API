@@ -1,5 +1,6 @@
-package com.vtn.entity;
+package com.vtn.entity.log;
 
+import com.vtn.entity.TripEntity;
 import com.vtn.enumdef.TripStatusEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -20,12 +21,12 @@ public class TripLog {
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID id;
 
-    @Column(name = "staff", nullable = false)
-    String staff;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     TripStatusEnum status;
+
+    @Column(name = "change_by", nullable = false)
+    String changeBy;
 
     @Column(name = "change_at", nullable = false)
     LocalDateTime changeAt;

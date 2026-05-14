@@ -138,7 +138,7 @@ public class EmployeeService {
         }
         employeeRepository.delete(employee);
 
-        return new BaseResponse(200, null, "Delete employee successful", null, null);
+        return new BaseResponse(204, null, "Delete employee successful", null, null);
     }
 
     private boolean isAdmin(UserDetails info) {
