@@ -1,6 +1,8 @@
 package com.vtn.security;
 
 import com.vtn.service.AccountDetailsService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,28 +37,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String jwt = authHeader.substring(7);
-        String username = jwtService.extractUsername(jwt);
 
-        if (username != null
-                && SecurityContextHolder.getContext().getAuthentication() == null) {
+        try {
+            String username = jwtService.extractUsername(jwt);
 
-            UserDetails userDetails =
-                    accountDetailsService.loadUserByUsername(username);
+            if (username != null
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+                UserDetails userDetails =
+                        accountDetailsService.loadUserByUsername(username);
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+
+        } catch (ExpiredJwtException e) {
+            // Token hết hạn → không set authentication → Spring Security tự trả 401
+            // Frontend interceptor sẽ bắt 401 và gọi /api/auth/refresh
+            logger.debug("Access token expired: " + e.getMessage());
+
+        } catch (JwtException e) {
+            // Token sai chữ ký, bị tamper → cũng không set authentication → 401
+            logger.warn("Invalid JWT token: " + e.getMessage());
         }
 
+        // Luôn tiếp tục filter chain — Spring Security sẽ xử lý 401 nếu chưa authenticated
         filterChain.doFilter(request, response);
     }
-
 }
