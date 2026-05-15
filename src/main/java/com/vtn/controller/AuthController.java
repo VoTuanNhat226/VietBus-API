@@ -46,7 +46,7 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
 
     private static final String REFRESH_TOKEN_COOKIE = "refresh_token";
-    private static final int COOKIE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60; // 7 ngày
+    private static final int COOKIE_MAX_AGE_SECONDS = 24 * 60 * 60; // 1 day
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager,
@@ -91,7 +91,7 @@ public class AuthController {
             claims.put("role", role);
             String accessToken = jwtService.generateAccessToken(claims, request.getUsername());
 
-            // Refresh token: dài hạn (7 ngày), gửi qua httpOnly cookie
+            // Refresh token: dài hạn (1 ngày), gửi qua httpOnly cookie
             String refreshToken = refreshTokenService.issueRefreshToken(request.getUsername());
             setRefreshTokenCookie(response, refreshToken);
 
@@ -139,7 +139,7 @@ public class AuthController {
             return ResponseEntity.ok(new RefreshResponse(newAccessToken));
 
         } catch (TokenReuseException e) {
-            // ⚠️ Reuse detected → xóa cookie, buộc login lại với 403
+            // Reuse detected -> xóa cookie, buộc login lại với 403
             clearRefreshTokenCookie(response);
             return ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
@@ -157,10 +157,7 @@ public class AuthController {
 
     /** Logout thiết bị hiện tại — revoke family này */
     @PostMapping(APIConstants.API_LOGOUT)
-    public ResponseEntity<LoginResponse> logout(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) {
+    public ResponseEntity<LoginResponse> logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = extractRefreshTokenFromCookie(request);
         if (refreshToken != null) {
             refreshTokenService.revokeFamily(refreshToken);

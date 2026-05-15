@@ -3,7 +3,7 @@ package com.vtn.service;
 import com.vtn.dto.request.TripRequest;
 import com.vtn.dto.response.TripResponse;
 import com.vtn.entity.*;
-import com.vtn.entity.log.TripLog;
+import com.vtn.entity.TripHistory;
 import com.vtn.enumdef.AccountRoleEnum;
 import com.vtn.enumdef.TripSeatStatusEnum;
 import com.vtn.enumdef.TripStatusEnum;
@@ -32,7 +32,7 @@ public class TripService {
     private final VehicleRepository vehicleRepository;
     private final SeatRepository seatRepository;
     private final TripSeatRepository tripSeatRepository;
-    private final TripLogRepository tripLogRepository;
+    private final TripHistoryRepository tripLogRepository;
 
     @Autowired
     public TripService(TripRepository tripRepository,
@@ -41,7 +41,7 @@ public class TripService {
                        VehicleRepository vehicleRepository,
                        SeatRepository seatRepository,
                        TripSeatRepository tripSeatRepository,
-                       TripLogRepository tripLogRepository) {
+                       TripHistoryRepository tripLogRepository) {
         this.tripRepository = tripRepository;
         this.routeRepository = routeRepository;
         this.employeeRepository = employeeRepository;
@@ -195,7 +195,7 @@ public class TripService {
         tripRepository.save(trip);
 
         // Save log
-        TripLog tripLog = new TripLog();
+        TripHistory tripLog = new TripHistory();
         tripLog.setChangeBy(info.getUsername());
         tripLog.setChangeAt(LocalDateTime.now());
         tripLog.setStatus(TripStatusEnum.CREATED);
@@ -232,7 +232,7 @@ public class TripService {
         tripRepository.save(trip);
 
         // Save log
-        TripLog tripLog = new TripLog();
+        TripHistory tripLog = new TripHistory();
         tripLog.setChangeBy(info.getUsername());
         tripLog.setChangeAt(LocalDateTime.now());
         tripLog.setStatus(request.getStatus());

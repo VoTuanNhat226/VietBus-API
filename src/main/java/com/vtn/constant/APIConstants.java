@@ -53,7 +53,10 @@ public class APIConstants {
     public static final String API_GET_TRIP_BY_TRIP_ID = API_VIET_BUS + TRIP + "/get-by-id";
     public static final String API_CREATE_TRIP = API_VIET_BUS + TRIP + "/create";
     public static final String API_UPDATE_TRIP = API_VIET_BUS + TRIP + "/update";
-    public static final String API_DELETE_TRIP = API_VIET_BUS + TRIP + "/delete";
+
+    //Trip History
+    public static final String TRIP_HISTORY = "/trip-history";
+    public static final String API_GET_TRIP_HISTORY_BY_TRIP_ID = API_VIET_BUS + TRIP_HISTORY + "/get-by-trip-id";
 
     //Seat
     public static final String SEAT = "/seat";

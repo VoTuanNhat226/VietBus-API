@@ -1,6 +1,5 @@
 package com.vtn.entity;
 
-import com.vtn.entity.log.TripLog;
 import com.vtn.enumdef.AccountRoleEnum;
 import com.vtn.enumdef.TripStatusEnum;
 import jakarta.persistence.*;
@@ -54,7 +53,7 @@ public class TripEntity extends AuditModel{
     List<TripEmployeeEntity> tripEmployees = new ArrayList<>();
 
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TripLog> logs = new ArrayList<>();
+    private List<TripHistory> logs = new ArrayList<>();
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     /** Trả về danh sách tất cả tài xế của chuyến */

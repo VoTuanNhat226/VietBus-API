@@ -1,6 +1,5 @@
-package com.vtn.entity.log;
+package com.vtn.entity;
 
-import com.vtn.entity.TripEntity;
 import com.vtn.enumdef.TripStatusEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -14,9 +13,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "trip_log")
+@Table(name = "trip_history")
 @Entity
-public class TripLog {
+public class TripHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID id;
