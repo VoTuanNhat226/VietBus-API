@@ -1,6 +1,7 @@
 package com.vtn.dto.request;
 
 import com.vtn.enumdef.PaymentMethodEnum;
+import com.vtn.enumdef.PaymentTypeEnum;
 import com.vtn.enumdef.TicketStatusEnum;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +20,7 @@ public class TicketRequest {
     private String ticketSoldBy;
 
     private String note;
-    private String paymentType;
+    private PaymentTypeEnum paymentType;
     private PaymentMethodEnum paymentMethod;
 
     private UUID tripId;

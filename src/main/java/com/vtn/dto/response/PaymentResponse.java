@@ -2,6 +2,7 @@ package com.vtn.dto.response;
 
 import com.vtn.enumdef.PaymentMethodEnum;
 import com.vtn.enumdef.PaymentStatusEnum;
+import com.vtn.enumdef.PaymentTypeEnum;
 import com.vtn.enumdef.TicketStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,5 +24,5 @@ public class PaymentResponse {
     private String ticketCode;
     private BigDecimal ticketPrice;
     private TicketStatusEnum ticketStatus;
-    private String ticketPaymentType;
+    private PaymentTypeEnum ticketPaymentType;
 }

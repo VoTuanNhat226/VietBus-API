@@ -102,4 +102,8 @@ public class APIConstants {
     public static final String API_GET_TOTAL_VEHICLE = API_VIET_BUS + STATISTICS + "/total-vehicle";
     public static final String API_GET_All_TRIP_DEPARTED = API_VIET_BUS + STATISTICS + "/get-all-trip-departed";
     public static final String API_GET_TOTAL_TICKET_PER_ROUTE = API_VIET_BUS + STATISTICS + "/total-ticket-per-route";
+
+    //Webhook
+    public static final String WEBHOOK = "/webhook";
+    public static final String API_WEBHOOK_MOMO = API_VIET_BUS + WEBHOOK + "/momo";
 }

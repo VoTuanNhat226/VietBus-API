@@ -1,5 +1,7 @@
 package com.vtn.entity;
 
+import com.vtn.enumdef.PaymentMethodEnum;
+import com.vtn.enumdef.PaymentTypeEnum;
 import com.vtn.enumdef.TicketStatusEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -24,24 +26,41 @@ public class TicketEntity extends AuditModel{
     @Column(name = "ticket_code", nullable = false, unique = true, length = 10)
     String ticketCode;
 
-    @Column(name = "note")
-    String note;
-
     @Column(name = "price", nullable = false)
     BigDecimal price;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    TicketStatusEnum status;
-
-    @Column(name = "payment_type")
-    String paymentType;
+    @Column(name = "note")
+    String note;
 
     @Column(name = "sold_by")
     String soldBy;
 
     @Column(name = "sold_at")
     LocalDateTime soldAt;
+
+    @Column(name = "paid_at")
+    LocalDateTime paidAt;
+
+    @Column(name = "transaction_id")
+    String transactionId;  // ID từ cổng thanh toán
+
+    @Column(name = "momo_pay_url", length = 500)
+    String momoPayUrl;
+
+    @Column(name = "momo_qr_code", length = 500)
+    String momoQrCode;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    TicketStatusEnum status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type")
+    PaymentTypeEnum paymentType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    PaymentMethodEnum paymentMethod;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_id", nullable = false)

@@ -2,13 +2,12 @@ package com.vtn.service;
 
 import com.vtn.dto.request.TicketRequest;
 import com.vtn.dto.response.TicketResponse;
+import com.vtn.dto.result.MomoPaymentResult;
 import com.vtn.entity.*;
-import com.vtn.enumdef.PaymentMethodEnum;
-import com.vtn.enumdef.PaymentStatusEnum;
-import com.vtn.enumdef.TicketStatusEnum;
-import com.vtn.enumdef.TripSeatStatusEnum;
+import com.vtn.enumdef.*;
 import com.vtn.repository.*;
 import com.vtn.service.Mail.MailService;
+import com.vtn.service.Momo.MomoService;
 import com.vtn.service.QR.QrCodeService;
 import com.vtn.utils.BaseResponse;
 import com.vtn.utils.CodeGeneratorUtil;
@@ -22,6 +21,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -36,6 +36,7 @@ public class TicketService {
     private final PaymentRepository paymentRepository;
     private final MailService mailService;
     private final QrCodeService qrCodeService;
+    private final MomoService momoService;
 
     @Autowired
     public TicketService(
@@ -45,7 +46,8 @@ public class TicketService {
             PassengerRepository passengerRepository,
             PaymentRepository paymentRepository,
             MailService mailService,
-            QrCodeService qrCodeService) {
+            QrCodeService qrCodeService,
+            MomoService momoService) {
         this.ticketRepository = ticketRepository;
         this.tripRepository = tripRepository;
         this.tripSeatRepository = tripSeatRepository;
@@ -53,6 +55,7 @@ public class TicketService {
         this.paymentRepository = paymentRepository;
         this.mailService = mailService;
         this.qrCodeService = qrCodeService;
+        this.momoService = momoService;
     }
 
     public BaseResponse getAllTickets(TicketRequest request) {
@@ -66,6 +69,7 @@ public class TicketService {
                         request.getPassengerPhoneNumber())
                 .stream()
                 .map(this::toTicketResponse)
+                .sorted(Comparator.comparing(TicketResponse::getTicketSoldAt).reversed())
                 .toList();
 
         return new BaseResponse(200, tickets, "Get all tickets successful", null, null);
@@ -99,11 +103,10 @@ public class TicketService {
     public BaseResponse createTicket(TicketRequest request) throws Exception {
         UserDetails info = getInfo();
 
-        TripEntity trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new RuntimeException("Trip not found"));
+        // Validate Input
+        TripEntity trip = tripRepository.findById(request.getTripId()).orElseThrow(() -> new RuntimeException("Trip not found"));
 
-        TripSeatEntity tripSeat = tripSeatRepository.findById(request.getTripSeatId())
-                .orElseThrow(() -> new RuntimeException("Trip seat not found"));
+        TripSeatEntity tripSeat = tripSeatRepository.findById(request.getTripSeatId()).orElseThrow(() -> new RuntimeException("Trip seat not found"));
 
         if (!TripSeatStatusEnum.AVAILABLE.equals(tripSeat.getStatus())) {
             return new BaseResponse(409, null, "Seat have been hold or sold", null, null);
@@ -111,16 +114,18 @@ public class TicketService {
 
         PassengerEntity passenger = null;
         if (request.getPassengerId() != null) {
-            passenger = passengerRepository.findById(request.getPassengerId())
-                    .orElseThrow(() -> new RuntimeException("Passenger not found"));
+            passenger = passengerRepository.findById(request.getPassengerId()).orElseThrow(() -> new RuntimeException("Passenger not found"));
         }
 
+        // Generate ticketCode
         String ticketCode = generateUniqueTicketCode();
-        boolean isPayNow = PAY_NOW.equals(request.getPaymentType());
+
+        boolean isPayNow = PaymentTypeEnum.PAY_NOW.equals(request.getPaymentType());
+        boolean isPayLater = PaymentTypeEnum.PAY_LATER.equals(request.getPaymentType());
 
         TicketEntity ticket = buildTicketEntity(request, trip, tripSeat, passenger, ticketCode, info.getUsername(), isPayNow);
-
         tripSeat.setStatus(isPayNow ? TripSeatStatusEnum.SOLD : TripSeatStatusEnum.HOLD);
+
         tripSeatRepository.save(tripSeat);
         ticketRepository.save(ticket);
 
@@ -130,20 +135,36 @@ public class TicketService {
             sendTicketMailAfterCommit(ticket);
         }
 
-        return new BaseResponse(201, toTicketResponse(ticket), "Create ticket successful", null, null);
+        if (isPayLater) {
+            if (PaymentMethodEnum.MOMO.equals(request.getPaymentMethod())) {
+                MomoPaymentResult momoResult = momoService.createPayment(
+                        ticket.getTicketCode(),
+                        ticket.getPrice()
+                );
+
+                ticket.setMomoPayUrl(momoResult.getPayUrl());
+                ticket.setMomoQrCode(momoResult.getQrCodeUrl());
+                ticket.setPaymentMethod(PaymentMethodEnum.MOMO);
+                ticketRepository.save(ticket);
+
+                sendMomoQrMailAfterCommit(ticket, momoResult);
+            }
+        }
+
+        return new BaseResponse(201, toTicketResponse(ticket), "Create ticket successful, created payment", null, null);
     }
 
     @Transactional
     public BaseResponse updateTicket(TicketRequest request) throws Exception {
         UserDetails info = getInfo();
 
+        // Validate Input
         TicketEntity ticket = ticketRepository.findByTicketCode(request.getTicketCode());
         if (ticket == null) {
             return new BaseResponse(404, null, "Ticket not found", null, null);
         }
 
         TicketStatusEnum currentStatus = ticket.getStatus();
-
         if (TicketStatusEnum.PAID.equals(currentStatus)) {
             return new BaseResponse(409, null, "Ticket have been paid", null, null);
         }
@@ -182,13 +203,15 @@ public class TicketService {
                 t.getPaymentType(),
                 t.getSoldBy(),
                 t.getSoldAt(),
+                t.getNote(),
                 t.getTrip().getTripId(),
                 t.getTrip().getTripCode(),
                 t.getTrip().getRoute().getFromStation().getName(),
                 t.getTrip().getRoute().getToStation().getName(),
                 t.getTripSeat().getSeat().getSeatNumber(),
                 passenger != null ? passenger.getFullName() : null,
-                passenger != null ? passenger.getPhoneNumber() : null
+                passenger != null ? passenger.getPhoneNumber() : null,
+                passenger != null ? passenger.getNote() : null
         );
     }
 
@@ -282,6 +305,56 @@ public class TicketService {
                 ticket.getTrip().getRoute().getToStation().getName(),
                 arrivalTime,
                 ticket.getTripSeat().getSeat().getSeatNumber()
+        );
+    }
+
+    private void sendMomoQrMailAfterCommit(TicketEntity ticket, MomoPaymentResult momoResult)
+            throws Exception {
+
+        PassengerEntity passenger = ticket.getPassenger();
+        if (passenger == null || passenger.getEmail() == null) return;
+
+        String email   = passenger.getEmail();
+        String subject = "Thanh toán vé xe VietBus - " + ticket.getTicketCode();
+        String content = buildMomoMailContent(ticket, momoResult);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        mailService.sendTicketMail(email, subject, content, null);
+                    }
+                }
+        );
+    }
+
+    private String buildMomoMailContent(TicketEntity ticket, MomoPaymentResult momoResult) {
+        return """
+        <div style='font-family: Arial'>
+            <h2>VietBus - Thanh toán vé xe</h2>
+            <p>Xin chào, vé <b>%s</b> đang chờ thanh toán.</p>
+
+            <p><b>Tuyến:</b> %s → %s</p>
+            <p><b>Ghế:</b> %s</p>
+            <p><b>Số tiền:</b> %,d VND</p>
+
+            <h3>Thanh toán qua MoMo</h3>
+            <p><a href="%s" style="padding:10px 20px;background:#ae2070;color:white;
+               border-radius:5px;text-decoration:none">👉 Thanh toán ngay</a></p>
+
+            <p>Hoặc scan QR:</p>
+            <img src="%s" width="200"/>
+
+            <p><i>Link thanh toán có hiệu lực trong 15 phút.</i></p>
+        </div>
+        """.formatted(
+                ticket.getTicketCode(),
+                ticket.getTrip().getRoute().getFromStation().getName(),
+                ticket.getTrip().getRoute().getToStation().getName(),
+                ticket.getTripSeat().getSeat().getSeatNumber(),
+                ticket.getPrice().longValue(),
+                momoResult.getPayUrl(),
+                momoResult.getQrCodeUrl()
         );
     }
 

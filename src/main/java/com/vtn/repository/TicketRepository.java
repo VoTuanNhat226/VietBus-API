@@ -12,20 +12,19 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     boolean existsByTicketCode(String ticketCode);
 
-    TicketEntity findByTicketCode(String ticketCode);
-
     @Query("""
         SELECT t
         FROM TicketEntity t
-        WHERE t.status = 'UNPAID'
+        WHERE t.ticketCode = :ticketCode
     """)
-    List<TicketEntity> findAllTicketUnPaid();
+    TicketEntity findByTicketCode(@Param("ticketCode") String ticketCode);
 
     @Query("""
         SELECT t

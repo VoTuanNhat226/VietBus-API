@@ -2,20 +2,36 @@ package com.vtn.service;
 
 import com.vtn.dto.request.PaymentRequest;
 import com.vtn.dto.response.PaymentResponse;
+import com.vtn.entity.PaymentEntity;
+import com.vtn.entity.TicketEntity;
+import com.vtn.enumdef.PaymentMethodEnum;
+import com.vtn.enumdef.PaymentStatusEnum;
+import com.vtn.enumdef.TicketStatusEnum;
 import com.vtn.repository.PaymentRepository;
+import com.vtn.repository.TicketRepository;
+import com.vtn.service.Mail.MailService;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PaymentService {
     private final PaymentRepository paymentRepository;
+    private final TicketRepository ticketRepository;
+    private final MailService mailService;
 
     @Autowired
-    public PaymentService(PaymentRepository paymentRepository) {
+    public PaymentService(PaymentRepository paymentRepository,
+                          TicketRepository ticketRepository,
+                          MailService mailService) {
         this.paymentRepository = paymentRepository;
+        this.ticketRepository = ticketRepository;
+        this.mailService = mailService;
     }
 
     public BaseResponse getAllPayments(PaymentRequest request) {
@@ -40,5 +56,29 @@ public class PaymentService {
                 ))
                 .toList();
         return new BaseResponse(200, payments,null,null,null);
+    }
+
+    @Transactional
+    public void confirmPayment(String ticketCode, String transactionId, PaymentMethodEnum method) {
+        TicketEntity ticket = ticketRepository.findByTicketCode(ticketCode);
+        if (ticket == null || ticket.getStatus() == TicketStatusEnum.PAID) return;
+
+        ticket.setStatus(TicketStatusEnum.PAID);
+        ticket.setTransactionId(transactionId);
+        ticket.setPaymentMethod(method);
+        ticket.setPaidAt(LocalDateTime.now());
+        ticketRepository.save(ticket);
+
+        // Tạo PaymentEntity
+        PaymentEntity payment = new PaymentEntity();
+        payment.setTicket(ticket);
+        payment.setAmount(ticket.getPrice());
+        payment.setMethod(method);
+        payment.setStatus(PaymentStatusEnum.SUCCESS);
+        payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        // Gửi mail vé sau khi commit
+        // mailService.sendTicketMail(...);  ← gọi tương tự sendTicketMailAfterCommit
     }
 }
