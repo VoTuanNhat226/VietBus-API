@@ -322,7 +322,7 @@ public class TicketService {
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        mailService.sendTicketMail(email, subject, content, null);
+                        mailService.sendHtmlMail(email, subject, content);
                     }
                 }
         );

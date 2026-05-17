@@ -1,5 +1,6 @@
 package com.vtn.service.Mail;
 
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -32,6 +33,23 @@ public class MailService {
 
             mailSender.send(message);
         } catch (Exception e) {
+            throw new RuntimeException("Send mail failed", e);
+        }
+    }
+
+    @Async("mailExecutor")
+    public void sendHtmlMail(String to, String subject, String htmlContent) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (MessagingException e) {
             throw new RuntimeException("Send mail failed", e);
         }
     }
