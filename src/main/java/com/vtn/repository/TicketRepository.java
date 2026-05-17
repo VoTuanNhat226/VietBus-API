@@ -52,6 +52,8 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     @Query("""
         SELECT t
         FROM TicketEntity t
+        JOIN FETCH t.trip
+        JOIN FETCH t.passenger p
         WHERE (t.status = 'UNPAID')
             AND (:ticketCode IS NULL OR t.ticketCode LIKE %:ticketCode%)
             AND (:tripCode IS NULL OR t.trip.tripCode LIKE %:tripCode%)
