@@ -37,7 +37,7 @@ public class MomoService {
         String requestId = UUID.randomUUID().toString();
         long   amount    = price.longValue();
         String extraData = "";                   // để trống or base64
-        String requestType = "payWithMethod";
+        String requestType = "captureWallet";
         String orderInfo  = "Pay ticket " + ticketCode;
 
         // 1. Raw signature - thứ tự CỐ ĐỊNH theo docs MoMo

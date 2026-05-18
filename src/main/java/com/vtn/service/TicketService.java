@@ -11,6 +11,7 @@ import com.vtn.service.Momo.MomoService;
 import com.vtn.service.QR.QrCodeService;
 import com.vtn.utils.BaseResponse;
 import com.vtn.utils.CodeGeneratorUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,15 +21,12 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @Service
 public class TicketService {
-    // Constant
-    private static final String PAY_NOW = "PAY_NOW";
-
     private final TicketRepository ticketRepository;
     private final TripRepository tripRepository;
     private final TripSeatRepository tripSeatRepository;
@@ -201,6 +199,7 @@ public class TicketService {
                 t.getPrice(),
                 t.getStatus(),
                 t.getPaymentType(),
+                t.getPaymentMethod(),
                 t.getSoldBy(),
                 t.getSoldAt(),
                 t.getNote(),
@@ -259,7 +258,7 @@ public class TicketService {
         String passengerEmail = passenger.getEmail();
         byte[] qrCode = qrCodeService.generateQrCode(ticket.getTicketCode());
         String subject = "Xác nhận đặt vé xe VietBus";
-        String content = buildTicketMailContent(ticket);
+        String content = mailService.buildTicketMailContent(ticket);
 
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
@@ -271,43 +270,6 @@ public class TicketService {
         );
     }
 
-    private String buildTicketMailContent(TicketEntity ticket) {
-        String bookingTime   = ticket.getCreatedAt().format(MAIL_DATE_FORMAT);
-        String departureTime = ticket.getTrip().getDepartureTime().format(MAIL_DATE_FORMAT);
-        String arrivalTime   = ticket.getTrip().getArrivalTime().format(MAIL_DATE_FORMAT);
-
-        return """
-                <div style='font-family: Arial'>
-                    <h2>VietBus - Xác nhận đặt vé</h2>
- 
-                    <p><b>Mã vé:</b> %s</p>
-                    <p><b>Ngày đặt:</b> %s</p>
- 
-                    <p><b>Điểm đi:</b> %s</p>
-                    <p><b>Giờ xuất bến:</b> %s</p>
- 
-                    <p><b>Điểm đến:</b> %s</p>
-                    <p><b>Giờ đến:</b> %s</p>
- 
-                    <p><b>Ghế:</b> %s</p>
- 
-                    <h3>QR Check-in</h3>
-                    <img src="cid:ticketQr" width="250"/>
- 
-                    <p>Vui lòng đưa mã QR cho nhân viên khi lên xe.</p>
-                    <p>Cảm ơn bạn đã sử dụng VietBus!</p>
-                </div>
-                """.formatted(
-                ticket.getTicketCode(),
-                bookingTime,
-                ticket.getTrip().getRoute().getFromStation().getName(),
-                departureTime,
-                ticket.getTrip().getRoute().getToStation().getName(),
-                arrivalTime,
-                ticket.getTripSeat().getSeat().getSeatNumber()
-        );
-    }
-
     private void sendMomoQrMailAfterCommit(TicketEntity ticket, MomoPaymentResult momoResult)
             throws Exception {
 
@@ -315,8 +277,8 @@ public class TicketService {
         if (passenger == null || passenger.getEmail() == null) return;
 
         String email   = passenger.getEmail();
-        String subject = "Thanh toán vé xe VietBus - " + ticket.getTicketCode();
-        String content = buildMomoMailContent(ticket, momoResult);
+        String subject = "Thanh toán vé xe VietBus";
+        String content = mailService.buildMomoMailContent(ticket, momoResult);
 
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
@@ -325,36 +287,6 @@ public class TicketService {
                         mailService.sendHtmlMail(email, subject, content);
                     }
                 }
-        );
-    }
-
-    private String buildMomoMailContent(TicketEntity ticket, MomoPaymentResult momoResult) {
-        return """
-        <div style='font-family: Arial'>
-            <h2>VietBus - Thanh toán vé xe</h2>
-            <p>Xin chào, vé <b>%s</b> đang chờ thanh toán.</p>
-
-            <p><b>Tuyến:</b> %s → %s</p>
-            <p><b>Ghế:</b> %s</p>
-            <p><b>Số tiền:</b> %,d VND</p>
-
-            <h3>Thanh toán qua MoMo</h3>
-            <p><a href="%s" style="padding:10px 20px;background:#ae2070;color:white;
-               border-radius:5px;text-decoration:none">👉 Thanh toán ngay</a></p>
-
-            <p>Hoặc scan QR:</p>
-            <img src="%s" width="200"/>
-
-            <p><i>Link thanh toán có hiệu lực trong 15 phút.</i></p>
-        </div>
-        """.formatted(
-                ticket.getTicketCode(),
-                ticket.getTrip().getRoute().getFromStation().getName(),
-                ticket.getTrip().getRoute().getToStation().getName(),
-                ticket.getTripSeat().getSeat().getSeatNumber(),
-                ticket.getPrice().longValue(),
-                momoResult.getPayUrl(),
-                momoResult.getQrCodeUrl()
         );
     }
 
@@ -369,6 +301,4 @@ public class TicketService {
     private UserDetails getInfo() {
         return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
-
-    private static final DateTimeFormatter MAIL_DATE_FORMAT = DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy");
 }
