@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
 import java.util.Map;
 
 @Slf4j
@@ -31,7 +30,6 @@ public class MailService {
 
     @Async("mailExecutor")
     public void sendTicketMail(String to, String subject, String htmlContent, byte[] qrCode) {
-
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -51,15 +49,56 @@ public class MailService {
         }
     }
 
+    public String buildTicketMailContent(TicketEntity ticket) {
+        String bookingTime   = ticket.getCreatedAt().format(MAIL_DATE_FORMAT);
+        String departureTime = ticket.getTrip().getDepartureTime().format(MAIL_DATE_FORMAT);
+        String arrivalTime   = ticket.getTrip().getArrivalTime().format(MAIL_DATE_FORMAT);
+
+        return """
+                <div style='font-family: Arial'>
+                    <h2>VietBus - Xác nhận đặt vé</h2>
+ 
+                    <p><b>Mã vé:</b> %s</p>
+                    <p><b>Ngày đặt:</b> %s</p>
+ 
+                    <p><b>Điểm đi:</b> %s</p>
+                    <p><b>Giờ xuất bến:</b> %s</p>
+ 
+                    <p><b>Điểm đến:</b> %s</p>
+                    <p><b>Giờ đến:</b> %s</p>
+ 
+                    <p><b>Ghế:</b> %s</p>
+ 
+                    <h3>QR Check-in</h3>
+                    <img src="cid:ticketQr" width="250"/>
+ 
+                    <p>Vui lòng đưa mã QR cho nhân viên khi lên xe.</p>
+                    <p>Cảm ơn bạn đã sử dụng VietBus!</p>
+                </div>
+                """.formatted(
+                ticket.getTicketCode(),
+                bookingTime,
+                ticket.getTrip().getRoute().getFromStation().getName(),
+                departureTime,
+                ticket.getTrip().getRoute().getToStation().getName(),
+                arrivalTime,
+                ticket.getTripSeat().getSeat().getSeatNumber()
+        );
+    }
+
     @Async("mailExecutor")
-    public void sendHtmlMail(String to, String subject, String htmlContent) {
+    public void sendHtmlMail(String to, String subject, String htmlContent, byte[] imageBytes, String cid) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
+
+            if (imageBytes != null && cid != null) {
+                helper.addInline(cid, new ByteArrayResource(imageBytes), "image/png");
+            }
 
             mailSender.send(message);
 
@@ -68,18 +107,13 @@ public class MailService {
         }
     }
 
-    public String buildMomoMailContent(TicketEntity ticket, MomoPaymentResult momoResult) {
-
-        // Download QR -> base64 để nhúng thẳng vào HTML, không bị block bởi email client
-        String qrBase64   = generateQrAsBase64(momoResult.getQrCodeUrl());
-        String qrImgBlock = (qrBase64 != null)
-                ? "<img src='data:image/png;base64," + qrBase64 + "' width='200' height='200'/>"
+    public String buildMomoMailContent(TicketEntity ticket, MomoPaymentResult momoResult, String qrCid) {
+        String qrImgBlock = (qrCid != null)
+                ? "<img src='cid:" + qrCid + "' width='200' height='200' alt='QR MoMo'/>"
                 : "<p style='color:red'>Không thể tải mã QR. Vui lòng dùng link phía trên.</p>";
 
         return """
         <div style='font-family:Arial,sans-serif; max-width:600px; margin:auto;'>
-
-          <h2 style='color:#ae2070;'>VietBus - Thanh toán vé xe</h2>
           <p>Xin chào, vé <b>%s</b> đang chờ thanh toán.</p>
 
           <table style='width:100%%; border-collapse:collapse; margin:16px 0;'>
@@ -123,69 +157,28 @@ public class MailService {
                 ticket.getTripSeat().getSeat().getSeatNumber(),
                 ticket.getPrice().longValue(),
                 momoResult.getPayUrl(),
-                qrImgBlock                          // base64 image or fallback text
+                qrImgBlock
         );
     }
 
-    private String generateQrAsBase64(String qrContent) {
+    public byte[] generateQrAsBytes(String qrContent) {
         try {
             int size = 300;
-
             QRCodeWriter writer = new QRCodeWriter();
             BitMatrix bitMatrix = writer.encode(
                     qrContent,
                     BarcodeFormat.QR_CODE,
                     size, size,
-                    Map.of(EncodeHintType.MARGIN, 1)  // margin nhỏ để QR to hơn
+                    Map.of(EncodeHintType.MARGIN, 1)
             );
-
-            // Dùng MatrixToImageWriter thay vì tự vẽ BufferedImage
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             MatrixToImageWriter.writeToStream(bitMatrix, "PNG", out);
-
-            return Base64.getEncoder().encodeToString(out.toByteArray());
+            return out.toByteArray();
 
         } catch (Exception e) {
             log.warn("[Mail] Cannot generate QR: {}", e.getMessage());
             return null;
         }
-    }
-
-    public String buildTicketMailContent(TicketEntity ticket) {
-        String bookingTime   = ticket.getCreatedAt().format(MAIL_DATE_FORMAT);
-        String departureTime = ticket.getTrip().getDepartureTime().format(MAIL_DATE_FORMAT);
-        String arrivalTime   = ticket.getTrip().getArrivalTime().format(MAIL_DATE_FORMAT);
-
-        return """
-                <div style='font-family: Arial'>
-                    <h2>VietBus - Xác nhận đặt vé</h2>
- 
-                    <p><b>Mã vé:</b> %s</p>
-                    <p><b>Ngày đặt:</b> %s</p>
- 
-                    <p><b>Điểm đi:</b> %s</p>
-                    <p><b>Giờ xuất bến:</b> %s</p>
- 
-                    <p><b>Điểm đến:</b> %s</p>
-                    <p><b>Giờ đến:</b> %s</p>
- 
-                    <p><b>Ghế:</b> %s</p>
- 
-                    <h3>QR Check-in</h3>
-                    <img src="cid:ticketQr" width="250"/>
- 
-                    <p>Vui lòng đưa mã QR cho nhân viên khi lên xe.</p>
-                    <p>Cảm ơn bạn đã sử dụng VietBus!</p>
-                </div>
-                """.formatted(
-                ticket.getTicketCode(),
-                bookingTime,
-                ticket.getTrip().getRoute().getFromStation().getName(),
-                departureTime,
-                ticket.getTrip().getRoute().getToStation().getName(),
-                arrivalTime,
-                ticket.getTripSeat().getSeat().getSeatNumber()
-        );
     }
 
     private static final DateTimeFormatter MAIL_DATE_FORMAT = DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy");

@@ -21,26 +21,31 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class MomoService {
-    @Value("${momo.partner-code}")   private String partnerCode;
-    @Value("${momo.access-key}")     private String accessKey;
-    @Value("${momo.secret-key}")     private String secretKey;
-    @Value("${momo.api-url}")        private String apiUrl;
-    @Value("${momo.redirect-url}")   private String redirectUrl;
-    @Value("${momo.ipn-url}")        private String ipnUrl;
+    @Value("${momo.partner-code}")
+    private String partnerCode;
+    @Value("${momo.access-key}")
+    private String accessKey;
+    @Value("${momo.secret-key}")
+    private String secretKey;
+    @Value("${momo.api-url}")
+    private String apiUrl;
+    @Value("${momo.redirect-url}")
+    private String redirectUrl;
+    @Value("${momo.ipn-url}")
+    private String ipnUrl;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public MomoPaymentResult createPayment(String ticketCode, BigDecimal price)
-            throws Exception {
+    public MomoPaymentResult createPayment(String ticketCode, BigDecimal price) throws Exception {
 
-        String orderId   = ticketCode;           // dùng ticketCode làm orderId -> dễ tra sau
+        String orderId   = ticketCode;                      // dùng ticketCode làm orderId -> dễ tra sau
         String requestId = UUID.randomUUID().toString();
         long   amount    = price.longValue();
-        String extraData = "";                   // để trống or base64
+        String extraData = "";                              // để trống or base64
         String requestType = "captureWallet";
         String orderInfo  = "Pay ticket " + ticketCode;
 
-        // 1. Raw signature - thứ tự CỐ ĐỊNH theo docs MoMo
+        // 1. Raw signature - thứ tự cố định theo docs MoMo
         String rawSignature =
                 "accessKey="   + accessKey   +
                         "&amount="     + amount      +
@@ -70,7 +75,7 @@ public class MomoService {
         body.put("signature",   signature);
         body.put("lang",        "vi");
 
-        // 3. Call MoMo
+        // 3. Call Momo
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(apiUrl))

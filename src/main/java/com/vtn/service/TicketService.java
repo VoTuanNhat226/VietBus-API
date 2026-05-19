@@ -73,7 +73,6 @@ public class TicketService {
         return new BaseResponse(200, tickets, "Get all tickets successful", null, null);
     }
 
-
     public BaseResponse getAllTicketsUnpaid(TicketRequest request) {
         List<TicketResponse> tickets = ticketRepository.getAllTicketUnpaid(
                         request.getTicketCode(),
@@ -86,7 +85,6 @@ public class TicketService {
 
         return new BaseResponse(200, tickets, "Get all tickets unpaid successful", null, null);
     }
-
 
     public BaseResponse getAllTicketsByTripId(TicketRequest request) {
         List<TicketResponse> tickets = ticketRepository.getAllByTripId(request.getTripId())
@@ -251,13 +249,13 @@ public class TicketService {
         return payment;
     }
 
-    private void sendTicketMailAfterCommit(TicketEntity ticket) throws Exception {
+    public void sendTicketMailAfterCommit(TicketEntity ticket) throws Exception {
         PassengerEntity passenger = ticket.getPassenger();
         if (passenger == null || passenger.getEmail() == null) return;
 
         String passengerEmail = passenger.getEmail();
         byte[] qrCode = qrCodeService.generateQrCode(ticket.getTicketCode());
-        String subject = "Xác nhận đặt vé xe VietBus";
+        String subject = "XÁC NHẬN ĐẶT VÉ XE VIETBUS";
         String content = mailService.buildTicketMailContent(ticket);
 
         TransactionSynchronizationManager.registerSynchronization(
@@ -270,21 +268,23 @@ public class TicketService {
         );
     }
 
-    private void sendMomoQrMailAfterCommit(TicketEntity ticket, MomoPaymentResult momoResult)
-            throws Exception {
-
+    private void sendMomoQrMailAfterCommit(TicketEntity ticket, MomoPaymentResult momoResult) {
         PassengerEntity passenger = ticket.getPassenger();
         if (passenger == null || passenger.getEmail() == null) return;
 
         String email   = passenger.getEmail();
-        String subject = "Thanh toán vé xe VietBus";
-        String content = mailService.buildMomoMailContent(ticket, momoResult);
+        String subject = "THANH TOÁN VÉ XE VIETBUS";
+
+        byte[] qrBytes = mailService.generateQrAsBytes(momoResult.getQrCodeUrl());
+        String qrCid   = "qr-momo-" + ticket.getTicketCode();
+
+        String content = mailService.buildMomoMailContent(ticket, momoResult, qrBytes != null ? qrCid : null);
 
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        mailService.sendHtmlMail(email, subject, content);
+                        mailService.sendHtmlMail(email, subject, content, qrBytes, qrCid);
                     }
                 }
         );

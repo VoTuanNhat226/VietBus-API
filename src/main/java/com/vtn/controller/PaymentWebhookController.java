@@ -26,14 +26,14 @@ public class PaymentWebhookController {
     }
 
     @PostMapping(value = APIConstants.API_WEBHOOK_MOMO)
-    public ResponseEntity<Map<String, Object>> momoCallback(@RequestBody MomoCallbackRequest request) {
-        // Step 1: Xác thực chữ ký HMAC
+    public ResponseEntity<Map<String, Object>> momoCallback(@RequestBody MomoCallbackRequest request) throws Exception {
+        // Step 1: Verify signature HMAC
         boolean valid = momoSignatureService.verify(request);
         if (!valid) {
             return ResponseEntity.badRequest().body(Map.of("resultCode", 1, "message", "Invalid signature"));
         }
 
-        // Step 2: Kiểm tra resultCode (0 = thành công)
+        // Step 2: Check resultCode (0 = success)
         if (request.getResultCode() == 0) {
             // Step 3: Update DB
             paymentService.confirmPayment(
@@ -43,7 +43,7 @@ public class PaymentWebhookController {
             );
         }
 
-        // Step 4: Trả về 200 OK để MOMO không gọi lại
+        // Step 4: Return 200 OK for MOMO not callback
         return ResponseEntity.ok(Map.of("resultCode", 0, "message", "Success"));
     }
 }

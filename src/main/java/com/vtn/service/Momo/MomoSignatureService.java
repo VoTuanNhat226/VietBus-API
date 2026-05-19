@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 public class MomoSignatureService {
     @Value("${momo.secret-key}")
     private String secretKey;
-
     @Value("${momo.access-key}")
     private String momoAccessKey;
 
@@ -41,7 +40,6 @@ public class MomoSignatureService {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            // Chuyển sang hex string
             StringBuilder sb = new StringBuilder();
             for (byte b : hash) {
                 sb.append(String.format("%02x", b));
