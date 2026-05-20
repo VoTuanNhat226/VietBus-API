@@ -30,4 +30,6 @@ public class TicketRequest {
     private UUID passengerId;
     private String passengerName;
     private String passengerPhoneNumber;
+
+    private String ipAddress;
 }

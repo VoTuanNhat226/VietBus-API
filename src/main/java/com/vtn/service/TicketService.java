@@ -3,12 +3,14 @@ package com.vtn.service;
 import com.vtn.dto.request.TicketRequest;
 import com.vtn.dto.response.TicketResponse;
 import com.vtn.dto.result.MomoPaymentResult;
+import com.vtn.dto.result.VNPayPaymentResult;
 import com.vtn.entity.*;
 import com.vtn.enumdef.*;
 import com.vtn.repository.*;
 import com.vtn.service.Mail.MailService;
 import com.vtn.service.Momo.MomoService;
 import com.vtn.service.QR.QrCodeService;
+import com.vtn.service.VNPay.VNPayService;
 import com.vtn.utils.BaseResponse;
 import com.vtn.utils.CodeGeneratorUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,7 @@ public class TicketService {
     private final MailService mailService;
     private final QrCodeService qrCodeService;
     private final MomoService momoService;
+    private final VNPayService vnPayService;
 
     @Autowired
     public TicketService(
@@ -45,7 +48,8 @@ public class TicketService {
             PaymentRepository paymentRepository,
             MailService mailService,
             QrCodeService qrCodeService,
-            MomoService momoService) {
+            MomoService momoService,
+            VNPayService vnPayService) {
         this.ticketRepository = ticketRepository;
         this.tripRepository = tripRepository;
         this.tripSeatRepository = tripSeatRepository;
@@ -54,6 +58,7 @@ public class TicketService {
         this.mailService = mailService;
         this.qrCodeService = qrCodeService;
         this.momoService = momoService;
+        this.vnPayService = vnPayService;
     }
 
     public BaseResponse getAllTickets(TicketRequest request) {
@@ -144,6 +149,19 @@ public class TicketService {
                 ticketRepository.save(ticket);
 
                 sendMomoQrMailAfterCommit(ticket, momoResult);
+            }
+            if (PaymentMethodEnum.VNPAY.equals(request.getPaymentMethod())) {
+                VNPayPaymentResult vnpayResult = vnPayService.createPayment(
+                        ticket.getTicketCode(),
+                        ticket.getPrice(),
+                        request.getIpAddress()
+                );
+
+                ticket.setVnpayPayUrl(vnpayResult.getPayUrl());
+                ticket.setPaymentMethod(PaymentMethodEnum.VNPAY);
+                ticketRepository.save(ticket);
+
+                sendVNPayMailAfterCommit(ticket, vnpayResult);
             }
         }
 
@@ -273,7 +291,7 @@ public class TicketService {
         if (passenger == null || passenger.getEmail() == null) return;
 
         String email   = passenger.getEmail();
-        String subject = "THANH TOÁN VÉ XE VIETBUS";
+        String subject = "THANH TOÁN VÉ XE VIETBUS - MOMO";
 
         byte[] qrBytes = mailService.generateQrAsBytes(momoResult.getQrCodeUrl());
         String qrCid   = "qr-momo-" + ticket.getTicketCode();
@@ -285,6 +303,24 @@ public class TicketService {
                     @Override
                     public void afterCommit() {
                         mailService.sendHtmlMail(email, subject, content, qrBytes, qrCid);
+                    }
+                }
+        );
+    }
+
+    private void sendVNPayMailAfterCommit(TicketEntity ticket, VNPayPaymentResult vnpayResult) {
+        PassengerEntity passenger = ticket.getPassenger();
+        if (passenger == null || passenger.getEmail() == null) return;
+
+        String email   = passenger.getEmail();
+        String subject = "THANH TOÁN VÉ XE VIETBUS - VNPAY";
+        String content = mailService.buildVNPayMailContent(ticket, vnpayResult);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        mailService.sendHtmlMail(email, subject, content, null, null);
                     }
                 }
         );

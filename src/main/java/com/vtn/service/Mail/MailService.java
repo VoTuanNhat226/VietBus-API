@@ -6,6 +6,7 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.vtn.dto.result.MomoPaymentResult;
+import com.vtn.dto.result.VNPayPaymentResult;
 import com.vtn.entity.TicketEntity;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -179,6 +180,51 @@ public class MailService {
             log.warn("[Mail] Cannot generate QR: {}", e.getMessage());
             return null;
         }
+    }
+
+    public String buildVNPayMailContent(TicketEntity ticket, VNPayPaymentResult vnpayResult) {
+        return """
+            <div style='font-family:Arial,sans-serif; max-width:600px; margin:auto;'>
+                <p>Xin chào, vé <b>%s</b> đang chờ thanh toán.</p>
+
+                <table style='width:100%%; border-collapse:collapse; margin:16px 0;'>
+                    <tr><td style='padding:8px; background:#f5f5f5;'><b>Tuyến</b></td>
+                        <td style='padding:8px;'>%s → %s</td></tr>
+                    <tr><td style='padding:8px; background:#f5f5f5;'><b>Ghế</b></td>
+                        <td style='padding:8px;'>%s</td></tr>
+                    <tr><td style='padding:8px; background:#f5f5f5;'><b>Số tiền</b></td>
+                        <td style='padding:8px; color:#e53935; font-weight:bold;'>%,d VND</td></tr>
+                </table>
+
+                <div style='margin:20px 0; padding:16px; border:1px solid #eee; border-radius:8px;'>
+                    <h3 style='margin:0 0 12px;'>Nhấn link để thanh toán qua VNPay</h3>
+                    <a href='%s'
+                        style='display:inline-block; padding:12px 28px; background:#e53935;
+                        color:white; border-radius:6px; text-decoration:none; font-weight:bold;
+                        font-size:16px;'>
+                        Thanh toán ngay qua VNPay
+                    </a>
+                    <p style='color:#999; font-size:12px; margin:12px 0 0;'>
+                        Nếu nút không hoạt động, copy link sau vào trình duyệt:<br/>
+                        <a href='%s' style='color:#e53935;'>%s</a>
+                    </p>
+                </div>
+    
+                <p style='color:#999; font-size:12px; margin-top:24px;'>
+                    Link thanh toán có hiệu lực trong <b>15 phút</b>.<br/>
+                    Nếu cần hỗ trợ, liên hệ hotline VietBus: 0977751951.
+                </p>
+            </div>
+        """.formatted(
+                ticket.getTicketCode(),
+                ticket.getTrip().getRoute().getFromStation().getName(),
+                ticket.getTrip().getRoute().getToStation().getName(),
+                ticket.getTripSeat().getSeat().getSeatNumber(),
+                ticket.getPrice().longValue(),
+                vnpayResult.getPayUrl(),
+                vnpayResult.getPayUrl(),
+                vnpayResult.getPayUrl()
+        );
     }
 
     private static final DateTimeFormatter MAIL_DATE_FORMAT = DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy");

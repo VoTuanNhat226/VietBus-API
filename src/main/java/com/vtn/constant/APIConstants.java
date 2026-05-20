@@ -106,4 +106,5 @@ public class APIConstants {
     //Webhook
     public static final String WEBHOOK = "/webhook";
     public static final String API_WEBHOOK_MOMO = API_VIET_BUS + WEBHOOK + "/momo";
+    public static final String API_WEBHOOK_VNPAY = API_VIET_BUS + WEBHOOK + "/vnpay";
 }

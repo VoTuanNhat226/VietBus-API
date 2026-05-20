@@ -4,6 +4,7 @@ import com.vtn.constant.APIConstants;
 import com.vtn.dto.request.TicketRequest;
 import com.vtn.service.TicketService;
 import com.vtn.utils.BaseResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,13 +46,26 @@ public class TicketController {
     }
 
     @PostMapping(value =APIConstants.API_CREATE_TICKET)
-    public ResponseEntity<BaseResponse> create(@RequestBody TicketRequest request) throws Exception {
+    public ResponseEntity<BaseResponse> create(@RequestBody TicketRequest request, HttpServletRequest httpRequest) throws Exception {
         long beginTime = System.currentTimeMillis();
+        request.setIpAddress(getClientIp(httpRequest));
         BaseResponse response = ticketService.createTicket(request);
         response.setTook(System.currentTimeMillis() - beginTime);
         return ResponseEntity
                 .status(response.getStatusCode())
                 .body(response);
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        String resolved = (ip != null && !ip.isBlank()) ? ip.split(",")[0].trim()
+                : request.getRemoteAddr();
+
+        // Normalize IPv6 loopback → IPv4
+        if ("0:0:0:0:0:0:0:1".equals(resolved) || "::1".equals(resolved)) {
+            return "127.0.0.1";
+        }
+        return resolved;
     }
 
     @PostMapping(value =APIConstants.API_UPDATE_TICKET)

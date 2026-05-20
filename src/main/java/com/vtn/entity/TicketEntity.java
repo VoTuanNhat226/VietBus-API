@@ -50,6 +50,9 @@ public class TicketEntity extends AuditModel{
     @Column(name = "momo_qr_code", length = 500)
     String momoQrCode;
 
+    @Column(name = "vnpay_pay_url", length = 1000)
+    String vnpayPayUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     TicketStatusEnum status;
