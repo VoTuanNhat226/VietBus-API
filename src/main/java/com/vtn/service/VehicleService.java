@@ -64,7 +64,7 @@ public class VehicleService {
             return new BaseResponse(409, null,"Vehicle already existed", null,null);
         }
 
-        // ===== CREATE BUS =====
+        // ===== CREATE VEHICLE =====
         VehicleEntity vehicle = new VehicleEntity();
         vehicle.setLicensePlate(request.getLicensePlate());
         vehicle.setTotalSeat(request.getTotalSeat());
@@ -74,7 +74,6 @@ public class VehicleService {
         vehicle.setTotalKm(0);
         vehicle.setCreatedBy(info.getUsername());
         vehicle.setCreatedAt(LocalDateTime.now());
-
         vehicleRepository.save(vehicle);
 
         // ===== CREATE SEATS =====
@@ -83,7 +82,7 @@ public class VehicleService {
             case 40 -> generateSeat40(vehicle, info);
             case 34 -> generateSeat34(vehicle, info);
             case 24 -> generateSeat24(vehicle, info);
-            default -> throw new RuntimeException("Loại xe chưa hỗ trợ");
+            default -> throw new RuntimeException("Vehicle type not yet supported");
         }
 
         return new BaseResponse(201,vehicle,"Create vehicle successful",null,null);

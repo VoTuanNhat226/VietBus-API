@@ -77,4 +77,14 @@ public class TicketController {
                 .status(response.getStatusCode())
                 .body(response);
     }
+
+    @PostMapping(value =APIConstants.API_CANCEL_TICKET)
+    public ResponseEntity<BaseResponse> cancel(@RequestBody TicketRequest request) throws Exception {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = ticketService.cancelTicket(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
+    }
 }

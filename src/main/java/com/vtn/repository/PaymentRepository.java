@@ -15,6 +15,12 @@ import java.util.UUID;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<PaymentEntity, UUID> {
+    @Query("""
+        SELECT p
+        FROM PaymentEntity p
+        WHERE p.ticket.ticketId = :ticketId
+    """)
+    PaymentEntity getByTicketId(@Param("ticketId") UUID ticketId);
 
     @Query("""
         SELECT p

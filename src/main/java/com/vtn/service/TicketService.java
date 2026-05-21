@@ -189,6 +189,8 @@ public class TicketService {
 
         if (TicketStatusEnum.UNPAID.equals(currentStatus) && TicketStatusEnum.PAID.equals(request.getTicketStatus())) {
             ticket.setStatus(TicketStatusEnum.PAID);
+            ticket.setUpdatedBy(info.getUsername());
+            ticket.setUpdatedAt(LocalDateTime.now());
             ticketRepository.save(ticket);
 
             TripSeatEntity tripSeat = ticket.getTripSeat();
@@ -204,6 +206,69 @@ public class TicketService {
         }
 
         return new BaseResponse(200, null, "Update ticket successful", null, null);
+    }
+
+    @Transactional
+    public BaseResponse cancelTicket(TicketRequest request) throws Exception {
+        UserDetails info = getInfo();
+
+        // Validate ticket
+        TicketEntity ticket = ticketRepository.findByTicketCode(request.getTicketCode());
+        if (ticket == null) {
+            return new BaseResponse(404, null, "Ticket not found", null, null);
+        }
+
+        if (TicketStatusEnum.CANCELED.equals(ticket.getStatus())) {
+            return new BaseResponse(400, null, "Ticket already cancelled", null, null);
+        }
+
+        // Validate trip
+        TripEntity trip = ticket.getTrip();
+        if (trip == null) {
+            return new BaseResponse(404, null, "Trip not found", null, null);
+        }
+
+        if (!TripStatusEnum.OPEN_FOR_BOOKING.equals(trip.getStatus()) && !TripStatusEnum.CLOSED_FOR_BOOKING.equals(trip.getStatus())) {
+            return new BaseResponse(400, null, "Cannot cancel ticket because trip status is invalid", null, null);
+        }
+
+        // Validate trip seat
+        TripSeatEntity tripSeat = ticket.getTripSeat();
+        if (tripSeat == null) {
+            return new BaseResponse(404, null, "Trip seat not found", null, null);
+        }
+
+        // Validate payment if ticket status is PAID
+        PaymentEntity payment = null;
+        if (TicketStatusEnum.PAID.equals(ticket.getStatus())) {
+            payment = paymentRepository.getByTicketId(ticket.getTicketId());
+
+            if (payment == null) {
+                return new BaseResponse(404, null, "Payment not found", null, null);
+            }
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // Update ticket
+        ticket.setStatus(TicketStatusEnum.CANCELED);
+        ticket.setUpdatedBy(info.getUsername());
+        ticket.setUpdatedAt(now);
+        ticketRepository.save(ticket);
+
+        // Update trip seat
+        tripSeat.setStatus(TripSeatStatusEnum.AVAILABLE);
+        tripSeatRepository.save(tripSeat);
+
+        // Update payment
+        if (payment != null) {
+            payment.setStatus(PaymentStatusEnum.REFUNDED);
+            payment.setUpdatedBy(info.getUsername());
+            payment.setUpdatedAt(now);
+            paymentRepository.save(payment);
+        }
+
+        return new BaseResponse(200, null, "Cancel ticket successful", null, null);
     }
 
     // ------------------ helper ------------------
