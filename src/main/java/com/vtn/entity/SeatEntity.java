@@ -13,7 +13,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "seats", uniqueConstraints = {@UniqueConstraint(name = "uk_seat_number_bus", columnNames = {"seat_number", "bus_id"})})
+@Table(name = "seats", uniqueConstraints = {@UniqueConstraint(name = "uk_seat_number_vehicle", columnNames = {"seat_number", "vehicle_id"})})
 @Entity
 public class SeatEntity extends AuditModel{
     @Id

@@ -208,7 +208,7 @@ public class StatisticsService {
         List<TripEntity> trips = tripRepository.getAllTripByStatus(TripStatusEnum.DEPARTED);
         if (trips != null && !trips.isEmpty()) {
             List<TripResponse> responses = trips.stream()
-                    .map(this::TriptoResponse)
+                    .map(this::tripToResponse)
                     .toList();
 
             return new BaseResponse(200, responses, "Get all trip departed successful", null, null);
@@ -231,7 +231,7 @@ public class StatisticsService {
     }
 
     // Helper
-    private TripResponse TriptoResponse(TripEntity trip) {
+    private TripResponse tripToResponse(TripEntity trip) {
         return TripResponse.builder()
                 .tripId(trip.getTripId())
                 .tripCode(trip.getTripCode())

@@ -268,6 +268,9 @@ public class TicketService {
             paymentRepository.save(payment);
         }
 
+        // Send mail cancel ticket
+        sendCancelTicketMailAfterCommit(ticket);
+
         return new BaseResponse(200, null, "Cancel ticket successful", null, null);
     }
 
@@ -346,6 +349,24 @@ public class TicketService {
                     @Override
                     public void afterCommit() {
                         mailService.sendTicketMail(passengerEmail, subject, content, qrCode);
+                    }
+                }
+        );
+    }
+
+    public void sendCancelTicketMailAfterCommit(TicketEntity ticket) throws Exception {
+        PassengerEntity passenger = ticket.getPassenger();
+        if (passenger == null || passenger.getEmail() == null) return;
+
+        String passengerEmail = passenger.getEmail();
+        String subject = "XÁC NHẬN HỦY VÉ XE VIETBUS";
+        String content = mailService.buildCancelTicketMailContent(ticket);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        mailService.sendHtmlMail(passengerEmail, subject, content, null,null);
                     }
                 }
         );
