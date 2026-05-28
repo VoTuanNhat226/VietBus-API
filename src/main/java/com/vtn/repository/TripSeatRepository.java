@@ -19,6 +19,13 @@ public interface TripSeatRepository extends JpaRepository<TripSeatEntity, UUID> 
     TripSeatEntity findByTripSeatId(@Param("tripSeatId") UUID tripSeatId);
 
     @Query("""
+        SELECT ts
+        FROM TripSeatEntity ts
+        WHERE ts.id IN :tripSeatIds
+    """)
+    List<TripSeatEntity> findAllById(@Param("tripSeatIds") List<UUID> tripSeatIds);
+
+    @Query("""
         SELECT COUNT(t)
         FROM TripSeatEntity t
         WHERE t.trip.tripId = :tripId
