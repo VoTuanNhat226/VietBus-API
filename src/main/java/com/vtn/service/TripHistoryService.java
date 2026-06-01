@@ -2,15 +2,13 @@ package com.vtn.service;
 
 import com.vtn.dto.request.TripRequest;
 import com.vtn.dto.response.TripHistoryResponse;
-import com.vtn.entity.TripHistory;
 import com.vtn.repository.TripHistoryRepository;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class TripHistoryService {
@@ -21,6 +19,7 @@ public class TripHistoryService {
         this.tripHistoryRepository = tripHistoryRepository;
     }
 
+    @Cacheable(value = "tripHistory", key = "#request.tripId")
     public BaseResponse getByTripId(TripRequest request) {
         List<TripHistoryResponse> tripHistoryResponses =
                 tripHistoryRepository.findByTripId(request.getTripId())

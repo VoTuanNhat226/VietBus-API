@@ -8,6 +8,7 @@ import com.vtn.repository.SeatRepository;
 import com.vtn.utils.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -41,8 +42,9 @@ public class VehicleService {
         return new BaseResponse(200, vehicles, "Get all vehicle active successful", null, null);
     }
 
+    @Cacheable(value = "vehicle", key = "#request.vehicleId")
     public BaseResponse getVehicleById(VehicleRequest request) {
-        Optional<VehicleEntity> vehicle = vehicleRepository.findById(request.getVehicleId());
+        VehicleEntity vehicle = vehicleRepository.findByVehicleId(request.getVehicleId());
         return new BaseResponse(200, vehicle, "Get vehicle successful", null, null);
     }
 

@@ -2,32 +2,31 @@ package com.vtn.utils;
 
 import jakarta.persistence.MappedSuperclass;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
+import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @MappedSuperclass
-public class BaseResponse {
+public class BaseResponse implements Serializable {
     // Status code
-    private Integer statusCode;
+    Integer statusCode;
 
     // Generic data field
-    private Object data;
+    Object data;
 
     // Status description
-    private String description;
+    String description;
 
     // Status message
-    private String messageStatus;
+    String messageStatus;
 
     // Time taken to process the request API (in milliseconds)
-    private Long took;
+    Long took;
 
     public BaseResponse(Integer statusCode, Object data, String description, String messageStatus, Long took) {
         this.statusCode = statusCode;

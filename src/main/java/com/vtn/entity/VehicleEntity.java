@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @Getter
@@ -13,7 +14,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "vehicles")
 @Entity
-public class VehicleEntity extends AuditModel{
+public class VehicleEntity extends AuditModel implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID vehicleId;

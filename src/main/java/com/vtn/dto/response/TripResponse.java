@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
-public class TripResponse {
+public class TripResponse implements Serializable {
     //Trip
     private UUID tripId;
     private String tripCode;

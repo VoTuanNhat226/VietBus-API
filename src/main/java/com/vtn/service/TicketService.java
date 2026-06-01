@@ -112,65 +112,91 @@ public class TicketService {
             passenger = passengerRepository.findById(request.getPassengerId()).orElseThrow(() -> new RuntimeException("Passenger not found"));
         }
 
-        if (!request.getTripSeatIds().isEmpty()) {
-            List<TripSeatEntity> tripSeats = tripSeatRepository.findAllById(request.getTripSeatIds());
+        if (request.getTripSeatIds() == null || request.getTripSeatIds().isEmpty()) {
+            return new BaseResponse(400, null, "Please choose at least one seat", null, null);
+        }
 
-            if (!tripSeats.isEmpty()) {
-                boolean isPayNow = PaymentTypeEnum.PAY_NOW.equals(request.getPaymentType());
-                boolean isPayLater = PaymentTypeEnum.PAY_LATER.equals(request.getPaymentType());
+        List<TripSeatEntity> tripSeats = tripSeatRepository.findAllById(request.getTripSeatIds());
 
-                for(TripSeatEntity seat : tripSeats) {
-                    // Validate status tripSeat
-                    if (!TripSeatStatusEnum.AVAILABLE.equals(seat.getStatus())) {
-                        String message = String.format("Seat %s have been hold or sold", seat.getSeat().getSeatNumber());
-                        return new BaseResponse(409, null, message, null, null);
-                    }
+        if (tripSeats.size() != request.getTripSeatIds().size()) {
+            return new BaseResponse(404, null, "Some trip seats not found", null, null);
+        }
 
-                    // Generate ticketCode
-                    String ticketCode = generateUniqueTicketCode();
+        for (TripSeatEntity seat : tripSeats) {
+            if (!TripSeatStatusEnum.AVAILABLE.equals(seat.getStatus())) {
+                String message = String.format(
+                        "Seat %s have been HOLD or SOLD",
+                        seat.getSeat().getSeatNumber()
+                );
 
-                    TicketEntity ticket = buildTicketEntity(request, trip, seat, passenger, ticketCode, info.getUsername(), isPayNow);
-                    seat.setStatus(isPayNow ? TripSeatStatusEnum.SOLD : TripSeatStatusEnum.HOLD);
-                    tripSeatRepository.save(seat);
+                return new BaseResponse(409, null, message, null, null);
+            }
+        }
+
+        // Process create ticket
+        boolean isPayNow = PaymentTypeEnum.PAY_NOW.equals(request.getPaymentType());
+        boolean isPayLater = PaymentTypeEnum.PAY_LATER.equals(request.getPaymentType());
+
+        for (TripSeatEntity seat : tripSeats) {
+            String ticketCode = generateUniqueTicketCode();
+
+            TicketEntity ticket = buildTicketEntity(
+                    request,
+                    trip,
+                    seat,
+                    passenger,
+                    ticketCode,
+                    info.getUsername(),
+                    isPayNow
+            );
+
+            seat.setStatus(isPayNow ? TripSeatStatusEnum.SOLD : TripSeatStatusEnum.HOLD);
+
+            tripSeatRepository.save(seat);
+            ticketRepository.save(ticket);
+
+            if (isPayNow) {
+                PaymentEntity payment = buildPaymentEntity(
+                        ticket,
+                        request.getPaymentMethod(),
+                        info.getUsername()
+                );
+
+                paymentRepository.save(payment);
+                sendTicketMailAfterCommit(ticket);
+            }
+
+            if (isPayLater) {
+                if (PaymentMethodEnum.MOMO.equals(request.getPaymentMethod())) {
+                    MomoPaymentResult momoResult = momoService.createPayment(
+                            ticket.getTicketCode(),
+                            ticket.getPrice()
+                    );
+
+                    ticket.setMomoPayUrl(momoResult.getPayUrl());
+                    ticket.setMomoQrCode(momoResult.getQrCodeUrl());
+                    ticket.setPaymentMethod(PaymentMethodEnum.MOMO);
+
                     ticketRepository.save(ticket);
+                    sendMomoQrMailAfterCommit(ticket, momoResult);
+                }
 
-                    if (isPayNow) {
-                        PaymentEntity payment = buildPaymentEntity(ticket, request.getPaymentMethod(), info.getUsername());
-                        paymentRepository.save(payment);
-                        sendTicketMailAfterCommit(ticket);
-                    }
+                if (PaymentMethodEnum.VNPAY.equals(request.getPaymentMethod())) {
+                    VNPayPaymentResult vnPayResult = vnPayService.createPayment(
+                            ticket.getTicketCode(),
+                            ticket.getPrice(),
+                            request.getIpAddress()
+                    );
 
-                    if (isPayLater) {
-                        if (PaymentMethodEnum.MOMO.equals(request.getPaymentMethod())) {
-                            MomoPaymentResult momoResult = momoService.createPayment(
-                                    ticket.getTicketCode(),
-                                    ticket.getPrice()
-                            );
+                    ticket.setVnpayPayUrl(vnPayResult.getPayUrl());
+                    ticket.setPaymentMethod(PaymentMethodEnum.VNPAY);
 
-                            ticket.setMomoPayUrl(momoResult.getPayUrl());
-                            ticket.setMomoQrCode(momoResult.getQrCodeUrl());
-                            ticket.setPaymentMethod(PaymentMethodEnum.MOMO);
-                            ticketRepository.save(ticket);
-
-                            sendMomoQrMailAfterCommit(ticket, momoResult);
-                        }
-                        if (PaymentMethodEnum.VNPAY.equals(request.getPaymentMethod())) {
-                            VNPayPaymentResult vnpayResult = vnPayService.createPayment(
-                                    ticket.getTicketCode(),
-                                    ticket.getPrice(),
-                                    request.getIpAddress()
-                            );
-
-                            ticket.setVnpayPayUrl(vnpayResult.getPayUrl());
-                            ticket.setPaymentMethod(PaymentMethodEnum.VNPAY);
-                            ticketRepository.save(ticket);
-
-                            sendVNPayMailAfterCommit(ticket, vnpayResult);
-                        }
-                    }
+                    ticketRepository.save(ticket);
+                    sendVNPayMailAfterCommit(ticket, vnPayResult);
                 }
             }
         }
+
         return new BaseResponse(201, null, "Create ticket successful", null, null);
     }
 
@@ -193,6 +219,7 @@ public class TicketService {
             return new BaseResponse(400, null, "No status change", null, null);
         }
 
+        // Process update ticket
         if (TicketStatusEnum.UNPAID.equals(currentStatus) && TicketStatusEnum.PAID.equals(request.getTicketStatus())) {
             ticket.setStatus(TicketStatusEnum.PAID);
             ticket.setUpdatedBy(info.getUsername());
@@ -208,7 +235,7 @@ public class TicketService {
 
             sendTicketMailAfterCommit(ticket);
 
-            return new BaseResponse(200, null, "Update ticket successful, created payment", null, null);
+            return new BaseResponse(200, null, "Update ticket successful", null, null);
         }
 
         return new BaseResponse(200, null, "Update ticket successful", null, null);

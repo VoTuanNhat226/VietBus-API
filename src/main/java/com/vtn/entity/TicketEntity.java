@@ -70,7 +70,7 @@ public class TicketEntity extends AuditModel{
     TripEntity trip;
 
     @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "trip_seat_id", nullable = false, unique = true)
+    @JoinColumn(name = "trip_seat_id", nullable = false)
     TripSeatEntity tripSeat;
 
     @ManyToOne(fetch = FetchType.LAZY)

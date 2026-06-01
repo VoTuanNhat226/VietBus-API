@@ -1,13 +1,9 @@
 package com.vtn.dto.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.Data;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
 public class RouteRequest {
     private UUID routeId;
     private UUID fromStationId;

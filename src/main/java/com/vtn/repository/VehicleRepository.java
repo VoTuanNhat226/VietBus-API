@@ -11,7 +11,12 @@ import java.util.List;
 import java.util.UUID;
 
 public interface VehicleRepository extends JpaRepository<VehicleEntity, UUID> {
-    VehicleEntity findByVehicleId(UUID vehicleId);
+    @Query("""
+        SELECT v
+        FROM VehicleEntity v
+        WHERE v.vehicleId = :vehicleId
+    """)
+    VehicleEntity findByVehicleId(@Param("vehicleId") UUID vehicleId);
 
     VehicleEntity findByLicensePlate(String licensePlate);
 

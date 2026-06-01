@@ -12,6 +12,7 @@ import com.vtn.utils.BaseResponse;
 import com.vtn.utils.CodeGeneratorUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -74,6 +75,7 @@ public class TripService {
         return new BaseResponse(200, result, "Get all trips open for booking successful",null,null);
     }
 
+    @Cacheable(value = "trip", key = "#request.tripId")
     public BaseResponse getTripByTripId(TripRequest request) {
         if (request.getTripId() == null) {
             return new BaseResponse(400, null, "TripId is required", null, null);
@@ -167,7 +169,6 @@ public class TripService {
                 tripRequest.getArrivalTime(),
                 List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
         );
-
         if (vehicleConflict) {
             return new BaseResponse(400,null,"The vehicle has been assigned to another trip during this time",null,null);
         }
