@@ -12,6 +12,7 @@ import com.vtn.utils.BaseResponse;
 import com.vtn.utils.CodeGeneratorUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -75,7 +76,7 @@ public class TripService {
         return new BaseResponse(200, result, "Get all trips open for booking successful",null,null);
     }
 
-    @Cacheable(value = "trip", key = "#request.tripId")
+    @Cacheable(value = "trip", key = "#request.tripId", condition = "#request.tripId != null")
     public BaseResponse getTripByTripId(TripRequest request) {
         if (request.getTripId() == null) {
             return new BaseResponse(400, null, "TripId is required", null, null);
@@ -97,25 +98,40 @@ public class TripService {
         if (route == null) {
             return new BaseResponse(404,null,"Route not found",null,null);
         }
+
         // Validate vehicle
         VehicleEntity vehicle = vehicleRepository.findByVehicleId(tripRequest.getVehicleId());
         if (vehicle == null) {
             return new BaseResponse(404,null,"Vehicle not found",null,null);
         }
-        // Validate time
-        if (tripRequest.getArrivalTime().isBefore(tripRequest.getDepartureTime())) {
-            return new BaseResponse(400, null, "Arrival time and Departure time are invalid", null, null);
+
+        boolean vehicleConflict = tripRepository.existsVehicleConflict(
+                vehicle.getVehicleId(),
+                tripRequest.getDepartureTime(),
+                tripRequest.getArrivalTime(),
+                List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
+        );
+        if (vehicleConflict) {
+            return new BaseResponse(400,null,"The vehicle has been assigned to another trip during this time",null,null);
         }
 
-        if (tripRequest.getDepartureTime().isBefore(LocalDateTime.now())) {
-            return new BaseResponse(400,null,"Departure time must be longer than current time",null,null);
+        // Validate time
+        if (tripRequest.getDepartureTime() == null || tripRequest.getArrivalTime() == null) {
+            return new BaseResponse(400, null, "Departure time and Arrival time are required", null, null);
         }
+        if (!tripRequest.getArrivalTime().isAfter(tripRequest.getDepartureTime())) {
+            return new BaseResponse(400, null, "Arrival time must be after departure time", null, null);
+        }
+        if (tripRequest.getDepartureTime().isBefore(LocalDateTime.now())) {
+            return new BaseResponse(400,null,"Departure time must be after current time",null,null);
+        }
+
         // Validate price
         if (tripRequest.getPrice() == null || tripRequest.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
             return new BaseResponse(400,null,"Ticket prices invalid",null,null);
         }
 
-        // ── Validate & load drivers (bắt buộc có ít nhất 1) ──────────────
+        // Validate & load drivers (bắt buộc có ít nhất 1)
         if (tripRequest.getDriverIds() == null || tripRequest.getDriverIds().isEmpty()) {
             return new BaseResponse(400, null, "At least one driver is required", null, null);
         }
@@ -139,7 +155,7 @@ public class TripService {
             drivers.add(driver);
         }
 
-        // ── Validate & load assistants (tuỳ chọn) ────────────────────────
+        // Validate & load assistants (tuỳ chọn)
         List<EmployeeEntity> assistants = new ArrayList<>();
         if (tripRequest.getAssistantIds() != null) {
             for (UUID assistantId : tripRequest.getAssistantIds()) {
@@ -162,25 +178,13 @@ public class TripService {
             }
         }
 
-        // Validate vehicle conflict
-        boolean vehicleConflict = tripRepository.existsVehicleConflict(
-                vehicle.getVehicleId(),
-                tripRequest.getDepartureTime(),
-                tripRequest.getArrivalTime(),
-                List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
-        );
-        if (vehicleConflict) {
-            return new BaseResponse(400,null,"The vehicle has been assigned to another trip during this time",null,null);
-        }
-
         TripEntity trip = new TripEntity();
         String tripCode;
         do {
-            tripCode = CodeGeneratorUtil.generateCode();
+            tripCode = CodeGeneratorUtil.generateTripCode();
         } while (tripRepository.existsByTripCode(tripCode));
 
         trip.setTripCode(tripCode);
-
         trip.setDepartureTime(tripRequest.getDepartureTime());
         trip.setArrivalTime(tripRequest.getArrivalTime());
         trip.setPrice(tripRequest.getPrice());
@@ -192,16 +196,10 @@ public class TripService {
         // Gán drivers và assistants qua bảng trung gian
         drivers.forEach(d -> trip.addEmployee(d, AccountRoleEnum.DRIVER));
         assistants.forEach(a -> trip.addEmployee(a, AccountRoleEnum.ASSISTANT));
-
         tripRepository.save(trip);
 
         // Save log
-        TripHistory tripLog = new TripHistory();
-        tripLog.setChangeBy(info.getUsername());
-        tripLog.setChangeAt(LocalDateTime.now());
-        tripLog.setStatus(TripStatusEnum.CREATED);
-        tripLog.setTrip(trip);
-        tripLogRepository.save(tripLog);
+        saveTripHistory(trip, TripStatusEnum.CREATED, info);
 
         // Create TripSeat
         List<SeatEntity> seats = seatRepository.findByVehicleId(vehicle.getVehicleId());
@@ -214,13 +212,23 @@ public class TripService {
                     return ts;
                 }).toList();
         tripSeatRepository.saveAll(tripSeats);
+
         TripResponse response = toResponse(trip);
         return new BaseResponse(200,response,"Create trip successful",null,null);
     }
 
+    @CacheEvict(value = "trip", key = "#request.tripId", condition = "#request.tripId != null")
     @Transactional
     public BaseResponse updateTrip(TripRequest request) {
         UserDetails info = getInfo();
+
+        if (request.getTripId() == null) {
+            return new BaseResponse(400, null, "TripId is required", null, null);
+        }
+
+        if (request.getStatus() == null) {
+            return new BaseResponse(400, null, "Trip status is required", null, null);
+        }
 
         TripEntity trip = tripRepository.findById(request.getTripId()).orElse(null);
         if (trip == null) {
@@ -233,19 +241,24 @@ public class TripService {
         tripRepository.save(trip);
 
         // Save log
-        TripHistory tripLog = new TripHistory();
-        tripLog.setChangeBy(info.getUsername());
-        tripLog.setChangeAt(LocalDateTime.now());
-        tripLog.setStatus(request.getStatus());
-        tripLog.setTrip(trip);
-        tripLogRepository.save(tripLog);
+        saveTripHistory(trip, request.getStatus(), info);
 
         TripResponse response = toResponse(trip);
         return new BaseResponse(200,response,"Update trip successful", null, null);
     }
 
+    // --------------------------------- Helper ---------------------------------
     private UserDetails getInfo() {
         return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
+    private void saveTripHistory(TripEntity trip, TripStatusEnum status, UserDetails info) {
+        TripHistory tripLog = new TripHistory();
+        tripLog.setChangeBy(info.getUsername());
+        tripLog.setChangeAt(LocalDateTime.now());
+        tripLog.setStatus(status);
+        tripLog.setTrip(trip);
+        tripLogRepository.save(tripLog);
     }
 
     private TripResponse toResponse(TripEntity trip) {

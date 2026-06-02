@@ -25,7 +25,7 @@ public class TripEntity extends AuditModel{
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID tripId;
 
-    @Column(name = "trip_code", nullable = false, unique = true, length = 10)
+    @Column(name = "trip_code", nullable = false, unique = true, length = 18)
     String tripCode;
 
     @Column(name = "departure_time", nullable = false)

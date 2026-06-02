@@ -31,9 +31,9 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
         FROM TicketEntity t
         LEFT JOIN FETCH t.passenger p
         LEFT JOIN t.trip tr
-        WHERE (:ticketCode IS NULL OR t.ticketCode = :ticketCode)
+        WHERE (:ticketCode IS NULL OR t.ticketCode LIKE %:ticketCode%)
             AND (:ticketStatus IS NULL OR t.status = :ticketStatus)
-            AND (:tripCode IS NULL OR tr.tripCode = :tripCode)
+            AND (:tripCode IS NULL OR tr.tripCode LIKE %:tripCode%)
             AND (:tripId IS NULL OR tr.tripId = :tripId)
             AND (:ticketPaymentType IS NULL OR t.paymentType = :ticketPaymentType)
             AND (:passengerName IS NULL OR p.fullName LIKE %:passengerName%)

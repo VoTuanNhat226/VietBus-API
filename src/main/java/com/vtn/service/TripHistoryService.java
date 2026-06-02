@@ -19,7 +19,6 @@ public class TripHistoryService {
         this.tripHistoryRepository = tripHistoryRepository;
     }
 
-    @Cacheable(value = "tripHistory", key = "#request.tripId")
     public BaseResponse getByTripId(TripRequest request) {
         List<TripHistoryResponse> tripHistoryResponses =
                 tripHistoryRepository.findByTripId(request.getTripId())

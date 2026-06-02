@@ -52,12 +52,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (ExpiredJwtException e) {
-            // Token hết hạn → không set authentication → Spring Security tự trả 401
+            // Token hết hạn -> không set authentication -> Spring Security tự trả 401
             // Frontend interceptor sẽ bắt 401 và gọi /api/auth/refresh
             logger.debug("Access token expired: " + e.getMessage());
 
         } catch (JwtException e) {
-            // Token sai chữ ký, bị tamper → cũng không set authentication → 401
+            // Token sai chữ ký, bị tamper -> cũng không set authentication -> 401
             logger.warn("Invalid JWT token: " + e.getMessage());
         }
 

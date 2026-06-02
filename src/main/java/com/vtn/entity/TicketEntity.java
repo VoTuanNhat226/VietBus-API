@@ -23,7 +23,7 @@ public class TicketEntity extends AuditModel{
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID ticketId;
 
-    @Column(name = "ticket_code", nullable = false, unique = true, length = 10)
+    @Column(name = "ticket_code", nullable = false, unique = true, length = 18)
     String ticketCode;
 
     @Column(name = "price", nullable = false)

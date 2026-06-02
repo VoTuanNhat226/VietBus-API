@@ -12,7 +12,6 @@ import com.vtn.enumdef.TripSeatStatusEnum;
 import com.vtn.repository.PaymentRepository;
 import com.vtn.repository.TicketRepository;
 import com.vtn.repository.TripSeatRepository;
-import com.vtn.service.Mail.MailService;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,26 +19,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final TicketRepository ticketRepository;
     private final TripSeatRepository tripSeatRepository;
-    private final MailService mailService;
     private final TicketService ticketService;
 
     @Autowired
     public PaymentService(PaymentRepository paymentRepository,
                           TicketRepository ticketRepository,
                           TripSeatRepository tripSeatRepository,
-                          MailService mailService,
                           TicketService ticketService) {
         this.paymentRepository = paymentRepository;
         this.ticketRepository = ticketRepository;
         this.tripSeatRepository = tripSeatRepository;
-        this.mailService = mailService;
         this.ticketService = ticketService;
     }
 

@@ -27,7 +27,6 @@ public class TripSeatService {
             return new BaseResponse(400, null, "TripId is required", null, null);
         }
         Integer count = tripSeatRepository.countTripSeatSoldByTripId(request.getTripId(), List.of(TripSeatStatusEnum.SOLD, TripSeatStatusEnum.HOLD));
-
         return new BaseResponse(200, count, "Get quantity trip seat sold successful",null,null);
     }
 
@@ -36,7 +35,6 @@ public class TripSeatService {
             return new BaseResponse(400, null, "TripId is required", null, null);
         }
         List<TripSeatEntity> tripSeats = tripSeatRepository.findAllTripSeatsByTripId(request.getTripId());
-
         return new BaseResponse(200, tripSeats, "Get all trip seats successful",null,null);
 
     }

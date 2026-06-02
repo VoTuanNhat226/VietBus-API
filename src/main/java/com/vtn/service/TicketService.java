@@ -448,7 +448,7 @@ public class TicketService {
     private String generateUniqueTicketCode() {
         String code;
         do {
-            code = CodeGeneratorUtil.generateCode();
+            code = CodeGeneratorUtil.generateTicketCode();
         } while (ticketRepository.existsByTicketCode(code));
         return code;
     }

@@ -79,8 +79,8 @@ public class RefreshTokenService {
 
         // Bước 3: Kiểm tra version
         if (tokenVersion != family.getLatestVersion()) {
-            // ⚠️ REUSE DETECTED — token cũ bị tái sử dụng
-            log.warn("🚨 Refresh token reuse detected! user={}, familyId={}, tokenVersion={}, latestVersion={}",
+            // REUSE DETECTED — token cũ bị tái sử dụng
+            log.warn("Refresh token reuse detected! user={}, familyId={}, tokenVersion={}, latestVersion={}",
                     username, familyId, tokenVersion, family.getLatestVersion());
             family.setRevoked(true);
             familyRepository.save(family);

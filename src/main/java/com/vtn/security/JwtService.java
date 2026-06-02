@@ -21,11 +21,9 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
-    // Access token: ngắn hạn (vd: 15 phút = 900_000 ms)
     @Value("${jwt.expiration}")
     private long accessTokenExpiration;
 
-    // Refresh token: dài hạn (vd: 7 ngày = 604_800_000 ms)
     @Value("${jwt.refresh-expiration}")
     private long refreshTokenExpiration;
 
