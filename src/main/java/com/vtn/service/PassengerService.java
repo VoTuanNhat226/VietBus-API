@@ -34,7 +34,7 @@ public class PassengerService {
 
     public BaseResponse createPassenger(PassengerRequest request) {
 
-        // validate exists
+        // Validate exists
         if (passengerRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
@@ -51,10 +51,9 @@ public class PassengerService {
         passengerEntity.setIdCardNumber(request.getIdCardNumber());
         passengerEntity.setNote(request.getNote());
         passengerEntity.setPhoneNumber(request.getPhoneNumber());
-
         passengerRepository.save(passengerEntity);
 
-        return new BaseResponse(200, passengerEntity, "Create a passenger successful", null, null);
+        return new BaseResponse(201, passengerEntity, "Create a passenger successful", null, null);
     }
 
     public BaseResponseNew<List<PassengerResponse>> getListPassenger(BasePageRequest request) {
@@ -141,7 +140,7 @@ public class PassengerService {
 
         passengerRepository.delete(entity);
 
-        return new BaseResponse(200, null, "Delete passenger successful", null, null);
+        return new BaseResponse(204, null, "Delete passenger successful", null, null);
     }
 
     public BaseResponseNew<List<PassengerResponse>> searchPassenger(PassengerSearchRequest request) {
@@ -149,18 +148,12 @@ public class PassengerService {
 
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-        String fullName = (request.getFullName() == null || request.getFullName().isBlank())
-                ? null : request.getFullName().trim();
-        String phoneNumber = (request.getPhoneNumber() == null || request.getPhoneNumber().isBlank())
-                ? null : request.getPhoneNumber().trim();
-        String email = (request.getEmail() == null || request.getEmail().isBlank())
-                ? null : request.getEmail().trim().toLowerCase();
-        String idCardNumber = (request.getIdCardNumber() == null || request.getIdCardNumber().isBlank())
-                ? null : request.getIdCardNumber().trim();
+        String fullName = (request.getFullName() == null || request.getFullName().isBlank()) ? null : request.getFullName().trim();
+        String phoneNumber = (request.getPhoneNumber() == null || request.getPhoneNumber().isBlank()) ? null : request.getPhoneNumber().trim();
+        String email = (request.getEmail() == null || request.getEmail().isBlank()) ? null : request.getEmail().trim().toLowerCase();
+        String idCardNumber = (request.getIdCardNumber() == null || request.getIdCardNumber().isBlank()) ? null : request.getIdCardNumber().trim();
 
-        Page<PassengerEntity> page = passengerRepository.searchPassengers(
-                fullName, phoneNumber, email, idCardNumber, pageable
-        );
+        Page<PassengerEntity> page = passengerRepository.searchPassengers(fullName, phoneNumber, email, idCardNumber, pageable);
 
         List<PassengerResponse> data = page.getContent()
                 .stream()
@@ -175,7 +168,7 @@ public class PassengerService {
         );
 
         Meta meta = new Meta(pageMeta, System.currentTimeMillis() - start);
-        String message = "Search passenger successfully";
+        String message = "Search passenger successful";
 
         return new BaseResponseNew<>(
                 200, message, data, meta, null, "Success", meta.getTook()
