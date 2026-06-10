@@ -2,6 +2,7 @@ package com.vtn.controller;
 
 import com.vtn.constant.APIConstants;
 import com.vtn.dto.request.AccountRequest;
+import com.vtn.dto.request.ChangePasswordRequest;
 import com.vtn.service.AccountDetailsService;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,16 @@ public class AccountController {
     public ResponseEntity<BaseResponse> updateAccount(@RequestBody AccountRequest accountRequest) {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = accountDetailsService.updateAccount(accountRequest);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
+    }
+
+    @PostMapping(value = APIConstants.API_CHANGE_PASSWORD)
+    public ResponseEntity<BaseResponse> changePassword(@RequestBody ChangePasswordRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = accountDetailsService.changePassword(request);
         response.setTook(System.currentTimeMillis() - beginTime);
         return ResponseEntity
                 .status(response.getStatusCode())

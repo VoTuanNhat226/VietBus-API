@@ -1,14 +1,17 @@
 package com.vtn.service;
 
 import com.vtn.dto.request.AccountRequest;
+import com.vtn.dto.request.ChangePasswordRequest;
 import com.vtn.entity.AccountEntity;
 import com.vtn.repository.AccountRepository;
 import com.vtn.utils.BaseResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,16 +21,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AccountDetailsService implements UserDetailsService {
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
-
-        return accountRepository
-                .findByUsername(username)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found")
-                );
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return accountRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     private boolean isAllParametersNull(AccountRequest request) {
@@ -72,5 +70,32 @@ public class AccountDetailsService implements UserDetailsService {
             accountRepository.save(account);
             return new BaseResponse(200, "Account updated successful", null, null,null);
         }
+    }
+
+    public BaseResponse changePassword(ChangePasswordRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            return new BaseResponse(401, "Bạn chưa đăng nhập", null, null, null);
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        AccountEntity account = accountRepository.findByUsername(userDetails.getUsername()).orElse(null);
+
+        if (account == null) {
+            return new BaseResponse(404, "Account not found", null, null, null);
+        }
+
+        if (!passwordEncoder.matches(request.getOldPassword(), account.getPassword())) {
+            return new BaseResponse(400, "Mật khẩu hiện tại không đúng", null, null, null);
+        }
+
+        account.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        account.setUpdatedBy(userDetails.getUsername());
+        account.setUpdatedAt(LocalDateTime.now());
+        accountRepository.save(account);
+
+        return new BaseResponse(200, "Change password successful", null, null, null);
     }
 }

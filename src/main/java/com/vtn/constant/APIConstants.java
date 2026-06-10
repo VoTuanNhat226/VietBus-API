@@ -20,6 +20,7 @@ public class APIConstants {
     public static final String API_CREATE_ACCOUNT = API_VIET_BUS + ACCOUNT + "/create";
     public static final String API_UPDATE_ACCOUNT = API_VIET_BUS + ACCOUNT + "/update";
     public static final String API_GET_ALL_ACCOUNT_BY_ROLE = API_VIET_BUS + ACCOUNT + "/get-all-by-role";
+    public static final String API_CHANGE_PASSWORD = API_VIET_BUS + ACCOUNT + "/change-password";
 
     //Employee
     public static final String EMPLOYEE = "/employee";
