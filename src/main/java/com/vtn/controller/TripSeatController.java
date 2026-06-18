@@ -1,7 +1,6 @@
 package com.vtn.controller;
 
 import com.vtn.constant.APIConstants;
-import com.vtn.dto.request.TripRequest;
 import com.vtn.dto.request.TripSeatRequest;
 import com.vtn.service.TripSeatService;
 import com.vtn.utils.BaseResponse;

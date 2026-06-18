@@ -41,7 +41,6 @@ public class EmployeeController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = employeeService.createEmployee(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-
         return ResponseEntity
                 .status(response.getStatusCode())
                 .body(response);
@@ -52,7 +51,6 @@ public class EmployeeController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = employeeService.updateEmployee(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-
         return ResponseEntity
                 .status(response.getStatusCode())
                 .body(response);
@@ -63,7 +61,6 @@ public class EmployeeController {
         long beginTime = System.currentTimeMillis();
         BaseResponse response = employeeService.deleteEmployee(request);
         response.setTook(System.currentTimeMillis() - beginTime);
-
         return ResponseEntity
                 .status(response.getStatusCode())
                 .body(response);

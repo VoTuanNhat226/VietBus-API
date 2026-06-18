@@ -2,7 +2,6 @@ package com.vtn.controller;
 
 import com.vtn.constant.APIConstants;
 import com.vtn.dto.request.SeatRequest;
-import com.vtn.dto.request.VehicleRequest;
 import com.vtn.service.SeatService;
 import com.vtn.utils.BaseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
