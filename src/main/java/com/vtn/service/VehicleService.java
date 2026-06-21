@@ -41,7 +41,7 @@ public class VehicleService {
         return new BaseResponse(200, vehicles, "Get all vehicle active successful", null, null);
     }
 
-    @Cacheable(value = "vehicle", key = "#request.vehicleId")
+//    @Cacheable(value = "vehicle", key = "#request.vehicleId")
     public BaseResponse getVehicleById(VehicleRequest request) {
         VehicleEntity vehicle = vehicleRepository.findByVehicleId(request.getVehicleId());
         return new BaseResponse(200, vehicle, "Get vehicle successful", null, null);
