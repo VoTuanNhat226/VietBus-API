@@ -1,0 +1,19 @@
+services:
+  application-db:
+    container_name: application-vietbus-db
+    image: postgres:17
+    environment:
+      POSTGRES_DB: neondb
+      POSTGRES_USER: neondb_owner
+      POSTGRES_PASSWORD: npg_MbB7R8YCcjEa
+    ports:
+      - "5432:5432"
+    volumes:
+      - application_db_data:/var/lib/postgresql/data
+    networks:
+      - my-network
+
+volumes:
+  application_db_data:
+networks:
+  my-network:

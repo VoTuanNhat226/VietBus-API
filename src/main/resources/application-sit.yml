@@ -1,0 +1,73 @@
+server:
+  address: 0.0.0.0 # Other device can connect
+  port: ${PORT}
+  servlet:
+    session:
+      cookie:
+        same-site: strict
+
+spring:
+  application:
+    name: VietBus
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  #  cache:
+  #    type: redis
+  #  data:
+  #    redis:
+  #      host: localhost
+  #      port: 6379
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+    open-in-view: false
+  main:
+    web-application-type: servlet
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+logging:
+  level:
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000           # Access token: 1 hour (ms)
+  refresh-expiration: 86400000  # Refresh token: 1 day (ms)
+
+momo:
+  partner-code: MOMO
+  access-key: F8BBA842ECF85
+  secret-key: ${MOMO_SECRET_KEY}
+  api-url: https://test-payment.momo.vn/v2/gateway/api/create
+  redirect-url: https://your-domain.com/api/payment/momo/return                               # URL để khi thanh toán xong thì redirect về
+  ipn-url: https://capital-operating-smashup.ngrok-free.dev/api/v1/app/webhook/momo           # Webhook URL để MoMo gọi về thông báo kết quả thanh toán
+
+vnpay:
+  tmn-code: H9M6UTLN
+  hash-secret: ${VNPAY_HASH_SECRET}
+  api-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  return-url: https://capital-operating-smashup.ngrok-free.dev/api/payment/vnpay/return
+  ipn-url: https://capital-operating-smashup.ngrok-free.dev/api/v1/app/webhook/vnpay
+  version: "2.1.0"
+  command: pay
+  currency-code: VND
+  locale: vn
