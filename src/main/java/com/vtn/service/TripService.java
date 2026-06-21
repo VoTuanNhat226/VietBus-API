@@ -76,7 +76,7 @@ public class TripService {
         return new BaseResponse(200, result, "Get all trips open for booking successful",null,null);
     }
 
-//    @Cacheable(value = "trip", key = "#request.tripId", condition = "#request.tripId != null")
+    @Cacheable(value = "trip", key = "#request.tripId", condition = "#request.tripId != null")
     public BaseResponse getTripByTripId(TripRequest request) {
         if (request.getTripId() == null) {
             return new BaseResponse(400, null, "TripId is required", null, null);
@@ -217,7 +217,7 @@ public class TripService {
         return new BaseResponse(200,response,"Create trip successful",null,null);
     }
 
-//    @CacheEvict(value = "trip", key = "#request.tripId", condition = "#request.tripId != null")
+    @CacheEvict(value = "trip", key = "#request.tripId", condition = "#request.tripId != null")
     @Transactional
     public BaseResponse updateTrip(TripRequest request) {
         UserDetails info = getInfo();

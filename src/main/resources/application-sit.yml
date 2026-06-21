@@ -14,10 +14,11 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-  #  cache:
-  #    type: redis
-  #  data:
-  #    redis:
+  cache:
+    type: redis
+  data:
+    redis:
+      url: ${REDIS_URL:redis://red-d8s09jsvikkc73939thg:6379}
   #      host: localhost
   #      port: 6379
   jpa:
