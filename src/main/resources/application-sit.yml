@@ -18,7 +18,7 @@ spring:
     type: redis
   data:
     redis:
-      url: ${REDIS_URL:redis://red-d8s09jsvikkc73939thg:6379}
+      url: ${REDIS_URL}
   #      host: localhost
   #      port: 6379
   jpa:
