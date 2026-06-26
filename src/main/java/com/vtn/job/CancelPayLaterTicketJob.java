@@ -9,7 +9,6 @@ import com.vtn.repository.TripSeatRepository;
 import lombok.RequiredArgsConstructor;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;

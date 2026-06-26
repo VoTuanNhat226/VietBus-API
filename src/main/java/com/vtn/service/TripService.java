@@ -8,6 +8,7 @@ import com.vtn.enumdef.AccountRoleEnum;
 import com.vtn.enumdef.TripSeatStatusEnum;
 import com.vtn.enumdef.TripStatusEnum;
 import com.vtn.repository.*;
+import com.vtn.service.Quartz.QuartzService;
 import com.vtn.utils.BaseResponse;
 import com.vtn.utils.CodeGeneratorUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class TripService {
     private final SeatRepository seatRepository;
     private final TripSeatRepository tripSeatRepository;
     private final TripHistoryRepository tripLogRepository;
+    private final QuartzService quartzService;
 
     @Autowired
     public TripService(TripRepository tripRepository,
@@ -43,7 +45,8 @@ public class TripService {
                        VehicleRepository vehicleRepository,
                        SeatRepository seatRepository,
                        TripSeatRepository tripSeatRepository,
-                       TripHistoryRepository tripLogRepository) {
+                       TripHistoryRepository tripLogRepository,
+                       QuartzService quartzService) {
         this.tripRepository = tripRepository;
         this.routeRepository = routeRepository;
         this.employeeRepository = employeeRepository;
@@ -51,6 +54,7 @@ public class TripService {
         this.seatRepository = seatRepository;
         this.tripSeatRepository = tripSeatRepository;
         this.tripLogRepository = tripLogRepository;
+        this.quartzService = quartzService;
     }
 
     public BaseResponse getAllTrips(TripRequest request) {
@@ -212,6 +216,9 @@ public class TripService {
                     return ts;
                 }).toList();
         tripSeatRepository.saveAll(tripSeats);
+
+        // Send mail reminder passenger before trip departure
+        quartzService.scheduleReminderTripBeforeDeparture(trip);
 
         TripResponse response = toResponse(trip);
         return new BaseResponse(200,response,"Create trip successful",null,null);

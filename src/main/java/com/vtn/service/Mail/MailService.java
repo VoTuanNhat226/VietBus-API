@@ -408,5 +408,136 @@ public class MailService {
         );
     }
 
+    public String buildTripReminderMailContent(TicketEntity ticket) {
+
+        String departureTime = ticket.getTrip().getDepartureTime().format(MAIL_DATE_FORMAT);
+        String arrivalTime = ticket.getTrip().getArrivalTime().format(MAIL_DATE_FORMAT);
+
+        return """
+    <div style='font-family:Arial,sans-serif; max-width:600px; margin:auto;'>
+
+        <h2 style='color:#1976d2;'>
+            🚍 Chuyến xe của bạn sẽ khởi hành sau khoảng 2 giờ
+        </h2>
+
+        <p>
+            Xin chào,
+        </p>
+
+        <p>
+            Đây là email nhắc nhở từ <b>VietBus</b>.
+            Chuyến xe của bạn sẽ khởi hành trong khoảng <b>2 giờ nữa</b>.
+            Vui lòng chuẩn bị trước khi đến bến.
+        </p>
+
+        <div style='margin:20px 0; padding:16px; border:1px solid #eee; border-radius:8px;'>
+
+            <table style='width:100%%; border-collapse:collapse;'>
+
+                <tr>
+                    <td style='padding:8px;background:#f5f5f5;'><b>Mã vé</b></td>
+                    <td style='padding:8px;'>%s</td>
+                </tr>
+
+                <tr>
+                    <td style='padding:8px;background:#f5f5f5;'><b>Điểm đi</b></td>
+                    <td style='padding:8px;'>%s</td>
+                </tr>
+
+                <tr>
+                    <td style='padding:8px;background:#f5f5f5;'><b>Giờ xuất bến</b></td>
+                    <td style='padding:8px;color:#1976d2;font-weight:bold;'>%s</td>
+                </tr>
+
+                <tr>
+                    <td style='padding:8px;background:#f5f5f5;'><b>Điểm đến</b></td>
+                    <td style='padding:8px;'>%s</td>
+                </tr>
+
+                <tr>
+                    <td style='padding:8px;background:#f5f5f5;'><b>Giờ đến dự kiến</b></td>
+                    <td style='padding:8px;'>%s</td>
+                </tr>
+
+                <tr>
+                    <td style='padding:8px;background:#f5f5f5;'><b>Số ghế</b></td>
+                    <td style='padding:8px;'>%s</td>
+                </tr>
+
+                <tr>
+                    <td style='padding:8px;background:#f5f5f5;'><b>Giá vé</b></td>
+                    <td style='padding:8px;color:#1976d2;font-weight:bold;'>%,d VND</td>
+                </tr>
+
+            </table>
+
+        </div>
+
+        <div style='margin:24px 0; text-align:center;'>
+
+            <h3 style='margin-bottom:12px;'>QR Check-in</h3>
+
+            <img src="cid:ticketQr"
+                 width="250"
+                 style='border:1px solid #ddd;
+                        padding:8px;
+                        border-radius:8px;
+                        background:white;'/>
+
+            <p style='color:#777;font-size:13px;'>
+                Xuất trình mã QR này cho nhân viên khi lên xe.
+            </p>
+
+        </div>
+
+        <div style='padding:16px;
+                    background:#FFF8E1;
+                    border-left:4px solid #FFA000;
+                    border-radius:8px;'>
+
+            <h3 style='margin-top:0;'>Lưu ý</h3>
+
+            <ul style='line-height:1.8;'>
+
+                <li>Có mặt tại bến trước giờ khởi hành ít nhất <b>15 phút</b>.</li>
+
+                <li>Chuẩn bị CCCD hoặc giấy tờ tùy thân khi cần.</li>
+
+                <li>Giữ điện thoại còn pin để xuất trình mã QR.</li>
+
+                <li>Nếu không thể tham gia chuyến đi, vui lòng liên hệ VietBus sớm để được hỗ trợ.</li>
+
+            </ul>
+
+        </div>
+
+        <p style='margin-top:24px;'>
+
+            Chúc bạn có một chuyến đi an toàn và thuận lợi.
+
+        </p>
+
+        <hr style='margin:24px 0;'>
+
+        <p style='font-size:12px;color:#777;'>
+
+            Hotline: <b>0977751951</b><br>
+
+            Email này được gửi tự động trước giờ khởi hành.
+
+        </p>
+
+    </div>
+    """.formatted(
+                ticket.getTicketCode(),
+                ticket.getTrip().getRoute().getFromStation().getName(),
+                departureTime,
+                ticket.getTrip().getRoute().getToStation().getName(),
+                arrivalTime,
+                ticket.getTripSeat().getSeat().getSeatNumber(),
+                ticket.getPrice().longValue()
+        );
+    }
+
     private static final DateTimeFormatter MAIL_DATE_FORMAT = DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy");
 }
