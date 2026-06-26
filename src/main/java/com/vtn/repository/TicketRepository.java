@@ -29,6 +29,13 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     @Query("""
         SELECT t
         FROM TicketEntity t
+        WHERE t.ticketId = :ticketId
+    """)
+    TicketEntity findByTicketId(@Param("ticketId") UUID ticketId);
+
+    @Query("""
+        SELECT t
+        FROM TicketEntity t
         LEFT JOIN FETCH t.passenger p
         LEFT JOIN t.trip tr
         WHERE (:ticketCode IS NULL OR t.ticketCode LIKE %:ticketCode%)

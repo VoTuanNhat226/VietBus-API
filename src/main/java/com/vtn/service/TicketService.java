@@ -10,6 +10,7 @@ import com.vtn.repository.*;
 import com.vtn.service.Mail.MailService;
 import com.vtn.service.Momo.MomoService;
 import com.vtn.service.QR.QrCodeService;
+import com.vtn.service.Quartz.QuartzService;
 import com.vtn.service.VNPay.VNPayService;
 import com.vtn.utils.BaseResponse;
 import com.vtn.utils.CodeGeneratorUtil;
@@ -38,6 +39,7 @@ public class TicketService {
     private final QrCodeService qrCodeService;
     private final MomoService momoService;
     private final VNPayService vnPayService;
+    private final QuartzService quartzService;
 
     @Autowired
     public TicketService(
@@ -49,7 +51,8 @@ public class TicketService {
             MailService mailService,
             QrCodeService qrCodeService,
             MomoService momoService,
-            VNPayService vnPayService) {
+            VNPayService vnPayService,
+            QuartzService quartzService) {
         this.ticketRepository = ticketRepository;
         this.tripRepository = tripRepository;
         this.tripSeatRepository = tripSeatRepository;
@@ -59,6 +62,7 @@ public class TicketService {
         this.qrCodeService = qrCodeService;
         this.momoService = momoService;
         this.vnPayService = vnPayService;
+        this.quartzService = quartzService;
     }
 
     public BaseResponse getAllTickets(TicketRequest request) {
@@ -193,6 +197,10 @@ public class TicketService {
 
                     ticketRepository.save(ticket);
                     sendVNPayMailAfterCommit(ticket, vnPayResult);
+                }
+
+                if(ticket.getPaymentType() == PaymentTypeEnum.PAY_LATER){
+                    quartzService.scheduleCancelTicket(ticket.getTicketId());
                 }
             }
         }

@@ -18,9 +18,9 @@ spring:
     type: redis
   data:
     redis:
-      url: ${REDIS_URL:redis://red-d8s0ck7avr4c73f5g7g0:6379}
-#        host: localhost
-#        port: 6379
+#      url: ${REDIS_URL:redis://red-d8s0ck7avr4c73f5g7g0:6379}
+        host: localhost
+        port: 6379
   jpa:
     hibernate:
       ddl-auto: none
@@ -33,9 +33,9 @@ spring:
     web-application-type: servlet
   mail:
     host: smtp.gmail.com
-    port: 587
+    port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:tuannhat226@gmail.com}
-    password: ${MAIL_PASSWORD:ofkh vfej yttv zupv}
+    password: ${MAIL_PASSWORD:pwsa jeiq lmbq htkg}
     properties:
       mail:
         smtp:
@@ -51,19 +51,19 @@ logging:
 
 jwt:
   secret: ${JWT_SECRET:mX4r9FQ+Z8nZ0Y8bW+1E8g4b7v7pZbM+KcZl0YJm8mM=}
-  expiration: 3600000           # Access token: 1 hour (ms)
-  refresh-expiration: 86400000  # Refresh token: 1 day (ms)
+  expiration: ${JWT_EXPIRATION:3600000}                   # Access token: 1 hour (ms)
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000}  # Refresh token: 1 day (ms)
 
 momo:
-  partner-code: MOMO
-  access-key: F8BBA842ECF85
+  partner-code: ${MOMO_PARTNER_CODE:MOMO}
+  access-key: ${MOMO_ACCESS_KEY:F8BBA842ECF85}
   secret-key: ${MOMO_SECRET_KEY:K951B6PE1waDMi640xX08PD3vg6EkVlz}
   api-url: https://test-payment.momo.vn/v2/gateway/api/create
   redirect-url: https://your-domain.com/api/payment/momo/return                               # URL để khi thanh toán xong thì redirect về
   ipn-url: https://capital-operating-smashup.ngrok-free.dev/api/v1/app/webhook/momo           # Webhook URL để MoMo gọi về thông báo kết quả thanh toán
 
 vnpay:
-  tmn-code: H9M6UTLN
+  tmn-code: ${VNPAY_TMN_CODE:H9M6UTLN}
   hash-secret: ${VNPAY_HASH_SECRET:HVCHDEQR57RHV4ZFA9I690ENKLQBZTQ3}
   api-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
   return-url: https://capital-operating-smashup.ngrok-free.dev/api/payment/vnpay/return

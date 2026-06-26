@@ -133,6 +133,12 @@
 			<groupId>org.apache.httpcomponents.client5</groupId>
 			<artifactId>httpclient5</artifactId>
 		</dependency>
+
+		<!-- Quartz Scheduler -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-quartz</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
