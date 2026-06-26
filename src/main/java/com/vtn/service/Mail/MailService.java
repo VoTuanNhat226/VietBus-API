@@ -415,15 +415,9 @@ public class MailService {
 
         return """
     <div style='font-family:Arial,sans-serif; max-width:600px; margin:auto;'>
-
-        <h2 style='color:#1976d2;'>
-            🚍 Chuyến xe của bạn sẽ khởi hành sau khoảng 2 giờ
-        </h2>
-
         <p>
             Xin chào,
         </p>
-
         <p>
             Đây là email nhắc nhở từ <b>VietBus</b>.
             Chuyến xe của bạn sẽ khởi hành trong khoảng <b>2 giờ nữa</b>.

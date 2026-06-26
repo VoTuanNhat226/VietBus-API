@@ -1,9 +1,6 @@
 package com.vtn.job;
 
 import com.vtn.entity.TicketEntity;
-import com.vtn.entity.TripSeatEntity;
-import com.vtn.enumdef.TicketStatusEnum;
-import com.vtn.enumdef.TripSeatStatusEnum;
 import com.vtn.repository.TicketRepository;
 import com.vtn.service.Mail.MailService;
 import lombok.RequiredArgsConstructor;
