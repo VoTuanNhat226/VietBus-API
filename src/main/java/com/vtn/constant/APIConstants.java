@@ -68,7 +68,9 @@ public class APIConstants {
     public static final String API_COUNT_TRIP_SEAT_SOLD_BY_TRIP_ID = API_VIET_BUS + TRIP_SEAT + "/count-trip-seat-sold-by-trip-id";
     public static final String API_GET_ALL_TRIP_SEAT_BY_TRIP_ID = API_VIET_BUS + TRIP_SEAT + "/get-all-trip-seat-by-trip-id";
     public static final String API_GET_ALL_TRIP_SEAT_AVAILABLE_BY_TRIP_ID = API_VIET_BUS + TRIP_SEAT + "/get-all-trip-seat-available-by-trip-id";
-
+    public static final String API_LOCK_TRIP_SEAT_BY_ID = API_VIET_BUS + TRIP_SEAT + "/lock-trip-seat-by-id";
+    public static final String API_UN_LOCK_TRIP_SEAT_BY_ID = API_VIET_BUS + TRIP_SEAT + "/un-lock-trip-seat-by-id";
+    
     //Station
     public static final String STATION = "/station";
     public static final String API_GET_ALL_STATION = API_VIET_BUS + STATION + "/get-all";

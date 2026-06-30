@@ -127,12 +127,10 @@ public class TicketService {
         }
 
         for (TripSeatEntity seat : tripSeats) {
-            if (!TripSeatStatusEnum.AVAILABLE.equals(seat.getStatus())) {
-                String message = String.format(
-                        "Seat %s have been HOLD or SOLD",
-                        seat.getSeat().getSeatNumber()
-                );
-
+            boolean available = TripSeatStatusEnum.AVAILABLE.equals(seat.getStatus());
+            boolean blockedByCurrentUser = TripSeatStatusEnum.BLOCKED.equals(seat.getStatus()) && info.getUsername().equals(seat.getProcessingStaff());
+            if (!available && !blockedByCurrentUser) {
+                String message = String.format("Seat %s has been hold or sold", seat.getSeat().getSeatNumber());
                 return new BaseResponse(409, null, message, null, null);
             }
         }

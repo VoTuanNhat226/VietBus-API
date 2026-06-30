@@ -9,4 +9,5 @@ import java.util.UUID;
 @Setter
 public class TripSeatRequest {
     private UUID tripId;
+    private UUID tripSeatId;
 }

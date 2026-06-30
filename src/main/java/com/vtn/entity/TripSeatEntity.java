@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -23,6 +24,15 @@ public class TripSeatEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     TripSeatStatusEnum status;
+
+    @Column(name = "processing_staff")
+    String processingStaff;
+
+    @Column(name = "processing_at")
+    LocalDateTime processingAt;
+
+    @Column(name = "processing_expired_at")
+    LocalDateTime processingExpiredAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_id", nullable = false)

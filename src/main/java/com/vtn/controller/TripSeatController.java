@@ -45,4 +45,24 @@ public class TripSeatController {
                 .status(response.getStatusCode())
                 .body(response);
     }
+
+    @PostMapping(value = APIConstants.API_LOCK_TRIP_SEAT_BY_ID)
+    public ResponseEntity<BaseResponse> lockTripSeat(@RequestBody TripSeatRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = tripSeatService.lockTripSeat(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
+    }
+
+    @PostMapping(value = APIConstants.API_UN_LOCK_TRIP_SEAT_BY_ID)
+    public ResponseEntity<BaseResponse> unLockTripSeat(@RequestBody TripSeatRequest request) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = tripSeatService.unlockTripSeat(request);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return ResponseEntity
+                .status(response.getStatusCode())
+                .body(response);
+    }
 }
