@@ -37,6 +37,14 @@ public class TicketController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping(value = APIConstants.API_COUNT_ALL_TICKET_UNPAID)
+    public  ResponseEntity<BaseResponse> countAllTicketUnpaid(@RequestBody TicketRequest ticketRequest) {
+        long beginTime = System.currentTimeMillis();
+        BaseResponse response = ticketService.countTicketUnpaid(ticketRequest);
+        response.setTook(System.currentTimeMillis() - beginTime);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping(value = APIConstants.API_GET_ALL_TICKET_BY_TRIP_ID)
     public  ResponseEntity<BaseResponse> getAllTicketByTripId(@RequestBody TicketRequest ticketRequest) {
         long beginTime = System.currentTimeMillis();

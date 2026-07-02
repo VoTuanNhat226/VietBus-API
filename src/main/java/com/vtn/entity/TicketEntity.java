@@ -65,11 +65,11 @@ public class TicketEntity extends AuditModel{
     @Column(name = "payment_method")
     PaymentMethodEnum paymentMethod;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
     TripEntity trip;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_seat_id", nullable = false)
     TripSeatEntity tripSeat;
 

@@ -60,7 +60,8 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
         SELECT t
         FROM TicketEntity t
         JOIN FETCH t.trip
-        JOIN FETCH t.passenger p
+        JOIN FETCH t.passenger
+        JOIN FETCH t.tripSeat
         WHERE (t.status = 'UNPAID')
             AND (:ticketCode IS NULL OR t.ticketCode LIKE %:ticketCode%)
             AND (:tripCode IS NULL OR t.trip.tripCode LIKE %:tripCode%)
@@ -75,15 +76,20 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     );
 
     @Query("""
+        SELECT COUNT(t)
+        FROM TicketEntity t
+        WHERE t.status = 'UNPAID'
+    """)
+    Long countTicketUnpaid();
+
+    @Query("""
         SELECT t
         FROM TicketEntity t
         LEFT JOIN FETCH t.passenger p
         LEFT JOIN t.trip tr
         WHERE tr.tripId = :tripId
     """)
-    List<TicketEntity> getAllByTripId(
-            @Param("tripId") UUID tripId
-    );
+    List<TicketEntity> getAllByTripId(@Param("tripId") UUID tripId);
 
     @Query("""
         SELECT COUNT(t)

@@ -104,6 +104,11 @@ public class TicketService {
         return new BaseResponse(200, tickets, "Get all tickets by tripId successful", null, null);
     }
 
+    public BaseResponse countTicketUnpaid(TicketRequest request) {
+        Long count = ticketRepository.countTicketUnpaid();
+        return new BaseResponse(200, count, "Count all tickets unpaid successful", null, null);
+    }
+
     @Transactional
     public BaseResponse createTicket(TicketRequest request) throws Exception {
         UserDetails info = getInfo();
