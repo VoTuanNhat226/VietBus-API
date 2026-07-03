@@ -34,12 +34,12 @@ public class TripSeatEntity {
     @Column(name = "processing_expired_at")
     LocalDateTime processingExpiredAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
     @JsonIgnore
     TripEntity trip;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seat_id", nullable = false)
     SeatEntity seat;
 }

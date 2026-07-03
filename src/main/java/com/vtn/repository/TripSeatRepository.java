@@ -41,6 +41,8 @@ public interface TripSeatRepository extends JpaRepository<TripSeatEntity, UUID> 
     @Query("""
         SELECT t
         FROM TripSeatEntity t
+        JOIN FETCH t.trip
+        JOIN FETCH t.seat
         WHERE t.trip.tripId = :tripId
     """)
     List<TripSeatEntity> findAllTripSeatsByTripId(UUID tripId);

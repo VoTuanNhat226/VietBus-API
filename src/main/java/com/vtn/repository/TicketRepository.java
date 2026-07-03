@@ -36,8 +36,9 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     @Query("""
         SELECT t
         FROM TicketEntity t
-        LEFT JOIN FETCH t.passenger p
-        LEFT JOIN t.trip tr
+        JOIN FETCH t.passenger p
+        JOIN FETCH t.trip tr
+        JOIN FETCH t.tripSeat ts
         WHERE (:ticketCode IS NULL OR t.ticketCode LIKE %:ticketCode%)
             AND (:ticketStatus IS NULL OR t.status = :ticketStatus)
             AND (:tripCode IS NULL OR tr.tripCode LIKE %:tripCode%)
@@ -85,8 +86,10 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     @Query("""
         SELECT t
         FROM TicketEntity t
-        LEFT JOIN FETCH t.passenger p
-        LEFT JOIN t.trip tr
+        JOIN FETCH t.passenger p
+        JOIN FETCH t.trip tr
+        JOIN FETCH t.tripSeat ts
+        JOIN FETCH t.tripSeat.seat s
         WHERE tr.tripId = :tripId
     """)
     List<TicketEntity> getAllByTripId(@Param("tripId") UUID tripId);

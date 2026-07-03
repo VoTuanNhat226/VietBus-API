@@ -46,7 +46,7 @@ spring:
       org:
         quartz:
           threadPool:
-            threadCount: 30
+            threadCount: ${QUARTZ_THREAD_COUNT:30}
 
 logging:
   level:

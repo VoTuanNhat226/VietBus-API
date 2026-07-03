@@ -202,9 +202,8 @@ public class TicketService {
                     sendVNPayMailAfterCommit(ticket, vnPayResult);
                 }
 
-                if(ticket.getPaymentType() == PaymentTypeEnum.PAY_LATER){
-                    quartzService.scheduleCancelTicket(ticket.getTicketId());
-                }
+                // Job CancelPayLaterTicketl
+                quartzService.scheduleCancelTicket(ticket.getTicketId());
             }
         }
 
