@@ -39,7 +39,7 @@ public class TripSeatEntity {
     @JsonIgnore
     TripEntity trip;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "seat_id", nullable = false)
     SeatEntity seat;
 }

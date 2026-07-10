@@ -34,16 +34,16 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
     @Query("""
         SELECT e
         FROM EmployeeEntity e
-        WHERE e.active = true
-            AND e.position = :position
+        WHERE e.position = :position
+            AND e.active = true
     """)
     List<EmployeeEntity> getAllEmployeeActiveByPosition(@Param("position") EmployeePositionEnum position);
 
     @Query("""
         SELECT e
         FROM EmployeeEntity e
-        WHERE (e.fullName = :fullName)
-            AND (e.phoneNumber = :phoneNumber)
+        WHERE e.fullName = :fullName
+            AND e.phoneNumber = :phoneNumber
     """)
     EmployeeEntity findByFullNameAndPhoneNumber(
             @Param("fullName") String fullName,

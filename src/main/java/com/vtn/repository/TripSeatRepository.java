@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface TripSeatRepository extends JpaRepository<TripSeatEntity, UUID> {
@@ -28,6 +27,8 @@ public interface TripSeatRepository extends JpaRepository<TripSeatEntity, UUID> 
     """)
     List<TripSeatEntity> findAllById(@Param("tripSeatIds") List<UUID> tripSeatIds);
 
+
+    // idx_trip_seat_trip_id_status
     @Query("""
         SELECT COUNT(t)
         FROM TripSeatEntity t
@@ -38,6 +39,7 @@ public interface TripSeatRepository extends JpaRepository<TripSeatEntity, UUID> 
             @Param("tripId") UUID tripId,
             @Param("statuses") List<TripSeatStatusEnum> statuses);
 
+    // idx_trip_seat_trip_id
     @Query("""
         SELECT t
         FROM TripSeatEntity t
@@ -47,16 +49,18 @@ public interface TripSeatRepository extends JpaRepository<TripSeatEntity, UUID> 
     """)
     List<TripSeatEntity> findAllTripSeatsByTripId(UUID tripId);
 
+    // idx_trip_seat_trip_id_status
     @Query("""
         SELECT ts
         FROM TripSeatEntity ts
         JOIN FETCH TripEntity t ON t.tripId = ts.trip.tripId
         WHERE t.tripId = :tripId
-            AND t.status = 'OPEN_FOR_BOOKING'
             AND ts.status = 'AVAILABLE'
+            AND t.status = 'OPEN_FOR_BOOKING'
     """)
     List<TripSeatEntity> findAllTripSeatAvailableByTripId(@Param("tripId") UUID tripId);
 
+    // idx_trip_seat_trip_id_status_processing_expired_at
     @Modifying
     @Transactional
     @Query("""

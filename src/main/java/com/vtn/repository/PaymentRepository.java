@@ -27,7 +27,7 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, UUID> {
         FROM PaymentEntity p
         WHERE (:method IS NULL OR p.method = :method)
             AND (:status IS NULL OR p.status = :status)
-            AND (:ticketCode IS NULL OR p.ticket.ticketCode LIKE %:ticketCode%)
+            AND (:ticketCode IS NULL OR p.ticket.ticketCode LIKE :ticketCode%)
             AND (:ticketStatus IS NULL OR p.ticket.status = :ticketStatus)
             AND (:ticketPaymentType IS NULL OR p.ticket.paymentType = :ticketPaymentType)
     """)
