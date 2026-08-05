@@ -82,12 +82,14 @@ public class TripService {
 
     @Cacheable(value = "trip", key = "#request.tripId", condition = "#request.tripId != null")
     public BaseResponse getTripByTripId(TripRequest request) {
-        if (request.getTripId() == null) {
-            return new BaseResponse(400, null, "TripId is required", null, null);
+        BaseResponse tripIdError = validateTripIdRequired(request);
+        if (tripIdError != null) {
+            return tripIdError;
         }
         TripEntity trip = tripRepository.findById(request.getTripId()).orElse(null);
-        if(trip == null) {
-            return new BaseResponse(404, null,"Trip not found",null,null);
+        BaseResponse tripExistsError = validateTripExists(trip);
+        if (tripExistsError != null) {
+            return tripExistsError;
         }
         TripResponse response = toResponse(trip);
         return new BaseResponse(200, response, "Get trip successfully",null,null);
@@ -99,88 +101,49 @@ public class TripService {
 
         // Validate route
         RouteEntity route = routeRepository.findByRouteId(tripRequest.getRouteId());
-        if (route == null) {
-            return new BaseResponse(404,null,"Route not found",null,null);
+        BaseResponse routeError = validateRouteExists(route);
+        if (routeError != null) {
+            return routeError;
         }
 
         // Validate vehicle
         VehicleEntity vehicle = vehicleRepository.findByVehicleId(tripRequest.getVehicleId());
-        if (vehicle == null) {
-            return new BaseResponse(404,null,"Vehicle not found",null,null);
+        BaseResponse vehicleError = validateVehicleExists(vehicle);
+        if (vehicleError != null) {
+            return vehicleError;
         }
 
-        boolean vehicleConflict = tripRepository.existsVehicleConflict(
-                vehicle.getVehicleId(),
-                tripRequest.getDepartureTime(),
-                tripRequest.getArrivalTime(),
-                List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
-        );
-        if (vehicleConflict) {
-            return new BaseResponse(400,null,"The vehicle has been assigned to another trip during this time",null,null);
+        BaseResponse vehicleConflictError = validateVehicleAvailable(tripRequest, vehicle);
+        if (vehicleConflictError != null) {
+            return vehicleConflictError;
         }
 
         // Validate time
-        if (tripRequest.getDepartureTime() == null || tripRequest.getArrivalTime() == null) {
-            return new BaseResponse(400, null, "Departure time and Arrival time are required", null, null);
-        }
-        if (!tripRequest.getArrivalTime().isAfter(tripRequest.getDepartureTime())) {
-            return new BaseResponse(400, null, "Arrival time must be after departure time", null, null);
-        }
-        if (tripRequest.getDepartureTime().isBefore(LocalDateTime.now())) {
-            return new BaseResponse(400,null,"Departure time must be after current time",null,null);
+        BaseResponse timeError = validateTripTime(tripRequest);
+        if (timeError != null) {
+            return timeError;
         }
 
         // Validate price
-        if (tripRequest.getPrice() == null || tripRequest.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-            return new BaseResponse(400,null,"Ticket prices invalid",null,null);
+        BaseResponse priceError = validatePrice(tripRequest);
+        if (priceError != null) {
+            return priceError;
         }
 
         // Validate & load drivers (bắt buộc có ít nhất 1)
-        if (tripRequest.getDriverIds() == null || tripRequest.getDriverIds().isEmpty()) {
-            return new BaseResponse(400, null, "At least one driver is required", null, null);
-        }
-        List<EmployeeEntity> drivers = new ArrayList<>();
-        for (UUID driverId : tripRequest.getDriverIds()) {
-            EmployeeEntity driver = employeeRepository.findByEmployeeId(driverId);
-            if (driver == null) {
-                return new BaseResponse(404, null, "Driver not found: " + driverId, null, null);
-            }
-            boolean conflict = tripRepository.existsEmployeeConflict(
-                    driverId,
-                    tripRequest.getDepartureTime(),
-                    tripRequest.getArrivalTime(),
-                    List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
-            );
-            if (conflict) {
-                return new BaseResponse(400, null,
-                        "Driver " + driver.getFullName() + " has been assigned to another trip during this time",
-                        null, null);
-            }
-            drivers.add(driver);
+        EmployeeLoadResult driversResult = validateAndLoadDrivers(tripRequest);
+        if (driversResult.error() != null) {
+            return driversResult.error();
         }
 
         // Validate & load assistants (tuỳ chọn)
-        List<EmployeeEntity> assistants = new ArrayList<>();
-        if (tripRequest.getAssistantIds() != null) {
-            for (UUID assistantId : tripRequest.getAssistantIds()) {
-                EmployeeEntity assistant = employeeRepository.findByEmployeeId(assistantId);
-                if (assistant == null) {
-                    return new BaseResponse(404, null, "Assistant not found: " + assistantId, null, null);
-                }
-                boolean conflict = tripRepository.existsEmployeeConflict(
-                        assistantId,
-                        tripRequest.getDepartureTime(),
-                        tripRequest.getArrivalTime(),
-                        List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
-                );
-                if (conflict) {
-                    return new BaseResponse(400, null,
-                            "Assistant " + assistant.getFullName() + " has been assigned to another trip during this time",
-                            null, null);
-                }
-                assistants.add(assistant);
-            }
+        EmployeeLoadResult assistantsResult = validateAndLoadAssistants(tripRequest);
+        if (assistantsResult.error() != null) {
+            return assistantsResult.error();
         }
+
+        List<EmployeeEntity> drivers = driversResult.employees();
+        List<EmployeeEntity> assistants = assistantsResult.employees();
 
         TripEntity trip = new TripEntity();
         String tripCode;
@@ -229,17 +192,20 @@ public class TripService {
     public BaseResponse updateTrip(TripRequest request) {
         UserDetails info = getInfo();
 
-        if (request.getTripId() == null) {
-            return new BaseResponse(400, null, "TripId is required", null, null);
+        BaseResponse tripIdError = validateTripIdRequired(request);
+        if (tripIdError != null) {
+            return tripIdError;
         }
 
-        if (request.getStatus() == null) {
-            return new BaseResponse(400, null, "Trip status is required", null, null);
+        BaseResponse statusError = validateStatusRequired(request);
+        if (statusError != null) {
+            return statusError;
         }
 
         TripEntity trip = tripRepository.findById(request.getTripId()).orElse(null);
-        if (trip == null) {
-            return new BaseResponse(404,null,"Trip not found", null, null);
+        BaseResponse tripExistsError = validateTripExists(trip);
+        if (tripExistsError != null) {
+            return tripExistsError;
         }
 
         trip.setStatus(request.getStatus());
@@ -252,6 +218,129 @@ public class TripService {
 
         TripResponse response = toResponse(trip);
         return new BaseResponse(200,response,"Update trip successful", null, null);
+    }
+
+    // ------------------ validate ------------------
+    private record EmployeeLoadResult(List<EmployeeEntity> employees, BaseResponse error) {}
+
+    private BaseResponse validateTripIdRequired(TripRequest request) {
+        if (request.getTripId() == null) {
+            return new BaseResponse(400, null, "TripId is required", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateStatusRequired(TripRequest request) {
+        if (request.getStatus() == null) {
+            return new BaseResponse(400, null, "Trip status is required", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateTripExists(TripEntity trip) {
+        if (trip == null) {
+            return new BaseResponse(404, null, "Trip not found", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateRouteExists(RouteEntity route) {
+        if (route == null) {
+            return new BaseResponse(404, null, "Route not found", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateVehicleExists(VehicleEntity vehicle) {
+        if (vehicle == null) {
+            return new BaseResponse(404, null, "Vehicle not found", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateVehicleAvailable(TripRequest tripRequest, VehicleEntity vehicle) {
+        boolean vehicleConflict = tripRepository.existsVehicleConflict(
+                vehicle.getVehicleId(),
+                tripRequest.getDepartureTime(),
+                tripRequest.getArrivalTime(),
+                List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
+        );
+        if (vehicleConflict) {
+            return new BaseResponse(400, null, "The vehicle has been assigned to another trip during this time", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateTripTime(TripRequest tripRequest) {
+        if (tripRequest.getDepartureTime() == null || tripRequest.getArrivalTime() == null) {
+            return new BaseResponse(400, null, "Departure time and Arrival time are required", null, null);
+        }
+        if (!tripRequest.getArrivalTime().isAfter(tripRequest.getDepartureTime())) {
+            return new BaseResponse(400, null, "Arrival time must be after departure time", null, null);
+        }
+        if (tripRequest.getDepartureTime().isBefore(LocalDateTime.now())) {
+            return new BaseResponse(400, null, "Departure time must be after current time", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validatePrice(TripRequest tripRequest) {
+        if (tripRequest.getPrice() == null || tripRequest.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            return new BaseResponse(400, null, "Ticket prices invalid", null, null);
+        }
+        return null;
+    }
+
+    private EmployeeLoadResult validateAndLoadDrivers(TripRequest tripRequest) {
+        if (tripRequest.getDriverIds() == null || tripRequest.getDriverIds().isEmpty()) {
+            return new EmployeeLoadResult(null, new BaseResponse(400, null, "At least one driver is required", null, null));
+        }
+
+        List<EmployeeEntity> drivers = new ArrayList<>();
+        for (UUID driverId : tripRequest.getDriverIds()) {
+            EmployeeEntity driver = employeeRepository.findByEmployeeId(driverId);
+            if (driver == null) {
+                return new EmployeeLoadResult(null, new BaseResponse(404, null, "Driver not found: " + driverId, null, null));
+            }
+            boolean conflict = tripRepository.existsEmployeeConflict(
+                    driverId,
+                    tripRequest.getDepartureTime(),
+                    tripRequest.getArrivalTime(),
+                    List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
+            );
+            if (conflict) {
+                return new EmployeeLoadResult(null, new BaseResponse(400, null,
+                        "Driver " + driver.getFullName() + " has been assigned to another trip during this time",
+                        null, null));
+            }
+            drivers.add(driver);
+        }
+        return new EmployeeLoadResult(drivers, null);
+    }
+
+    private EmployeeLoadResult validateAndLoadAssistants(TripRequest tripRequest) {
+        List<EmployeeEntity> assistants = new ArrayList<>();
+        if (tripRequest.getAssistantIds() != null) {
+            for (UUID assistantId : tripRequest.getAssistantIds()) {
+                EmployeeEntity assistant = employeeRepository.findByEmployeeId(assistantId);
+                if (assistant == null) {
+                    return new EmployeeLoadResult(null, new BaseResponse(404, null, "Assistant not found: " + assistantId, null, null));
+                }
+                boolean conflict = tripRepository.existsEmployeeConflict(
+                        assistantId,
+                        tripRequest.getDepartureTime(),
+                        tripRequest.getArrivalTime(),
+                        List.of(TripStatusEnum.COMPLETED, TripStatusEnum.CANCELLED)
+                );
+                if (conflict) {
+                    return new EmployeeLoadResult(null, new BaseResponse(400, null,
+                            "Assistant " + assistant.getFullName() + " has been assigned to another trip during this time",
+                            null, null));
+                }
+                assistants.add(assistant);
+            }
+        }
+        return new EmployeeLoadResult(assistants, null);
     }
 
     // --------------------------------- Helper ---------------------------------

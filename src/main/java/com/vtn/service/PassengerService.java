@@ -1,10 +1,8 @@
 package com.vtn.service;
 
-import com.vtn.dto.request.EmployeeRequest;
 import com.vtn.dto.request.PassengerRequest;
 import com.vtn.dto.request.PassengerSearchRequest;
 import com.vtn.dto.response.PassengerResponse;
-import com.vtn.entity.EmployeeEntity;
 import com.vtn.entity.PassengerEntity;
 import com.vtn.repository.PassengerRepository;
 import com.vtn.utils.*;
@@ -16,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -34,16 +33,7 @@ public class PassengerService {
 
     public BaseResponse createPassenger(PassengerRequest request) {
 
-        // Validate exists
-        if (passengerRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-        if (passengerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-            throw new RuntimeException("Phone number already exists");
-        }
-        if (passengerRepository.existsByIdCardNumber(request.getIdCardNumber())) {
-            throw new RuntimeException("ID number already exists");
-        }
+        validateNotDuplicateOnCreate(request);
 
         PassengerEntity passengerEntity = new PassengerEntity();
         passengerEntity.setFullName(request.getFullName().trim());
@@ -81,45 +71,11 @@ public class PassengerService {
         );
     }
 
-    private PassengerResponse toResponse(PassengerEntity entity) {
-        if (entity == null) return null;
-
-        PassengerResponse response = new PassengerResponse();
-        response.setPassengerId(entity.getPassengerId());
-        response.setFullName(entity.getFullName());
-        response.setPhoneNumber(entity.getPhoneNumber());
-        response.setEmail(entity.getEmail());
-        response.setIdCardNumber(entity.getIdCardNumber());
-        response.setNote(entity.getNote());
-        response.setCreatedBy(entity.getCreatedBy());
-        response.setUpdatedBy(entity.getUpdatedBy());
-
-        return response;
-    }
-
     public BaseResponse updatePassenger(PassengerRequest request) {
 
-        // check tồn tại
-        PassengerEntity entity = passengerRepository.findById(request.getPassengerId())
-                .orElseThrow(() -> new RuntimeException("Passenger not found"));
+        PassengerEntity entity = getPassengerOrThrow(request.getPassengerId());
 
-        // check duplicate email (trừ chính nó)
-        if (!entity.getEmail().equals(request.getEmail().trim().toLowerCase())
-                && passengerRepository.existsByEmail(request.getEmail().trim().toLowerCase())) {
-            throw new RuntimeException("Email already exists");
-        }
-
-        // check duplicate phone (trừ chính nó)
-        if (!entity.getPhoneNumber().equals(request.getPhoneNumber())
-                && passengerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-            throw new RuntimeException("Phone number already exists");
-        }
-
-        // check duplicate idCardNumber (trừ chính nó)
-        if (!entity.getIdCardNumber().equals(request.getIdCardNumber())
-                && passengerRepository.existsByIdCardNumber(request.getIdCardNumber())) {
-            throw new RuntimeException("ID card number already exists");
-        }
+        validateNotDuplicateOnUpdate(request, entity);
 
         entity.setFullName(request.getFullName().trim());
         entity.setEmail(request.getEmail().trim().toLowerCase());
@@ -134,9 +90,7 @@ public class PassengerService {
 
     public BaseResponse deletePassenger(PassengerRequest request) {
 
-        // check tồn tại
-        PassengerEntity entity = passengerRepository.findById(request.getPassengerId())
-                .orElseThrow(() -> new RuntimeException("Passenger not found"));
+        PassengerEntity entity = getPassengerOrThrow(request.getPassengerId());
 
         passengerRepository.delete(entity);
 
@@ -173,5 +127,60 @@ public class PassengerService {
         return new BaseResponseNew<>(
                 200, message, data, meta, null, "Success", meta.getTook()
         );
+    }
+
+    // ------------------ validate ------------------
+    private void validateNotDuplicateOnCreate(PassengerRequest request) {
+        if (passengerRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+        if (passengerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new RuntimeException("Phone number already exists");
+        }
+        if (passengerRepository.existsByIdCardNumber(request.getIdCardNumber())) {
+            throw new RuntimeException("ID number already exists");
+        }
+    }
+
+    private void validateNotDuplicateOnUpdate(PassengerRequest request, PassengerEntity entity) {
+        // check duplicate email (trừ chính nó)
+        if (!entity.getEmail().equals(request.getEmail().trim().toLowerCase())
+                && passengerRepository.existsByEmail(request.getEmail().trim().toLowerCase())) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        // check duplicate phone (trừ chính nó)
+        if (!entity.getPhoneNumber().equals(request.getPhoneNumber())
+                && passengerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new RuntimeException("Phone number already exists");
+        }
+
+        // check duplicate idCardNumber (trừ chính nó)
+        if (!entity.getIdCardNumber().equals(request.getIdCardNumber())
+                && passengerRepository.existsByIdCardNumber(request.getIdCardNumber())) {
+            throw new RuntimeException("ID card number already exists");
+        }
+    }
+
+    // ------------------ helper ------------------
+    private PassengerEntity getPassengerOrThrow(UUID passengerId) {
+        return passengerRepository.findById(passengerId)
+                .orElseThrow(() -> new RuntimeException("Passenger not found"));
+    }
+
+    private PassengerResponse toResponse(PassengerEntity entity) {
+        if (entity == null) return null;
+
+        PassengerResponse response = new PassengerResponse();
+        response.setPassengerId(entity.getPassengerId());
+        response.setFullName(entity.getFullName());
+        response.setPhoneNumber(entity.getPhoneNumber());
+        response.setEmail(entity.getEmail());
+        response.setIdCardNumber(entity.getIdCardNumber());
+        response.setNote(entity.getNote());
+        response.setCreatedBy(entity.getCreatedBy());
+        response.setUpdatedBy(entity.getUpdatedBy());
+
+        return response;
     }
 }

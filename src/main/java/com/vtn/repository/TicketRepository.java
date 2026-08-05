@@ -36,15 +36,29 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
     @Query("""
         SELECT t
         FROM TicketEntity t
+        JOIN FETCH t.trip tr
+        JOIN FETCH tr.route r
+        JOIN FETCH r.fromStation
+        JOIN FETCH r.toStation
+        JOIN FETCH t.tripSeat ts
+        JOIN FETCH ts.seat
+        LEFT JOIN FETCH t.passenger
+        WHERE t.ticketId = :ticketId
+    """)
+    TicketEntity findByTicketIdWithDetails(@Param("ticketId") UUID ticketId);
+
+    @Query("""
+        SELECT t
+        FROM TicketEntity t
         JOIN FETCH t.passenger p
         JOIN FETCH t.trip tr
         JOIN FETCH t.tripSeat ts
-        WHERE (:ticketCode IS NULL OR t.ticketCode LIKE %:ticketCode%)
+        WHERE (:ticketCode IS NULL OR t.ticketCode LIKE :ticketCode%)
             AND (:ticketStatus IS NULL OR t.status = :ticketStatus)
-            AND (:tripCode IS NULL OR tr.tripCode LIKE %:tripCode%)
+            AND (:tripCode IS NULL OR tr.tripCode LIKE :tripCode%)
             AND (:tripId IS NULL OR tr.tripId = :tripId)
             AND (:ticketPaymentType IS NULL OR t.paymentType = :ticketPaymentType)
-            AND (:passengerName IS NULL OR p.fullName LIKE %:passengerName%)
+            AND (:passengerName IS NULL OR p.fullName LIKE :passengerName%)
             AND (:passengerPhoneNumber IS NULL OR p.phoneNumber = :passengerPhoneNumber)
     """)
     List<TicketEntity> getAllTicketByCondition(
@@ -64,10 +78,10 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Integer> {
         JOIN FETCH t.passenger
         JOIN FETCH t.tripSeat
         WHERE (t.status = 'UNPAID')
-            AND (:ticketCode IS NULL OR t.ticketCode LIKE %:ticketCode%)
-            AND (:tripCode IS NULL OR t.trip.tripCode LIKE %:tripCode%)
+            AND (:ticketCode IS NULL OR t.ticketCode LIKE :ticketCode%)
+            AND (:tripCode IS NULL OR t.trip.tripCode LIKE :tripCode%)
             AND (:ticketPaymentType IS NULL OR t.paymentType = :ticketPaymentType)
-            AND (:ticketSoldBy IS NULL OR t.soldBy LIKE %:ticketSoldBy%)
+            AND (:ticketSoldBy IS NULL OR t.soldBy LIKE :ticketSoldBy%)
     """)
     List<TicketEntity> getAllTicketUnpaid(
             @Param("ticketCode") String ticketCode,

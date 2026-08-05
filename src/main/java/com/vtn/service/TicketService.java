@@ -2,14 +2,14 @@ package com.vtn.service;
 
 import com.vtn.dto.request.TicketRequest;
 import com.vtn.dto.response.TicketResponse;
+import com.vtn.dto.event.TicketMailEvent;
 import com.vtn.dto.result.MomoPaymentResult;
 import com.vtn.dto.result.VNPayPaymentResult;
 import com.vtn.entity.*;
 import com.vtn.enumdef.*;
+import com.vtn.producer.MailEventProducer;
 import com.vtn.repository.*;
-import com.vtn.service.Mail.MailService;
 import com.vtn.service.Momo.MomoService;
-import com.vtn.service.QR.QrCodeService;
 import com.vtn.service.Quartz.QuartzService;
 import com.vtn.service.VNPay.VNPayService;
 import com.vtn.utils.BaseResponse;
@@ -26,6 +26,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -35,8 +36,7 @@ public class TicketService {
     private final TripSeatRepository tripSeatRepository;
     private final PassengerRepository passengerRepository;
     private final PaymentRepository paymentRepository;
-    private final MailService mailService;
-    private final QrCodeService qrCodeService;
+    private final MailEventProducer mailEventProducer;
     private final MomoService momoService;
     private final VNPayService vnPayService;
     private final QuartzService quartzService;
@@ -48,8 +48,7 @@ public class TicketService {
             TripSeatRepository tripSeatRepository,
             PassengerRepository passengerRepository,
             PaymentRepository paymentRepository,
-            MailService mailService,
-            QrCodeService qrCodeService,
+            MailEventProducer mailEventProducer,
             MomoService momoService,
             VNPayService vnPayService,
             QuartzService quartzService) {
@@ -58,8 +57,7 @@ public class TicketService {
         this.tripSeatRepository = tripSeatRepository;
         this.passengerRepository = passengerRepository;
         this.paymentRepository = paymentRepository;
-        this.mailService = mailService;
-        this.qrCodeService = qrCodeService;
+        this.mailEventProducer = mailEventProducer;
         this.momoService = momoService;
         this.vnPayService = vnPayService;
         this.quartzService = quartzService;
@@ -121,23 +119,21 @@ public class TicketService {
             passenger = passengerRepository.findById(request.getPassengerId()).orElseThrow(() -> new RuntimeException("Passenger not found"));
         }
 
-        if (request.getTripSeatIds() == null || request.getTripSeatIds().isEmpty()) {
-            return new BaseResponse(400, null, "Please choose at least one seat", null, null);
+        BaseResponse seatsSelectedError = validateSeatsSelected(request);
+        if (seatsSelectedError != null) {
+            return seatsSelectedError;
         }
 
         List<TripSeatEntity> tripSeats = tripSeatRepository.findAllById(request.getTripSeatIds());
 
-        if (tripSeats.size() != request.getTripSeatIds().size()) {
-            return new BaseResponse(404, null, "Some trip seats not found", null, null);
+        BaseResponse seatsExistError = validateSeatsExist(request, tripSeats);
+        if (seatsExistError != null) {
+            return seatsExistError;
         }
 
-        for (TripSeatEntity seat : tripSeats) {
-            boolean available = TripSeatStatusEnum.AVAILABLE.equals(seat.getStatus());
-            boolean blockedByCurrentUser = TripSeatStatusEnum.BLOCKED.equals(seat.getStatus()) && info.getUsername().equals(seat.getProcessingStaff());
-            if (!available && !blockedByCurrentUser) {
-                String message = String.format("Seat %s has been hold or sold", seat.getSeat().getSeatNumber());
-                return new BaseResponse(409, null, message, null, null);
-            }
+        BaseResponse seatsAvailableError = validateSeatsAvailable(tripSeats, info);
+        if (seatsAvailableError != null) {
+            return seatsAvailableError;
         }
 
         // Process create ticket
@@ -216,18 +212,17 @@ public class TicketService {
 
         // Validate Input
         TicketEntity ticket = ticketRepository.findByTicketCode(request.getTicketCode());
-        if (ticket == null) {
-            return new BaseResponse(404, null, "Ticket not found", null, null);
+        BaseResponse ticketExistsError = validateTicketExists(ticket);
+        if (ticketExistsError != null) {
+            return ticketExistsError;
+        }
+
+        BaseResponse updatableError = validateTicketUpdatable(ticket, request);
+        if (updatableError != null) {
+            return updatableError;
         }
 
         TicketStatusEnum currentStatus = ticket.getStatus();
-        if (TicketStatusEnum.PAID.equals(currentStatus)) {
-            return new BaseResponse(409, null, "Ticket have been paid", null, null);
-        }
-
-        if (currentStatus.equals(request.getTicketStatus())) {
-            return new BaseResponse(400, null, "No status change", null, null);
-        }
 
         // Process update ticket
         if (TicketStatusEnum.UNPAID.equals(currentStatus) && TicketStatusEnum.PAID.equals(request.getTicketStatus())) {
@@ -257,28 +252,33 @@ public class TicketService {
 
         // Validate ticket
         TicketEntity ticket = ticketRepository.findByTicketCode(request.getTicketCode());
-        if (ticket == null) {
-            return new BaseResponse(404, null, "Ticket not found", null, null);
+        BaseResponse ticketExistsError = validateTicketExists(ticket);
+        if (ticketExistsError != null) {
+            return ticketExistsError;
         }
 
-        if (TicketStatusEnum.CANCELED.equals(ticket.getStatus())) {
-            return new BaseResponse(400, null, "Ticket already cancelled", null, null);
+        BaseResponse notCancelledError = validateTicketNotCancelled(ticket);
+        if (notCancelledError != null) {
+            return notCancelledError;
         }
 
         // Validate trip
         TripEntity trip = ticket.getTrip();
-        if (trip == null) {
-            return new BaseResponse(404, null, "Trip not found", null, null);
+        BaseResponse tripExistsError = validateTripExists(trip);
+        if (tripExistsError != null) {
+            return tripExistsError;
         }
 
-        if (!TripStatusEnum.OPEN_FOR_BOOKING.equals(trip.getStatus()) && !TripStatusEnum.CLOSED_FOR_BOOKING.equals(trip.getStatus())) {
-            return new BaseResponse(400, null, "Cannot cancel ticket because trip status is invalid", null, null);
+        BaseResponse tripCancellableError = validateTripCancellable(trip);
+        if (tripCancellableError != null) {
+            return tripCancellableError;
         }
 
         // Validate trip seat
         TripSeatEntity tripSeat = ticket.getTripSeat();
-        if (tripSeat == null) {
-            return new BaseResponse(404, null, "Trip seat not found", null, null);
+        BaseResponse tripSeatExistsError = validateTripSeatExists(tripSeat);
+        if (tripSeatExistsError != null) {
+            return tripSeatExistsError;
         }
 
         // Validate payment if ticket status is PAID
@@ -286,8 +286,9 @@ public class TicketService {
         if (TicketStatusEnum.PAID.equals(ticket.getStatus())) {
             payment = paymentRepository.getByTicketId(ticket.getTicketId());
 
-            if (payment == null) {
-                return new BaseResponse(404, null, "Payment not found", null, null);
+            BaseResponse paymentExistsError = validatePaymentExists(payment);
+            if (paymentExistsError != null) {
+                return paymentExistsError;
             }
         }
 
@@ -315,6 +316,85 @@ public class TicketService {
         sendCancelTicketMailAfterCommit(ticket);
 
         return new BaseResponse(200, null, "Cancel ticket successful", null, null);
+    }
+
+    // ------------------ validate ------------------
+    private BaseResponse validateSeatsSelected(TicketRequest request) {
+        if (request.getTripSeatIds() == null || request.getTripSeatIds().isEmpty()) {
+            return new BaseResponse(400, null, "Please choose at least one seat", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateSeatsExist(TicketRequest request, List<TripSeatEntity> tripSeats) {
+        if (tripSeats.size() != request.getTripSeatIds().size()) {
+            return new BaseResponse(404, null, "Some trip seats not found", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateSeatsAvailable(List<TripSeatEntity> tripSeats, UserDetails info) {
+        for (TripSeatEntity seat : tripSeats) {
+            boolean available = TripSeatStatusEnum.AVAILABLE.equals(seat.getStatus());
+            boolean blockedByCurrentUser = TripSeatStatusEnum.BLOCKED.equals(seat.getStatus()) && info.getUsername().equals(seat.getProcessingStaff());
+            if (!available && !blockedByCurrentUser) {
+                String message = String.format("Seat %s has been hold or sold", seat.getSeat().getSeatNumber());
+                return new BaseResponse(409, null, message, null, null);
+            }
+        }
+        return null;
+    }
+
+    private BaseResponse validateTicketExists(TicketEntity ticket) {
+        if (ticket == null) {
+            return new BaseResponse(404, null, "Ticket not found", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateTicketUpdatable(TicketEntity ticket, TicketRequest request) {
+        if (TicketStatusEnum.PAID.equals(ticket.getStatus())) {
+            return new BaseResponse(409, null, "Ticket have been paid", null, null);
+        }
+        if (ticket.getStatus().equals(request.getTicketStatus())) {
+            return new BaseResponse(400, null, "No status change", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateTicketNotCancelled(TicketEntity ticket) {
+        if (TicketStatusEnum.CANCELED.equals(ticket.getStatus())) {
+            return new BaseResponse(400, null, "Ticket already cancelled", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateTripExists(TripEntity trip) {
+        if (trip == null) {
+            return new BaseResponse(404, null, "Trip not found", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateTripCancellable(TripEntity trip) {
+        if (!TripStatusEnum.OPEN_FOR_BOOKING.equals(trip.getStatus()) && !TripStatusEnum.CLOSED_FOR_BOOKING.equals(trip.getStatus())) {
+            return new BaseResponse(400, null, "Cannot cancel ticket because trip status is invalid", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateTripSeatExists(TripSeatEntity tripSeat) {
+        if (tripSeat == null) {
+            return new BaseResponse(404, null, "Trip seat not found", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validatePaymentExists(PaymentEntity payment) {
+        if (payment == null) {
+            return new BaseResponse(404, null, "Payment not found", null, null);
+        }
+        return null;
     }
 
     // ------------------ helper ------------------
@@ -378,78 +458,28 @@ public class TicketService {
         return payment;
     }
 
-    public void sendTicketMailAfterCommit(TicketEntity ticket) throws Exception {
-        PassengerEntity passenger = ticket.getPassenger();
-        if (passenger == null || passenger.getEmail() == null) return;
-
-        String passengerEmail = passenger.getEmail();
-        byte[] qrCode = qrCodeService.generateQrCode(ticket.getTicketCode());
-        String subject = "XÁC NHẬN ĐẶT VÉ XE VIETBUS";
-        String content = mailService.buildTicketMailContent(ticket);
-
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        mailService.sendTicketMail(passengerEmail, subject, content, qrCode);
-                    }
-                }
-        );
+    public void sendTicketMailAfterCommit(TicketEntity ticket) {
+        publishAfterCommit(ticket.getTicketId(), MailEventTypeEnum.TICKET_CONFIRMATION);
     }
 
-    public void sendCancelTicketMailAfterCommit(TicketEntity ticket) throws Exception {
-        PassengerEntity passenger = ticket.getPassenger();
-        if (passenger == null || passenger.getEmail() == null) return;
-
-        String passengerEmail = passenger.getEmail();
-        String subject = "XÁC NHẬN HỦY VÉ XE VIETBUS";
-        String content = mailService.buildCancelTicketMailContent(ticket);
-
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        mailService.sendHtmlMail(passengerEmail, subject, content, null,null);
-                    }
-                }
-        );
+    public void sendCancelTicketMailAfterCommit(TicketEntity ticket) {
+        publishAfterCommit(ticket.getTicketId(), MailEventTypeEnum.TICKET_CANCELLATION);
     }
 
     private void sendMomoQrMailAfterCommit(TicketEntity ticket, MomoPaymentResult momoResult) {
-        PassengerEntity passenger = ticket.getPassenger();
-        if (passenger == null || passenger.getEmail() == null) return;
-
-        String email   = passenger.getEmail();
-        String subject = "THANH TOÁN VÉ XE VIETBUS - MOMO";
-
-        byte[] qrBytes = mailService.generateQrAsBytes(momoResult.getQrCodeUrl());
-        String qrCid   = "qr-momo-" + ticket.getTicketCode();
-
-        String content = mailService.buildMomoMailContent(ticket, momoResult, qrBytes != null ? qrCid : null);
-
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        mailService.sendHtmlMail(email, subject, content, qrBytes, qrCid);
-                    }
-                }
-        );
+        publishAfterCommit(ticket.getTicketId(), MailEventTypeEnum.MOMO_PAYMENT_REQUEST);
     }
 
     private void sendVNPayMailAfterCommit(TicketEntity ticket, VNPayPaymentResult vnpayResult) {
-        PassengerEntity passenger = ticket.getPassenger();
-        if (passenger == null || passenger.getEmail() == null) return;
+        publishAfterCommit(ticket.getTicketId(), MailEventTypeEnum.VNPAY_PAYMENT_REQUEST);
+    }
 
-        String email   = passenger.getEmail();
-        String subject = "THANH TOÁN VÉ XE VIETBUS - VNPAY";
-        String content = mailService.buildVNPayMailContent(ticket, vnpayResult);
-
+    private void publishAfterCommit(UUID ticketId, MailEventTypeEnum type) {
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        mailService.sendHtmlMail(email, subject, content, null, null);
+                        mailEventProducer.sendMailEvent(new TicketMailEvent(ticketId, type, LocalDateTime.now()));
                     }
                 }
         );

@@ -27,16 +27,18 @@ public class TripSeatService {
     }
 
     public BaseResponse countTripSeatSoldByTripId(TripSeatRequest request) {
-        if (request.getTripId() == null) {
-            return new BaseResponse(400, null, "TripId is required", null, null);
+        BaseResponse tripIdError = validateTripIdRequired(request);
+        if (tripIdError != null) {
+            return tripIdError;
         }
         Integer count = tripSeatRepository.countTripSeatSoldByTripId(request.getTripId(), List.of(TripSeatStatusEnum.SOLD, TripSeatStatusEnum.HOLD));
         return new BaseResponse(200, count, "Get quantity trip seat sold successful",null,null);
     }
 
     public BaseResponse getAllTripSeatsByTripId(TripSeatRequest request) {
-        if (request.getTripId() == null) {
-            return new BaseResponse(400, null, "TripId is required", null, null);
+        BaseResponse tripIdError = validateTripIdRequired(request);
+        if (tripIdError != null) {
+            return tripIdError;
         }
 
         // Clear lock ghế
@@ -79,19 +81,20 @@ public class TripSeatService {
         String currentUsername = info.getUsername();
         LocalDateTime now = LocalDateTime.now();
 
-        if (request.getTripSeatId() == null) {
-            return new BaseResponse(400, null, "TripSeatId is required", null, null);
+        BaseResponse tripSeatIdError = validateTripSeatIdRequired(request);
+        if (tripSeatIdError != null) {
+            return tripSeatIdError;
         }
 
         TripSeatEntity tripSeat = tripSeatRepository.findByTripSeatId(request.getTripSeatId());
-        if (tripSeat == null) {
-            return new BaseResponse(404, null, "Seat not found", null, null);
+        BaseResponse seatExistsError = validateSeatExists(tripSeat);
+        if (seatExistsError != null) {
+            return seatExistsError;
         }
 
-        // Kiểm tra ghế đã SOLD/HOLD chưa (không thể lock)
-        TripSeatStatusEnum status = tripSeat.getStatus();
-        if (TripSeatStatusEnum.SOLD.equals(status) || TripSeatStatusEnum.HOLD.equals(status)) {
-            return new BaseResponse(409, null, "Seat has already been booked", null, null);
+        BaseResponse seatNotBookedError = validateSeatNotBooked(tripSeat);
+        if (seatNotBookedError != null) {
+            return seatNotBookedError;
         }
 
         // Atomic UPDATE — chỉ 1 thread thắng
@@ -116,18 +119,21 @@ public class TripSeatService {
         String currentUsername = info.getUsername();
         LocalDateTime now = LocalDateTime.now();
 
-        if (request.getTripSeatId() == null) {
-            return new BaseResponse(400, null, "TripSeatId is required", null, null);
+        BaseResponse tripSeatIdError = validateTripSeatIdRequired(request);
+        if (tripSeatIdError != null) {
+            return tripSeatIdError;
         }
 
         TripSeatEntity tripSeat = tripSeatRepository.findByTripSeatId(request.getTripSeatId());
-        if (tripSeat == null) {
-            return new BaseResponse(404, null, "Seat not found", null, null);
+        BaseResponse seatExistsError = validateSeatExists(tripSeat);
+        if (seatExistsError != null) {
+            return seatExistsError;
         }
 
         // HOLD,SOLD -> không cho unlock
-        if (TripSeatStatusEnum.SOLD.equals(tripSeat.getStatus()) || TripSeatStatusEnum.HOLD.equals(tripSeat.getStatus())) {
-            return new BaseResponse(409, null, "Seat has already been booked", null, null);
+        BaseResponse seatNotBookedError = validateSeatNotBooked(tripSeat);
+        if (seatNotBookedError != null) {
+            return seatNotBookedError;
         }
 
         // Không có ai lock -> không cần unlock
@@ -148,6 +154,37 @@ public class TripSeatService {
         return new BaseResponse(200, null, "Unlock trip seat successful", null, null);
     }
 
+    // ------------------ validate ------------------
+    private BaseResponse validateTripIdRequired(TripSeatRequest request) {
+        if (request.getTripId() == null) {
+            return new BaseResponse(400, null, "TripId is required", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateTripSeatIdRequired(TripSeatRequest request) {
+        if (request.getTripSeatId() == null) {
+            return new BaseResponse(400, null, "TripSeatId is required", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateSeatExists(TripSeatEntity tripSeat) {
+        if (tripSeat == null) {
+            return new BaseResponse(404, null, "Seat not found", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateSeatNotBooked(TripSeatEntity tripSeat) {
+        TripSeatStatusEnum status = tripSeat.getStatus();
+        if (TripSeatStatusEnum.SOLD.equals(status) || TripSeatStatusEnum.HOLD.equals(status)) {
+            return new BaseResponse(409, null, "Seat has already been booked", null, null);
+        }
+        return null;
+    }
+
+    // ------------------ helper ------------------
     private UserDetails getInfo() {
         return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }

@@ -50,19 +50,20 @@ public class VehicleService {
     @Transactional
     public BaseResponse createVehicle(VehicleRequest request) {
         UserDetails info = getInfo();
-        boolean isAdmin = isAdmin(info);
 
-        if (!isAdmin) {
-            return new BaseResponse(403, null, "You don't have permission!", null, null);
+        BaseResponse permissionError = validateIsAdmin(info);
+        if (permissionError != null) {
+            return permissionError;
         }
 
-        if (request.getLicensePlate() == null || request.getTotalSeat() == null) {
-            return new BaseResponse(400, null, "LicensePlate and TotalSeat are required", null, null);
+        BaseResponse requiredFieldsError = validateRequiredFields(request);
+        if (requiredFieldsError != null) {
+            return requiredFieldsError;
         }
 
-        VehicleEntity existedVehicle = vehicleRepository.findByLicensePlate(request.getLicensePlate());
-        if (existedVehicle != null) {
-            return new BaseResponse(409, null,"Vehicle already existed", null,null);
+        BaseResponse duplicateError = validateLicensePlateNotDuplicate(request);
+        if (duplicateError != null) {
+            return duplicateError;
         }
 
         // ===== CREATE VEHICLE =====
@@ -93,35 +94,66 @@ public class VehicleService {
         UserDetails info = getInfo();
 
         VehicleEntity vehicle = vehicleRepository.findByVehicleId(request.getVehicleId());
-        if (vehicle == null) {
-            return new BaseResponse(404, null, "Vehicle not found", null, null);
-        } else {
-            vehicle.setActive(request.getActive());
-            vehicle.setUpdatedBy(info.getUsername());
-            vehicle.setUpdatedAt(LocalDateTime.now());
-            vehicleRepository.save(vehicle);
-
-            return new BaseResponse(200, vehicle, "Update vehicle successful", null, null);
+        BaseResponse vehicleError = validateVehicleExists(vehicle);
+        if (vehicleError != null) {
+            return vehicleError;
         }
+
+        vehicle.setActive(request.getActive());
+        vehicle.setUpdatedBy(info.getUsername());
+        vehicle.setUpdatedAt(LocalDateTime.now());
+        vehicleRepository.save(vehicle);
+
+        return new BaseResponse(200, vehicle, "Update vehicle successful", null, null);
     }
 
     public BaseResponse deleteVehicle(VehicleRequest request) {
         UserDetails info = getInfo();
-        boolean isAdmin = isAdmin(info);
 
-        if (!isAdmin) {
-            return new BaseResponse(403, null, "You don't have permission!", null, null);
+        BaseResponse permissionError = validateIsAdmin(info);
+        if (permissionError != null) {
+            return permissionError;
         }
 
         VehicleEntity vehicle = vehicleRepository.findByVehicleId(request.getVehicleId());
         if (vehicle == null) {
             return new BaseResponse(404, null, "Vehicle not found", "No error", null);
-        } else {
-            vehicleRepository.delete(vehicle);
-            return new BaseResponse(204, null, "Delete vehicle successfully", "No error", null);
         }
+        vehicleRepository.delete(vehicle);
+        return new BaseResponse(204, null, "Delete vehicle successfully", "No error", null);
     }
 
+    // ------------------ validate ------------------
+    private BaseResponse validateIsAdmin(UserDetails info) {
+        if (!isAdmin(info)) {
+            return new BaseResponse(403, null, "You don't have permission!", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateRequiredFields(VehicleRequest request) {
+        if (request.getLicensePlate() == null || request.getTotalSeat() == null) {
+            return new BaseResponse(400, null, "LicensePlate and TotalSeat are required", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateLicensePlateNotDuplicate(VehicleRequest request) {
+        VehicleEntity existedVehicle = vehicleRepository.findByLicensePlate(request.getLicensePlate());
+        if (existedVehicle != null) {
+            return new BaseResponse(409, null,"Vehicle already existed", null,null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateVehicleExists(VehicleEntity vehicle) {
+        if (vehicle == null) {
+            return new BaseResponse(404, null, "Vehicle not found", null, null);
+        }
+        return null;
+    }
+
+    // ------------------ helper ------------------
     private void generateSeat40(VehicleEntity vehicle, UserDetails info) {
         List<SeatEntity> seats = new ArrayList<>();
         String[] columns = {"A", "B", "C"};

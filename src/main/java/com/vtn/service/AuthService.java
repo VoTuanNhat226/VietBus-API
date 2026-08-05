@@ -157,28 +157,21 @@ public class AuthService {
     }
 
     public ResponseEntity<LoginResponse> register(RegisterRequest request) {
-        if (accountRepository.existsByUsername(request.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new LoginResponse("Tên đăng nhập đã được sử dụng!"));
+        ResponseEntity<LoginResponse> usernameError = validateUsernameNotExists(request.getUsername());
+        if (usernameError != null) {
+            return usernameError;
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()
-                || authentication.getPrincipal().equals("anonymousUser")) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new LoginResponse("Bạn chưa đăng nhập"));
+        ResponseEntity<LoginResponse> authError = validateAuthenticated(authentication);
+        if (authError != null) {
+            return authError;
         }
 
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (!isAdmin) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body(new LoginResponse("Bạn không có quyền tạo tài khoản"));
+        ResponseEntity<LoginResponse> adminError = validateIsAdmin(authentication);
+        if (adminError != null) {
+            return adminError;
         }
 
         UserDetails info = (UserDetails) authentication.getPrincipal();
@@ -196,6 +189,39 @@ public class AuthService {
         return ResponseEntity.ok(new LoginResponse(null));
     }
 
+    // ------------------ validate ------------------
+    private ResponseEntity<LoginResponse> validateUsernameNotExists(String username) {
+        if (accountRepository.existsByUsername(username)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new LoginResponse("Tên đăng nhập đã được sử dụng!"));
+        }
+        return null;
+    }
+
+    private ResponseEntity<LoginResponse> validateAuthenticated(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getPrincipal().equals("anonymousUser")) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new LoginResponse("Bạn chưa đăng nhập"));
+        }
+        return null;
+    }
+
+    private ResponseEntity<LoginResponse> validateIsAdmin(Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(new LoginResponse("Bạn không có quyền tạo tài khoản"));
+        }
+        return null;
+    }
+
+    // ------------------ helper ------------------
     private void setRefreshTokenCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE, token);
         cookie.setHttpOnly(true);

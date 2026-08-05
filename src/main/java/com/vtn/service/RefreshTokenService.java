@@ -62,49 +62,29 @@ public class RefreshTokenService {
     @Transactional
     public RotateResult rotate(String oldRefreshToken) {
         // Bước 1: Parse claims (throws nếu chữ ký sai / expired JWT)
-        String familyId;
-        int tokenVersion;
-        String username;
-        try {
-            familyId    = jwtService.extractFamilyId(oldRefreshToken);
-            tokenVersion = jwtService.extractVersion(oldRefreshToken);
-            username    = jwtService.extractUsername(oldRefreshToken);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid refresh token: " + e.getMessage());
-        }
+        TokenClaims claims = extractClaims(oldRefreshToken);
 
         // Bước 2: Load family
-        RefreshTokenFamily family = familyRepository.findByFamilyId(familyId)
+        RefreshTokenFamily family = familyRepository.findByFamilyId(claims.familyId())
                 .orElseThrow(() -> new IllegalArgumentException("Unknown token family"));
 
-        // Bước 3: Kiểm tra version
-        if (tokenVersion != family.getLatestVersion()) {
-            // REUSE DETECTED — token cũ bị tái sử dụng
-            log.warn("Refresh token reuse detected! user={}, familyId={}, tokenVersion={}, latestVersion={}",
-                    username, familyId, tokenVersion, family.getLatestVersion());
-            family.setRevoked(true);
-            familyRepository.save(family);
-            throw new TokenReuseException("Refresh token reuse detected. All sessions revoked.");
-        }
+        // Bước 3: Kiểm tra version (REUSE DETECTED nếu không khớp)
+        validateVersionNotReused(claims, family);
 
         // Bước 4: Kiểm tra revoked
-        if (family.isRevoked()) {
-            throw new IllegalStateException("Token family has been revoked. Please login again.");
-        }
+        validateNotRevoked(family);
 
         // Bước 5: Kiểm tra family expiry
-        if (Instant.now().isAfter(family.getExpiryDate())) {
-            throw new IllegalStateException("Session expired. Please login again.");
-        }
+        validateNotExpired(family);
 
         // Bước 6: Rotate — tăng version, issue token mới
         int newVersion = family.getLatestVersion() + 1;
         family.setLatestVersion(newVersion);
         familyRepository.save(family);
 
-        String newRefreshToken = jwtService.generateRefreshToken(username, familyId, newVersion);
+        String newRefreshToken = jwtService.generateRefreshToken(claims.username(), claims.familyId(), newVersion);
 
-        return new RotateResult(username, newRefreshToken);
+        return new RotateResult(claims.username(), newRefreshToken);
     }
 
     /**
@@ -130,10 +110,47 @@ public class RefreshTokenService {
 
     public record RotateResult(String username, String newRefreshToken) {}
 
+    private record TokenClaims(String familyId, int version, String username) {}
+
     @Scheduled(cron = "0 0 3 * * *") // Chạy lúc 3AM mỗi ngày
     @Transactional
     public void cleanupExpiredFamilies() {
         familyRepository.deleteByRevokedTrueOrExpiryDateBefore(Instant.now());
         log.info("Cleaned up expired/revoked refresh token families");
+    }
+
+    // ------------------ validate ------------------
+    private TokenClaims extractClaims(String refreshToken) {
+        try {
+            String familyId = jwtService.extractFamilyId(refreshToken);
+            int tokenVersion = jwtService.extractVersion(refreshToken);
+            String username = jwtService.extractUsername(refreshToken);
+            return new TokenClaims(familyId, tokenVersion, username);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid refresh token: " + e.getMessage());
+        }
+    }
+
+    private void validateVersionNotReused(TokenClaims claims, RefreshTokenFamily family) {
+        if (claims.version() != family.getLatestVersion()) {
+            // REUSE DETECTED — token cũ bị tái sử dụng
+            log.warn("Refresh token reuse detected! user={}, familyId={}, tokenVersion={}, latestVersion={}",
+                    claims.username(), claims.familyId(), claims.version(), family.getLatestVersion());
+            family.setRevoked(true);
+            familyRepository.save(family);
+            throw new TokenReuseException("Refresh token reuse detected. All sessions revoked.");
+        }
+    }
+
+    private void validateNotRevoked(RefreshTokenFamily family) {
+        if (family.isRevoked()) {
+            throw new IllegalStateException("Token family has been revoked. Please login again.");
+        }
+    }
+
+    private void validateNotExpired(RefreshTokenFamily family) {
+        if (Instant.now().isAfter(family.getExpiryDate())) {
+            throw new IllegalStateException("Session expired. Please login again.");
+        }
     }
 }

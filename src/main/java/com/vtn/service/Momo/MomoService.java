@@ -87,10 +87,7 @@ public class MomoService {
         HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
         Map<?, ?> result = objectMapper.readValue(response.body(), Map.class);
 
-        int resultCode = (int) result.get("resultCode");
-        if (resultCode != 0) {
-            throw new RuntimeException("MoMo error: " + result.get("message"));
-        }
+        validateResultCode(result);
 
         return MomoPaymentResult.builder()
                 .payUrl((String) result.get("payUrl"))
@@ -100,6 +97,15 @@ public class MomoService {
                 .build();
     }
 
+    // ------------------ validate ------------------
+    private void validateResultCode(Map<?, ?> result) {
+        int resultCode = (int) result.get("resultCode");
+        if (resultCode != 0) {
+            throw new RuntimeException("MoMo error: " + result.get("message"));
+        }
+    }
+
+    // ------------------ helper ------------------
     private String hmacSHA256(String data, String key) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");

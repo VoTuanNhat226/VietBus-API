@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -29,7 +28,6 @@ public class MailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    @Async("mailExecutor")
     public void sendTicketMail(String to, String subject, String htmlContent, byte[] qrCode) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -129,7 +127,6 @@ public class MailService {
         );
     }
 
-    @Async("mailExecutor")
     public void sendHtmlMail(String to, String subject, String htmlContent, byte[] imageBytes, String cid) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

@@ -20,13 +20,11 @@ public class TripEmployeeEntity {
     UUID tripEmployeeId;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "trip_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_trip_employee_trip_id"))
+    @JoinColumn(name = "trip_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_employee_trip_id"))
     TripEntity trip;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "employee_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_trip_employee_employee_id"))
+    @JoinColumn(name = "employee_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trip_employee_employee_id"))
     EmployeeEntity employee;
 
     @Enumerated(EnumType.STRING)

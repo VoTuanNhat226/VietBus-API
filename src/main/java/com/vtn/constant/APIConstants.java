@@ -39,6 +39,12 @@ public class APIConstants {
     public static final String API_UPDATE_VEHICLE = API_VIET_BUS + VEHICLE + "/update";
     public static final String API_DELETE_VEHICLE = API_VIET_BUS + VEHICLE + "/delete";
 
+    //Vehicle Maintenance
+    public static final String VEHICLE_MAINTENANCE = "/vehicle-maintenance";
+    public static final String API_GET_VEHICLE_MAINTENANCE_BY_VEHICLE_ID = API_VIET_BUS + VEHICLE_MAINTENANCE + "/get-by-vehicle-id";
+    public static final String API_CREATE_VEHICLE_MAINTENANCE = API_VIET_BUS + VEHICLE_MAINTENANCE + "/create";
+    public static final String API_UPDATE_VEHICLE_MAINTENANCE = API_VIET_BUS + VEHICLE_MAINTENANCE + "/update";
+
     //Route
     public static final String ROUTE = "/route";
     public static final String API_GET_ALL_ROUTE = API_VIET_BUS + ROUTE + "/get-all";

@@ -28,14 +28,6 @@ public class AccountDetailsService implements UserDetailsService {
         return accountRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    private boolean isAllParametersNull(AccountRequest request) {
-        return ((request.getUsername() == null) &&
-                (request.getActive() == null ) &&
-                (request.getRole() == null) &&
-                (request.getCreatedBy() == null) &&
-                (request.getUpdatedBy() == null));
-    }
-
     public BaseResponse getAllAccounts(AccountRequest request) {
         List<AccountEntity> accounts;
         if (isAllParametersNull(request)) {
@@ -61,34 +53,39 @@ public class AccountDetailsService implements UserDetailsService {
         UserDetails info = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         AccountEntity account = accountRepository.findByAccountId(request.getAccountId());
-        if (account == null ) {
-            return new BaseResponse(404, "Account not found", null, null,null);
-        } else {
-            account.setActive(request.getActive());
-            account.setUpdatedBy(info.getUsername());
-            account.setUpdatedAt(LocalDateTime.now());
-            accountRepository.save(account);
-            return new BaseResponse(200, "Account updated successful", null, null,null);
+
+        BaseResponse validationError = validateAccountExists(account);
+        if (validationError != null) {
+            return validationError;
         }
+
+        account.setActive(request.getActive());
+        account.setUpdatedBy(info.getUsername());
+        account.setUpdatedAt(LocalDateTime.now());
+        accountRepository.save(account);
+        return new BaseResponse(200, "Account updated successful", null, null,null);
     }
 
     public BaseResponse changePassword(ChangePasswordRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            return new BaseResponse(401, "Bạn chưa đăng nhập", null, null, null);
+        BaseResponse authError = validateAuthenticated(authentication);
+        if (authError != null) {
+            return authError;
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
         AccountEntity account = accountRepository.findByUsername(userDetails.getUsername()).orElse(null);
 
-        if (account == null) {
-            return new BaseResponse(404, "Account not found", null, null, null);
+        BaseResponse accountError = validateAccountExists(account);
+        if (accountError != null) {
+            return accountError;
         }
 
-        if (!passwordEncoder.matches(request.getOldPassword(), account.getPassword())) {
-            return new BaseResponse(400, "Mật khẩu hiện tại không đúng", null, null, null);
+        BaseResponse passwordError = validateOldPassword(request, account);
+        if (passwordError != null) {
+            return passwordError;
         }
 
         account.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -97,5 +94,35 @@ public class AccountDetailsService implements UserDetailsService {
         accountRepository.save(account);
 
         return new BaseResponse(200, "Change password successful", null, null, null);
+    }
+
+    // ------------------ validate ------------------
+    private boolean isAllParametersNull(AccountRequest request) {
+        return ((request.getUsername() == null) &&
+                (request.getActive() == null ) &&
+                (request.getRole() == null) &&
+                (request.getCreatedBy() == null) &&
+                (request.getUpdatedBy() == null));
+    }
+
+    private BaseResponse validateAccountExists(AccountEntity account) {
+        if (account == null) {
+            return new BaseResponse(404, "Account not found", null, null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateAuthenticated(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            return new BaseResponse(401, "Bạn chưa đăng nhập", null, null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateOldPassword(ChangePasswordRequest request, AccountEntity account) {
+        if (!passwordEncoder.matches(request.getOldPassword(), account.getPassword())) {
+            return new BaseResponse(400, "Mật khẩu hiện tại không đúng", null, null, null);
+        }
+        return null;
     }
 }

@@ -48,15 +48,19 @@ public class RouteService {
     public BaseResponse createRoute(RouteRequest routeRequest) {
         UserDetails info = getInfo();
 
-        RouteEntity routeEntity = routeRepository.findByFromStationAndToStation(routeRequest.getFromStationId(), routeRequest.getToStationId());
-        if(routeEntity != null) {
-            return new BaseResponse(409, null,"Tuyến xe đã tồn tại", null,null);
+        BaseResponse existsError = validateRouteDoesNotExist(routeRequest);
+        if (existsError != null) {
+            return existsError;
         }
-        if(routeRequest.getFromStationId().equals(routeRequest.getToStationId())) {
-            return new BaseResponse(400, null,"Điểm đi trùng điểm đến", null,null);
+
+        BaseResponse stationsError = validateStationsDifferent(routeRequest);
+        if (stationsError != null) {
+            return stationsError;
         }
-        if(routeRequest.getDistanceKm() == 0) {
-            return new BaseResponse(400, null,"Khoảng cách phải lớn hơn 0", null,null);
+
+        BaseResponse distanceError = validateDistancePositive(routeRequest);
+        if (distanceError != null) {
+            return distanceError;
         }
 
         StationEntity fromStation = stationRepository.findByStationId(routeRequest.getFromStationId());
@@ -78,35 +82,75 @@ public class RouteService {
         UserDetails info = getInfo();
 
         RouteEntity route = routeRepository.findByRouteId(routeRequest.getRouteId());
-        if(route == null) {
-            return new BaseResponse(404, null, "Route not found", null, null);
-        } else {
-            route.setActive(routeRequest.getActive());
-            route.setUpdatedBy(info.getUsername());
-            route.setUpdatedAt(LocalDateTime.now());
-            routeRepository.save(route);
+        BaseResponse routeError = validateRouteExists(route);
+        if (routeError != null) {
+            return routeError;
         }
+
+        route.setActive(routeRequest.getActive());
+        route.setUpdatedBy(info.getUsername());
+        route.setUpdatedAt(LocalDateTime.now());
+        routeRepository.save(route);
 
         return new BaseResponse(200, route, "Update route successful", null, null);
     }
 
     public BaseResponse deleteRoute(RouteRequest routeRequest) {
         UserDetails info = getInfo();
-        boolean isAdmin = isAdmin(info);
 
-        if(!isAdmin) {
-            return new BaseResponse(403, null, "You don't has permission", null, null);
-        } else {
-            RouteEntity route = routeRepository.findByRouteId(routeRequest.getRouteId());
-            if(route == null) {
-                return new BaseResponse(404, null, "Route not found", null, null);
-            } else {
-                routeRepository.delete(route);
-                return new BaseResponse(204, route, "Delete route successful", null, null);
-            }
+        BaseResponse permissionError = validateIsAdmin(info);
+        if (permissionError != null) {
+            return permissionError;
         }
+
+        RouteEntity route = routeRepository.findByRouteId(routeRequest.getRouteId());
+        BaseResponse routeError = validateRouteExists(route);
+        if (routeError != null) {
+            return routeError;
+        }
+
+        routeRepository.delete(route);
+        return new BaseResponse(204, route, "Delete route successful", null, null);
     }
 
+    // ------------------ validate ------------------
+    private BaseResponse validateRouteDoesNotExist(RouteRequest routeRequest) {
+        RouteEntity routeEntity = routeRepository.findByFromStationAndToStation(routeRequest.getFromStationId(), routeRequest.getToStationId());
+        if (routeEntity != null) {
+            return new BaseResponse(409, null, "Tuyến xe đã tồn tại", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateStationsDifferent(RouteRequest routeRequest) {
+        if (routeRequest.getFromStationId().equals(routeRequest.getToStationId())) {
+            return new BaseResponse(400, null, "Điểm đi trùng điểm đến", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateDistancePositive(RouteRequest routeRequest) {
+        if (routeRequest.getDistanceKm() == 0) {
+            return new BaseResponse(400, null, "Khoảng cách phải lớn hơn 0", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateRouteExists(RouteEntity route) {
+        if (route == null) {
+            return new BaseResponse(404, null, "Route not found", null, null);
+        }
+        return null;
+    }
+
+    private BaseResponse validateIsAdmin(UserDetails info) {
+        if (!isAdmin(info)) {
+            return new BaseResponse(403, null, "You don't has permission", null, null);
+        }
+        return null;
+    }
+
+    // ------------------ helper ------------------
     private boolean isAdmin(UserDetails info) {
         return info.getAuthorities()
                 .stream()

@@ -65,7 +65,7 @@ public class PaymentService {
     @Transactional
     public void confirmPayment(String ticketCode, String transactionId, PaymentMethodEnum method) throws Exception {
         TicketEntity ticket = ticketRepository.findByTicketCode(ticketCode);
-        if (ticket == null || ticket.getStatus() == TicketStatusEnum.PAID) return;
+        if (!isTicketPayable(ticket)) return;
 
         // Update status ticket UNPAID -> PAID
         ticket.setStatus(TicketStatusEnum.PAID);
@@ -90,5 +90,10 @@ public class PaymentService {
 
         // Send ticket mail after payment success
          ticketService.sendTicketMailAfterCommit(ticket);
+    }
+
+    // ------------------ validate ------------------
+    private boolean isTicketPayable(TicketEntity ticket) {
+        return ticket != null && ticket.getStatus() != TicketStatusEnum.PAID;
     }
 }
